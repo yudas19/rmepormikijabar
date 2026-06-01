@@ -1,0 +1,1 @@
+<img src="{{ asset('storage/logo/pormiki.png') }}" alt="Logo" {{ $attributes }}>
