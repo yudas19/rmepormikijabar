@@ -1,0 +1,47 @@
+LangkahJika Membuat Halaman Statis (Hanya Menu/Cards)
+1. Buat file .blade.php secara manual di dalam folder resources/views/master/
+2. Daftarkan Route	Gunakan Route::view di web.php. Contoh: Route::view('/url', 'folder.file');
+3. Desain Layout Bungkus file HTML menggunakan: <x-layouts::app title="Judul"> ... </x-layouts::app>
+4. Hubungkan	Tambahkan link-nya di sidebar.blade.php atau di halaman card utama menggunakan {{ route('nama.route') }}.
+
+Jika Membuat Halaman CRUD (Livewire MFC)
+1. Jalankan perintah di terminal: php artisan make:livewire Nama.Page --mfc
+2. Gunakan Route::get di web.php menuju file .php-nya. Contoh: Route::get('/url', 'folder.page.page');
+3. Sama, bungkus file .blade.php di dalam folder komponen dengan <x-layouts::app>.
+4. Tambahkan tombol aksi (Simpan, Edit, Hapus) yang terhubung ke fungsi di file .php-nya.
+
+
+📚 Panduan Membaca Dokumentasi Resmi (Menu Wajib)
+Jangan membaca seluruh dokumentasi dari atas ke bawah karena akan membuatmu pusing. Fokuslah pada bagian-bagian penting ini terlebih dahulu:
+
+1. Laravel (Pondasi Utama)
+Link: laravel.com/docs
+Fokus Bacaan:
+Routing: Pahami cara kerja Route::get dan Route::view.
+Blade Components: Pahami bagaimana tag seperti <x-...> bekerja mengirim data (seperti :title atau $slot).
+
+2. Livewire v4 (Logika Interaktif & CRUD)
+Link: livewire.laravel.com/docs
+Fokus Bacaan:
+Components: Pahami bagaimana file PHP dan Blade berkomunikasi.
+Properties: Cara membuat variabel di PHP agar otomatis muncul di Blade (misal: public $search).
+Actions: Cara memicu fungsi PHP dari tombol di Blade (menggunakan wire:click="simpan").
+Forms: Sangat penting untuk CRUD Pasien/Petugas nanti, cari bagian Livewire Forms untuk validasi inputan.
+
+3. Flux UI (Desain Komponen Instan)
+Link: flux.laravel.com
+Fokus Bacaan:
+Layout (Sidebar / Header): Untuk memahami bagaimana mengatur navigasi menu samping tempatmu meletakkan link Master Data.
+Form Components: Lihat dokumentasi <flux:input>, <flux:select>, dan <flux:button>. Ini akan membuat tampilan Form CRUD Pasienmu langsung rapi dan modern tanpa perlu mendesain dari nol.
+Table: Cari tahu cara menampilkan data pasien menggunakan komponen tabel bawaan Flux.
+
+4. Tailwind CSS (Modifikasi Tampilan)
+Link: tailwindcss.com/docs
+Fokus Bacaan:
+Flexbox & Grid: Kunci utama membuat susunan layout dan card (seperti grid-cols-3, gap-6, flex, items-center).
+Spacing & Hover: Pahami p-4 (padding), m-2 (margin), dan hover:bg-gray-100 untuk efek interaktif saat card disentuh kursor.
+
+💡 Tips Tambahan untuk Sukses Membangun RME
+Gunakan Metode "Copy-Paste-Modifikasi": Jika kamu nanti membuat CRUD Pasien dan berhasil, saat ingin membuat CRUD Poli, jangan buat dari nol. Copy saja logika dari Pasien lalu ubah nama variabel dan tabelnya. Itu akan menghemat waktu 80%.
+
+Manfaatkan Flux UI Semaksimal Mungkin: Karena proyekmu sudah terpasang Flux, hindari menulis HTML manual yang terlalu panjang untuk Form. Cukup gunakan komponen siap pakai dari Flux agar tampilan aplikasimu konsisten.

@@ -20,6 +20,13 @@
                 </flux:sidebar.group>
             </flux:sidebar.nav>
 
+            <flux:navlist.item 
+                :href="route('master.index')" 
+                :current="request()->routeIs('master.*')"
+                icon="folder">
+                Master Data
+            </flux:navlist.item>
+
             <flux:spacer />
 
             <flux:sidebar.nav>

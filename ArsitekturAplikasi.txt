@@ -1,0 +1,37 @@
+laravel, livewire, flux, tailwindcss, pest,
+
+
+( awal installasi )
+
+ WARN  A new version of the Laravel installer is available. You have version 5.25.1 installed, the latest version is 5.28.1.
+
+  To update, open Herd > Settings > PHP > Laravel Installer and click the "Update" button.
+
+ ┌ Would you like to update now? ───────────────────────────────┐
+ │ Not now                                                      │
+ └──────────────────────────────────────────────────────────────┘
+
+ ┌ Which starter kit would you like to install? ────────────────┐
+ │ Livewire                                                     │
+ └──────────────────────────────────────────────────────────────┘
+
+ ┌ Which authentication provider do you prefer? ────────────────┐
+ │ Laravel's built-in authentication                            │
+ └──────────────────────────────────────────────────────────────┘
+
+ ┌ Would you like to use single-file Livewire components? ──────┐
+ │ No                                                           │
+ └──────────────────────────────────────────────────────────────┘
+
+ ┌ Which testing framework do you prefer? ──────────────────────┐
+ │ Pest                                                         │
+ └──────────────────────────────────────────────────────────────┘
+
+ ┌ Do you want to install Laravel Boost to improve AI assisted coding? ┐
+ │ No                                                                  │
+ └─────────────────────────────────────────────────────────────────────┘
+
+> @php artisan install:features --ansi
+
+ ┌ Which authentication features would you like to enable? ─────┐
+ │ Password confirmation                                        │

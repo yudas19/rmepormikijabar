@@ -6,6 +6,9 @@ Route::view('/', 'welcome')->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::view('dashboard', 'dashboard')->name('dashboard');
+
+Route::view('/master', 'master.index')->name('master.index');
+
 });
 
 
