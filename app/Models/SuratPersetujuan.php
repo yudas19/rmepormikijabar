@@ -7,6 +7,6 @@ use Illuminate\Database\Eloquent\Model;
 class SuratPersetujuan extends Model
 {
     protected $table = 'surat_persetujuans';
-    protected $guarded = ['id'];
 
+    protected $guarded = ['id'];
 }

@@ -7,5 +7,6 @@ use Illuminate\Database\Eloquent\Model;
 class MasterPendidikan extends Model
 {
     protected $table = 'master_pendidikans';
+
     protected $guarded = ['id'];
 }

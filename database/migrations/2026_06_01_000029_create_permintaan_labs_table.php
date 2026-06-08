@@ -25,7 +25,7 @@ return new class extends Migration
             $table->foreignId('pendaftaran_id')->constrained('pendaftarans')->onDelete('cascade');
             $table->foreignId('dokter_id')->nullable()->constrained('master_petugass')->onDelete('set null');
             $table->foreignId('analis_id')->nullable()->constrained('master_petugass')->onDelete('set null'); // Analis yang memeriksa
-            
+
             $table->enum('status_lab', ['permintaan', 'selesai', 'batal'])->default('permintaan');
             $table->timestamps();
         });
@@ -35,17 +35,17 @@ return new class extends Migration
             $table->id();
             $table->foreignId('permintaan_lab_id')->constrained('permintaan_labs')->onDelete('cascade');
             $table->foreignId('master_lab_id')->constrained('master_labs')->onDelete('restrict');
-            
+
             // Hasil Pemeriksaan oleh Analis
             $table->string('hasil_analis')->nullable(); // Nilai aktual yang keluar dari lab
             $table->text('kesan_kesimpulan')->nullable();
-            
+
             // Kunci Tarif untuk Kasir
             $table->decimal('tarif_penerapan', 12, 2);
-            
+
             // Bridging SatuSehat (DiagnosticReport / Observation Resource)
             $table->string('satu_sehat_lab_id')->nullable();
-            
+
             $table->timestamps();
         });
     }

@@ -6,11 +6,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Petugas extends Model
+class MasterPetugas extends Model
 {
     use SoftDeletes;
 
-    protected $table = 'petugass';
+    protected $table = 'master_petugass';
+
     protected $guarded = ['id'];
 
     protected $casts = [

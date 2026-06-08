@@ -4,19 +4,20 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class poli extends Model
+class Poli extends Model
 {
-    protected $table = 'polis';
+    protected $table = 'master_polis';
 
     protected $fillable = [
+        'kode_poli',
         'nama_poli',
         'kode_poli_bpjs',
         'satu_sehat_location_id',
-        'is_aktif',
+        'is_active',
     ];
 
     protected $casts = [
-        'is_aktif' => 'boolean',
+        'is_active' => 'boolean',
     ];
 
     public function pendaftaran()
@@ -24,4 +25,8 @@ class poli extends Model
         return $this->hasMany(Pendaftaran::class, 'poli_id');
     }
 
+    public function satusehat()
+    {
+        return $this->hasOne(MasterPoliSatusehat::class, 'master_poli_id');
+    }
 }

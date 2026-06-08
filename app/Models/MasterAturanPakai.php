@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class MasterAturanPakai extends Model
 {
-    protected $table = 'master_aturan_pakai';
+    protected $table = 'master_aturan_pakais';
+
     protected $guarded = ['id'];
 }

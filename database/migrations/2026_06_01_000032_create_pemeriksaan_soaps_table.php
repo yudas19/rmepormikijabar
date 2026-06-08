@@ -40,12 +40,12 @@ return new class extends Migration
 
             // --- 5. PLAN (Rencana Penatalaksanaan oleh Dokter) ---
             $table->text('rencana_tatalaksana')->nullable();
-            
+
             // --- Status Integrasi SatuSehat ---
             // Mengingat data SOAP dikirim terpisah (Condition & Observation) ke Kemenkes
             $table->string('satu_sehat_condition_id')->nullable(); // ID untuk Diagnosa
             $table->string('satu_sehat_observation_id')->nullable(); // ID untuk Vital Sign
-            
+
             // Petugas yang bertanggung jawab
             $table->foreignId('perawat_id')->nullable()->constrained('master_petugass')->onDelete('set null');
             $table->foreignId('dokter_id')->nullable()->constrained('master_petugass')->onDelete('set null');

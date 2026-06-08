@@ -6,8 +6,7 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-
-public function up(): void
+    public function up(): void
     {
         Schema::create('pasiens', function (Blueprint $table) {
             $table->id();
@@ -41,30 +40,30 @@ public function up(): void
             $table->string('pekerjaan', 50)->nullable();
             $table->string('kewarganegaraan', 3)->default('WNI');
             $table->string('bahasa', 50)->default('Indonesia');
-            
+
             // Kontak (Gunakan no_whatsapp agar seragam dengan rencana awal)
 
             $table->string('no_whatsapp', 15)->nullable();
             $table->string('email')->nullable();
-            
+
             // Alamat Lengkap
             $table->text('alamat');
             $table->foreignId('provinsi_id')->nullable()->constrained('provinsis')->onDelete('set null');
             $table->foreignId('kabupaten_kota_id')->nullable()->constrained('kabupaten_kotas')->onDelete('set null');
             $table->string('kode_pos', 10)->nullable();
-            
+
             // Status Akun / Rekam Medis
             $table->enum('status_pasien', ['aktif', 'nonaktif', 'meninggal'])->default('aktif');
-            
+
             // Keamanan & Tracking User
             $table->unsignedBigInteger('created_by')->nullable();
             $table->unsignedBigInteger('updated_by')->nullable();
             $table->foreign('created_by')->references('id')->on('users')->onDelete('set null');
             $table->foreign('updated_by')->references('id')->on('users')->onDelete('set null');
-            
+
             $table->timestamps();
             $table->softDeletes();
-            
+
             // Indexing untuk kecepatan pencarian data puluhan ribu pasien
             $table->index('nama_pasien');
             $table->index('nik');
