@@ -10,10 +10,13 @@ use App\Models\MedicalRecordIcd10;
 use App\Models\MedicalRecordIcd9;
 use App\Models\MedicalRecordPrescription;
 use App\Models\MedicalRecordPrescriptionItem;
+use App\Models\OdontogramRecord;
+use App\Models\KiaAncRecord;
 use App\Models\Pendaftaran;
 use App\Models\SuratKeterangan;
 use App\Models\SuratRujukan;
 use Flux\Flux;
+use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
 new class extends Component
@@ -64,6 +67,10 @@ new class extends Component
 
     public $evaluation;
 
+    public $keluhan_utama;
+
+    public $riwayat_alergi;
+
     // Status & Edit state
     public $status;
 
@@ -112,6 +119,47 @@ new class extends Component
     public $showHealthCertModal = false;
 
     public $showReferralModal = false;
+
+    // ─── Odontogram (Poli Gigi) ─────────────────────────────────────────
+    /** @var array<int, array{condition_code: string, notes: string}> tooth_number => data */
+    public array $teethMap = [];
+
+    public ?int $activeTooth = null;
+
+    public string $activeToothCondition = 'SOU';
+
+    public string $activeToothNotes = '';
+
+    public bool $showToothModal = false;
+
+    // ─── KIA ANC ────────────────────────────────────────────────────────
+    public string $anc_hpht = '';
+
+    public string $anc_tp = '';
+
+    public ?int $anc_uk_minggu = null;
+
+    public string $anc_tfu = '';
+
+    public string $anc_lila = '';
+
+    public string $anc_djj = '';
+
+    public string $anc_presentasi = '';
+
+    public string $anc_leopold_1 = '';
+
+    public string $anc_leopold_2 = '';
+
+    public string $anc_leopold_3 = '';
+
+    public string $anc_leopold_4 = '';
+
+    public string $anc_golongan_darah = '';
+
+    public bool $anc_riwayat_sc = false;
+
+    public string $anc_catatan_bidan = '';
 
     // Letter form inputs
     public $sick_start_date;
@@ -170,6 +218,9 @@ new class extends Component
         $this->assessment = $record->assessment;
         $this->plan = $record->plan;
         $this->evaluation = $record->evaluation;
+
+        $this->keluhan_utama = $record->keluhan_utama ?? $record->pendaftaran->keluhan_awal ?? '';
+        $this->riwayat_alergi = $record->riwayat_alergi ?? '';
 
         // Load status
         $this->status = $record->status;
@@ -231,9 +282,40 @@ new class extends Component
         $this->sick_dokter_id = $record->pendaftaran->dokter_id ?? '';
         $this->health_dokter_id = $record->pendaftaran->dokter_id ?? '';
         $this->ref_dokter_id = $record->pendaftaran->dokter_id ?? '';
-        $this->health_tensi = ($this->tensi_sistole && $this->tensi_diastole) ? $this->tensi_sistole.'/'.$this->tensi_diastole : '120/80';
+        $this->health_tensi = ($this->tensi_sistole && $this->tensi_diastole) ? $this->tensi_sistole . '/' . $this->tensi_diastole : '120/80';
         $this->health_height = $this->height;
         $this->health_weight = $this->weight;
+
+        // Preload Odontogram (Poli Gigi)
+        if ($this->poliklinik === 'gigi') {
+            foreach ($record->odontogramRecords as $tooth) {
+                $this->teethMap[$tooth->tooth_number] = [
+                    'condition_code' => $tooth->condition_code,
+                    'notes' => $tooth->notes ?? '',
+                ];
+            }
+        }
+
+        // Preload KIA ANC
+        if ($this->poliklinik === 'kia') {
+            $anc = $record->kiaAncRecord;
+            if ($anc) {
+                $this->anc_hpht = $anc->hpht ? $anc->hpht->format('Y-m-d') : '';
+                $this->anc_tp = $anc->tp ? $anc->tp->format('Y-m-d') : '';
+                $this->anc_uk_minggu = $anc->uk_minggu;
+                $this->anc_tfu = (string) ($anc->tfu ?? '');
+                $this->anc_lila = (string) ($anc->lila ?? '');
+                $this->anc_djj = (string) ($anc->djj ?? '');
+                $this->anc_presentasi = $anc->presentasi ?? '';
+                $this->anc_leopold_1 = $anc->leopold_1 ?? '';
+                $this->anc_leopold_2 = $anc->leopold_2 ?? '';
+                $this->anc_leopold_3 = $anc->leopold_3 ?? '';
+                $this->anc_leopold_4 = $anc->leopold_4 ?? '';
+                $this->anc_golongan_darah = $anc->golongan_darah ?? '';
+                $this->anc_riwayat_sc = (bool) $anc->riwayat_sc;
+                $this->anc_catatan_bidan = $anc->catatan_bidan ?? '';
+            }
+        }
     }
 
     public function updatedWeight()
@@ -280,8 +362,8 @@ new class extends Component
     public function updatedIcd10Query()
     {
         if (strlen($this->icd10Query) >= 2) {
-            $this->icd10Results = MasterIcd10::where('kode', 'like', '%'.$this->icd10Query.'%')
-                ->orWhere('nama_penyakit', 'like', '%'.$this->icd10Query.'%')
+            $this->icd10Results = MasterIcd10::where('kode', 'like', '%' . $this->icd10Query . '%')
+                ->orWhere('nama_penyakit', 'like', '%' . $this->icd10Query . '%')
                 ->take(8)
                 ->get()
                 ->toArray();
@@ -326,8 +408,8 @@ new class extends Component
 
     public function setPrimaryIcd10($index)
     {
-        foreach ($this->selectedIcd10s as $i => &$selected) {
-            $selected['is_primary'] = ($i === $index);
+        foreach ($this->selectedIcd10s as $i => $selected) {
+            $this->selectedIcd10s[$i]['is_primary'] = ($i === $index);
         }
     }
 
@@ -335,7 +417,8 @@ new class extends Component
     {
         array_splice($this->selectedIcd10s, $index, 1);
 
-        // If primary was deleted, assign primary to the first item
+        $this->selectedIcd10s = array_values($this->selectedIcd10s);
+
         if (count($this->selectedIcd10s) > 0) {
             $hasPrimary = false;
             foreach ($this->selectedIcd10s as $selected) {
@@ -354,8 +437,8 @@ new class extends Component
     public function updatedIcd9Query()
     {
         if (strlen($this->icd9Query) >= 2) {
-            $this->icd9Results = MasterIcd9::where('kode', 'like', '%'.$this->icd9Query.'%')
-                ->orWhere('nama', 'like', '%'.$this->icd9Query.'%')
+            $this->icd9Results = MasterIcd9::where('kode', 'like', '%' . $this->icd9Query . '%')
+                ->orWhere('nama', 'like', '%' . $this->icd9Query . '%')
                 ->take(8)
                 ->get()
                 ->toArray();
@@ -390,13 +473,81 @@ new class extends Component
     public function removeIcd9($index)
     {
         array_splice($this->selectedIcd9s, $index, 1);
+
+        $this->selectedIcd9s = array_values($this->selectedIcd9s);
+    }
+
+    // ─── Odontogram Methods ──────────────────────────────────────────────
+
+    public function openTooth(int $toothNumber): void
+    {
+        if (! $this->isEditable) {
+            return;
+        }
+
+        $this->activeTooth = $toothNumber;
+        $existing = $this->teethMap[$toothNumber] ?? null;
+        $this->activeToothCondition = $existing['condition_code'] ?? 'SOU';
+        $this->activeToothNotes = $existing['notes'] ?? '';
+        $this->showToothModal = true;
+    }
+
+    public function saveToothCondition(): void
+    {
+        if (! $this->activeTooth || ! $this->isEditable) {
+            return;
+        }
+
+        $this->teethMap[$this->activeTooth] = [
+            'condition_code' => $this->activeToothCondition,
+            'notes' => $this->activeToothNotes,
+        ];
+
+        $this->showToothModal = false;
+        $this->activeTooth = null;
+        $this->activeToothNotes = '';
+    }
+
+    public function closeToothModal(): void
+    {
+        $this->showToothModal = false;
+        $this->activeTooth = null;
+    }
+
+    public function clearTooth(int $toothNumber): void
+    {
+        if (! $this->isEditable) {
+            return;
+        }
+
+        unset($this->teethMap[$toothNumber]);
+    }
+
+    // ─── ANC (KIA) Methods ──────────────────────────────────────────────
+
+    public function updatedAncHpht(): void
+    {
+        if (! $this->anc_hpht) {
+            $this->anc_tp = '';
+            $this->anc_uk_minggu = null;
+
+            return;
+        }
+
+        $hpht = \Carbon\Carbon::parse($this->anc_hpht);
+
+        // Naegele's Rule: +7 days, -3 months, +1 year
+        $this->anc_tp = $hpht->copy()->addDays(7)->subMonths(3)->addYear()->format('Y-m-d');
+
+        // Calculate gestational age in weeks
+        $this->anc_uk_minggu = (int) $hpht->diffInWeeks(now());
     }
 
     // Prescription Add Flow
     public function updatedDrugQuery()
     {
         if (strlen($this->drugQuery) >= 2) {
-            $this->drugResults = MasterObat::where('nama_obat', 'like', '%'.$this->drugQuery.'%')
+            $this->drugResults = MasterObat::where('nama_obat', 'like', '%' . $this->drugQuery . '%')
                 ->where('is_aktif', true)
                 ->take(8)
                 ->get()
@@ -557,7 +708,7 @@ new class extends Component
         $this->record->pendaftaran->update(['status_antrean' => $antreanStatus]);
         $this->saveData();
 
-        Flux::toast(variant: 'success', text: 'Status kunjungan berhasil diubah ke: '.ucfirst($newStatus));
+        Flux::toast(variant: 'success', text: 'Status kunjungan berhasil diubah ke: ' . ucfirst($newStatus));
     }
 
     public function finalizeAndLock()
@@ -601,7 +752,8 @@ new class extends Component
     protected function saveData()
     {
         // 1. Update Medical Record Fields
-        $this->record->update([
+        $petugas = MasterPetugas::where('user_id', Auth::id())->first();
+        $updateData = [
             'tensi_sistole' => $this->tensi_sistole ? intval($this->tensi_sistole) : null,
             'tensi_diastole' => $this->tensi_diastole ? intval($this->tensi_diastole) : null,
             'pulse_rate' => $this->pulse_rate ? intval($this->pulse_rate) : null,
@@ -621,8 +773,20 @@ new class extends Component
             'assessment' => $this->assessment,
             'plan' => $this->plan,
             'evaluation' => $this->evaluation,
-            'updated_by' => auth()->id(),
-        ]);
+            'keluhan_utama' => $this->keluhan_utama,
+            'riwayat_alergi' => $this->riwayat_alergi,
+            'updated_by' => Auth::id(),
+        ];
+
+        if ($petugas) {
+            if ($petugas->jenis_petugas === 'Dokter') {
+                $updateData['dokter_id'] = $petugas->id;
+            } elseif ($petugas->jenis_petugas === 'Perawat') {
+                $updateData['perawat_id'] = $petugas->id;
+            }
+        }
+
+        $this->record->update($updateData);
 
         // 2. Synchronize ICD-10 Diagnoses
         MedicalRecordIcd10::where('medical_record_id', $this->recordId)->delete();
@@ -672,7 +836,45 @@ new class extends Component
                 ]);
             }
         }
+
+        // 5. Synchronize Odontogram (Poli Gigi only)
+        if ($this->poliklinik === 'gigi') {
+            OdontogramRecord::where('medical_record_id', $this->recordId)->delete();
+
+            foreach ($this->teethMap as $toothNumber => $data) {
+                OdontogramRecord::create([
+                    'medical_record_id' => $this->recordId,
+                    'tooth_number' => $toothNumber,
+                    'condition_code' => $data['condition_code'],
+                    'notes' => $data['notes'] ?: null,
+                ]);
+            }
+        }
+
+        // 6. Upsert KIA ANC Record (KIA only)
+        if ($this->poliklinik === 'kia') {
+            KiaAncRecord::updateOrCreate(
+                ['medical_record_id' => $this->recordId],
+                [
+                    'hpht' => $this->anc_hpht ?: null,
+                    'tp' => $this->anc_tp ?: null,
+                    'uk_minggu' => $this->anc_uk_minggu,
+                    'tfu' => $this->anc_tfu !== '' ? floatval($this->anc_tfu) : null,
+                    'lila' => $this->anc_lila !== '' ? floatval($this->anc_lila) : null,
+                    'djj' => $this->anc_djj !== '' ? intval($this->anc_djj) : null,
+                    'presentasi' => $this->anc_presentasi ?: null,
+                    'leopold_1' => $this->anc_leopold_1 ?: null,
+                    'leopold_2' => $this->anc_leopold_2 ?: null,
+                    'leopold_3' => $this->anc_leopold_3 ?: null,
+                    'leopold_4' => $this->anc_leopold_4 ?: null,
+                    'golongan_darah' => $this->anc_golongan_darah ?: null,
+                    'riwayat_sc' => $this->anc_riwayat_sc,
+                    'catatan_bidan' => $this->anc_catatan_bidan ?: null,
+                ]
+            );
+        }
     }
+
 
     // Letters Generation Logic
     public function openSickLeave()
@@ -690,7 +892,7 @@ new class extends Component
             'sick_dokter_id' => 'required|exists:master_petugass,id',
         ]);
 
-        $no_surat = 'SKD/SAKIT/'.date('Ymd').'/'.sprintf('%04d', rand(1, 9999));
+        $no_surat = 'SKD/SAKIT/' . date('Ymd') . '/' . sprintf('%04d', rand(1, 9999));
 
         $saved = SuratKeterangan::create([
             'no_surat' => $no_surat,
@@ -714,7 +916,7 @@ new class extends Component
     public function openHealthCert()
     {
         $this->health_dokter_id = $this->record->pendaftaran->dokter_id ?? '';
-        $this->health_tensi = ($this->tensi_sistole && $this->tensi_diastole) ? $this->tensi_sistole.'/'.$this->tensi_diastole : '120/80';
+        $this->health_tensi = ($this->tensi_sistole && $this->tensi_diastole) ? $this->tensi_sistole . '/' . $this->tensi_diastole : '120/80';
         $this->health_height = $this->height;
         $this->health_weight = $this->weight;
         $this->showHealthCertModal = true;
@@ -731,7 +933,7 @@ new class extends Component
             'health_dokter_id' => 'required|exists:master_petugass,id',
         ]);
 
-        $no_surat = 'SKD/SEHAT/'.date('Ymd').'/'.sprintf('%04d', rand(1, 9999));
+        $no_surat = 'SKD/SEHAT/' . date('Ymd') . '/' . sprintf('%04d', rand(1, 9999));
 
         $saved = SuratKeterangan::create([
             'no_surat' => $no_surat,
@@ -761,7 +963,7 @@ new class extends Component
         $primaryDiag = '';
         foreach ($this->selectedIcd10s as $selected) {
             if ($selected['is_primary']) {
-                $primaryDiag = $selected['kode'].' - '.$selected['nama_penyakit'];
+                $primaryDiag = $selected['kode'] . ' - ' . $selected['nama_penyakit'];
                 break;
             }
         }
@@ -778,7 +980,7 @@ new class extends Component
             'ref_dokter_id' => 'required|exists:master_petugass,id',
         ]);
 
-        $no_surat = 'RUJ/'.date('Ymd').'/'.sprintf('%04d', rand(1, 9999));
+        $no_surat = 'RUJ/' . date('Ymd') . '/' . sprintf('%04d', rand(1, 9999));
 
         $saved = SuratRujukan::create([
             'no_surat' => $no_surat,

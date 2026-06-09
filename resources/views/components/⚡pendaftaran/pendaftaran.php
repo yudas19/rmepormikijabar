@@ -422,6 +422,8 @@ new class extends Component
             'poli_id' => $this->reg_poli_id,
             'status' => 'waiting',
             'nomor_antrean' => $nomor_antrean,
+            'dokter_id' => $this->reg_dokter_id,
+            'keluhan_utama' => $this->reg_keluhan_awal,
             'created_by' => auth()->id(),
         ]);
 

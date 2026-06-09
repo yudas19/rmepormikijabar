@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class MedicalRecord extends Model
 {
@@ -42,6 +43,16 @@ class MedicalRecord extends Model
         return $this->belongsTo(Poli::class, 'poli_id');
     }
 
+    public function dokter(): BelongsTo
+    {
+        return $this->belongsTo(MasterPetugas::class, 'dokter_id');
+    }
+
+    public function perawat(): BelongsTo
+    {
+        return $this->belongsTo(MasterPetugas::class, 'perawat_id');
+    }
+
     public function getPoliklinikTypeAttribute(): string
     {
         if (! $this->relationLoaded('poli')) {
@@ -72,6 +83,16 @@ class MedicalRecord extends Model
     public function prescriptions(): HasMany
     {
         return $this->hasMany(MedicalRecordPrescription::class, 'medical_record_id');
+    }
+
+    public function odontogramRecords(): HasMany
+    {
+        return $this->hasMany(OdontogramRecord::class, 'medical_record_id');
+    }
+
+    public function kiaAncRecord(): HasOne
+    {
+        return $this->hasOne(KiaAncRecord::class, 'medical_record_id');
     }
 
     public function creator(): BelongsTo

@@ -17,6 +17,11 @@ return new class extends Migration
             $table->foreignId('poli_id')->constrained('master_polis')->onDelete('restrict');
             $table->enum('status', ['waiting', 'anamnesis', 'waiting_doctor', 'examination', 'completed'])->default('waiting');
             $table->string('nomor_antrean');
+            $table->foreignId('perawat_id')->nullable()->constrained('master_petugass')->onDelete('set null');
+            $table->foreignId('dokter_id')->nullable()->constrained('master_petugass')->onDelete('set null');
+            $table->string('satu_sehat_observation_id')->nullable();
+            $table->text('keluhan_utama')->nullable();
+            $table->text('riwayat_alergi')->nullable();
 
             // Vital Signs (TTV)
             $table->integer('tensi_sistole')->nullable();
@@ -65,6 +70,7 @@ return new class extends Migration
             $table->string('icd10_code');
             $table->string('icd10_name');
             $table->boolean('is_primary')->default(false);
+            $table->string('satu_sehat_condition_id')->nullable();
             $table->timestamps();
         });
 
@@ -75,6 +81,7 @@ return new class extends Migration
             $table->foreignId('master_icd9_id')->constrained('master_icd9s')->onDelete('cascade');
             $table->string('icd9_code');
             $table->string('icd9_name');
+            $table->string('satu_sehat_procedure_id')->nullable();
             $table->timestamps();
         });
 
