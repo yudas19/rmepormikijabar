@@ -1,8 +1,12 @@
 <?php
 
+use App\Models\KiaAncRecord;
+use App\Models\LabOrder;
+use App\Models\LabOrderResult;
 use App\Models\MasterAturanPakai;
 use App\Models\MasterIcd10;
 use App\Models\MasterIcd9;
+use App\Models\MasterLabTest;
 use App\Models\MasterMetodeRacik;
 use App\Models\MasterObat;
 use App\Models\MasterPetugas;
@@ -11,10 +15,10 @@ use App\Models\MedicalRecordIcd9;
 use App\Models\MedicalRecordPrescription;
 use App\Models\MedicalRecordPrescriptionItem;
 use App\Models\OdontogramRecord;
-use App\Models\KiaAncRecord;
 use App\Models\Pendaftaran;
 use App\Models\SuratKeterangan;
 use App\Models\SuratRujukan;
+use Carbon\Carbon;
 use Flux\Flux;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
@@ -161,6 +165,21 @@ new class extends Component
 
     public string $anc_catatan_bidan = '';
 
+    // ─── Lab Ordering ───────────────────────────────────────────────────────
+    /** @var array<int, array{id: int, test_name: string, category: string, tariff: int, default_normal_range: string|null, default_unit: string|null}> */
+    public array $selectedLabTests = [];
+
+    public string $labQuery = '';
+
+    /** @var array<int, mixed> */
+    public array $labResults = [];
+
+    public string $labClinicalNotes = '';
+
+    public ?int $existingLabOrderId = null;
+
+    public int $labTotalTariff = 0;
+
     // Letter form inputs
     public $sick_start_date;
 
@@ -257,9 +276,9 @@ new class extends Component
             $items = [];
             foreach ($presc->items as $item) {
                 $items[] = [
-                    'master_obat_id' => $item->master_obat_id,
-                    'nama_obat' => $item->masterObat->nama_obat,
-                    'jumlah' => $item->jumlah,
+                    'master_obat_id' => $item->requested_obat_id,
+                    'nama_obat' => $item->requestedObat?->nama_obat ?? '-',
+                    'jumlah' => $item->requested_qty,
                     'satuan' => $item->satuan,
                 ];
             }
@@ -282,7 +301,7 @@ new class extends Component
         $this->sick_dokter_id = $record->pendaftaran->dokter_id ?? '';
         $this->health_dokter_id = $record->pendaftaran->dokter_id ?? '';
         $this->ref_dokter_id = $record->pendaftaran->dokter_id ?? '';
-        $this->health_tensi = ($this->tensi_sistole && $this->tensi_diastole) ? $this->tensi_sistole . '/' . $this->tensi_diastole : '120/80';
+        $this->health_tensi = ($this->tensi_sistole && $this->tensi_diastole) ? $this->tensi_sistole.'/'.$this->tensi_diastole : '120/80';
         $this->health_height = $this->height;
         $this->health_weight = $this->weight;
 
@@ -315,6 +334,24 @@ new class extends Component
                 $this->anc_riwayat_sc = (bool) $anc->riwayat_sc;
                 $this->anc_catatan_bidan = $anc->catatan_bidan ?? '';
             }
+        }
+
+        // Preload Lab Order
+        $labOrder = $record->labOrders()->with('results.masterLabTest')->latest()->first();
+        if ($labOrder) {
+            $this->existingLabOrderId = $labOrder->id;
+            $this->labClinicalNotes = $labOrder->clinical_notes ?? '';
+            foreach ($labOrder->results as $result) {
+                $this->selectedLabTests[] = [
+                    'id' => $result->master_lab_test_id,
+                    'test_name' => $result->test_name_snapshot,
+                    'category' => $result->masterLabTest?->category ?? '',
+                    'tariff' => $result->tariff_snapshot,
+                    'default_normal_range' => $result->normal_range_snapshot,
+                    'default_unit' => $result->unit_snapshot,
+                ];
+            }
+            $this->recalcLabTotal();
         }
     }
 
@@ -362,8 +399,8 @@ new class extends Component
     public function updatedIcd10Query()
     {
         if (strlen($this->icd10Query) >= 2) {
-            $this->icd10Results = MasterIcd10::where('kode', 'like', '%' . $this->icd10Query . '%')
-                ->orWhere('nama_penyakit', 'like', '%' . $this->icd10Query . '%')
+            $this->icd10Results = MasterIcd10::where('kode', 'like', '%'.$this->icd10Query.'%')
+                ->orWhere('nama_penyakit', 'like', '%'.$this->icd10Query.'%')
                 ->take(8)
                 ->get()
                 ->toArray();
@@ -437,8 +474,8 @@ new class extends Component
     public function updatedIcd9Query()
     {
         if (strlen($this->icd9Query) >= 2) {
-            $this->icd9Results = MasterIcd9::where('kode', 'like', '%' . $this->icd9Query . '%')
-                ->orWhere('nama', 'like', '%' . $this->icd9Query . '%')
+            $this->icd9Results = MasterIcd9::where('kode', 'like', '%'.$this->icd9Query.'%')
+                ->orWhere('nama', 'like', '%'.$this->icd9Query.'%')
                 ->take(8)
                 ->get()
                 ->toArray();
@@ -534,7 +571,7 @@ new class extends Component
             return;
         }
 
-        $hpht = \Carbon\Carbon::parse($this->anc_hpht);
+        $hpht = Carbon::parse($this->anc_hpht);
 
         // Naegele's Rule: +7 days, -3 months, +1 year
         $this->anc_tp = $hpht->copy()->addDays(7)->subMonths(3)->addYear()->format('Y-m-d');
@@ -543,11 +580,80 @@ new class extends Component
         $this->anc_uk_minggu = (int) $hpht->diffInWeeks(now());
     }
 
+    // ─── Lab Ordering Methods ────────────────────────────────────────────
+
+    private function recalcLabTotal(): void
+    {
+        $this->labTotalTariff = (int) array_sum(array_column($this->selectedLabTests, 'tariff'));
+    }
+
+    public function updatedLabQuery(): void
+    {
+        if (strlen($this->labQuery) >= 2) {
+            $this->labResults = MasterLabTest::where('is_aktif', true)
+                ->where(function ($q) {
+                    $q->where('test_name', 'like', '%'.$this->labQuery.'%')
+                        ->orWhere('category', 'like', '%'.$this->labQuery.'%');
+                })
+                ->orderBy('category')
+                ->orderBy('test_name')
+                ->take(10)
+                ->get()
+                ->toArray();
+        } else {
+            $this->labResults = [];
+        }
+    }
+
+    public function addLabTest(int $id): void
+    {
+        if (! $this->isEditable) {
+            return;
+        }
+
+        // Prevent duplicates
+        foreach ($this->selectedLabTests as $t) {
+            if ($t['id'] == $id) {
+                $this->labQuery = '';
+                $this->labResults = [];
+
+                return;
+            }
+        }
+
+        $test = MasterLabTest::findOrFail($id);
+
+        $this->selectedLabTests[] = [
+            'id' => $test->id,
+            'test_name' => $test->test_name,
+            'category' => $test->category,
+            'tariff' => $test->tariff,
+            'default_normal_range' => $test->default_normal_range,
+            'default_unit' => $test->default_unit,
+        ];
+
+        $this->selectedLabTests = array_values($this->selectedLabTests);
+        $this->labQuery = '';
+        $this->labResults = [];
+        $this->recalcLabTotal();
+    }
+
+    public function removeLabTest(int $index): void
+    {
+        if (! $this->isEditable) {
+            return;
+        }
+
+        array_splice($this->selectedLabTests, $index, 1);
+        $this->selectedLabTests = array_values($this->selectedLabTests);
+        $this->recalcLabTotal();
+    }
+
     // Prescription Add Flow
     public function updatedDrugQuery()
     {
         if (strlen($this->drugQuery) >= 2) {
-            $this->drugResults = MasterObat::where('nama_obat', 'like', '%' . $this->drugQuery . '%')
+            $this->drugResults = MasterObat::where('nama_obat', 'like', '%'.$this->drugQuery.'%')
                 ->where('is_aktif', true)
                 ->take(8)
                 ->get()
@@ -708,7 +814,7 @@ new class extends Component
         $this->record->pendaftaran->update(['status_antrean' => $antreanStatus]);
         $this->saveData();
 
-        Flux::toast(variant: 'success', text: 'Status kunjungan berhasil diubah ke: ' . ucfirst($newStatus));
+        Flux::toast(variant: 'success', text: 'Status kunjungan berhasil diubah ke: '.ucfirst($newStatus));
     }
 
     public function finalizeAndLock()
@@ -830,9 +936,10 @@ new class extends Component
             foreach ($prescData['items'] as $item) {
                 MedicalRecordPrescriptionItem::create([
                     'prescription_id' => $prescription->id,
-                    'master_obat_id' => $item['master_obat_id'],
-                    'jumlah' => $item['jumlah'],
+                    'requested_obat_id' => $item['master_obat_id'],
+                    'requested_qty' => $item['jumlah'],
                     'satuan' => $item['satuan'],
+                    'requested_signa' => $prescData['aturan_pakai'],
                 ]);
             }
         }
@@ -873,8 +980,53 @@ new class extends Component
                 ]
             );
         }
-    }
 
+        // 7. Synchronize Lab Order
+        if (count($this->selectedLabTests) > 0) {
+            $dokter = MasterPetugas::where('user_id', Auth::id())->first();
+            $totalTariff = $this->labTotalTariff;
+
+            $labOrder = LabOrder::updateOrCreate(
+                ['id' => $this->existingLabOrderId ?? 0],
+                [
+                    'medical_record_id' => $this->recordId,
+                    'requested_by_id' => $dokter?->id,
+                    'total_tariff' => $totalTariff,
+                    'clinical_notes' => $this->labClinicalNotes ?: null,
+                    // Only override status if it's still pending (don't downgrade a completed order)
+                    'status' => $this->existingLabOrderId
+                        ? LabOrder::find($this->existingLabOrderId)?->status ?? 'pending'
+                        : 'pending',
+                ]
+            );
+
+            $this->existingLabOrderId = $labOrder->id;
+
+            // Delete existing results and recreate (snapshot pattern)
+            if ($labOrder->status === 'pending') {
+                $labOrder->results()->delete();
+
+                foreach ($this->selectedLabTests as $test) {
+                    LabOrderResult::create([
+                        'lab_order_id' => $labOrder->id,
+                        'master_lab_test_id' => $test['id'],
+                        'test_name_snapshot' => $test['test_name'],
+                        'normal_range_snapshot' => $test['default_normal_range'],
+                        'unit_snapshot' => $test['default_unit'],
+                        'tariff_snapshot' => $test['tariff'],
+                    ]);
+                }
+            }
+        } elseif ($this->existingLabOrderId) {
+            // Doctor removed all tests — delete the order if still pending
+            $labOrder = LabOrder::find($this->existingLabOrderId);
+            if ($labOrder && $labOrder->status === 'pending') {
+                $labOrder->results()->delete();
+                $labOrder->delete();
+                $this->existingLabOrderId = null;
+            }
+        }
+    }
 
     // Letters Generation Logic
     public function openSickLeave()
@@ -892,7 +1044,7 @@ new class extends Component
             'sick_dokter_id' => 'required|exists:master_petugass,id',
         ]);
 
-        $no_surat = 'SKD/SAKIT/' . date('Ymd') . '/' . sprintf('%04d', rand(1, 9999));
+        $no_surat = 'SKD/SAKIT/'.date('Ymd').'/'.sprintf('%04d', rand(1, 9999));
 
         $saved = SuratKeterangan::create([
             'no_surat' => $no_surat,
@@ -916,7 +1068,7 @@ new class extends Component
     public function openHealthCert()
     {
         $this->health_dokter_id = $this->record->pendaftaran->dokter_id ?? '';
-        $this->health_tensi = ($this->tensi_sistole && $this->tensi_diastole) ? $this->tensi_sistole . '/' . $this->tensi_diastole : '120/80';
+        $this->health_tensi = ($this->tensi_sistole && $this->tensi_diastole) ? $this->tensi_sistole.'/'.$this->tensi_diastole : '120/80';
         $this->health_height = $this->height;
         $this->health_weight = $this->weight;
         $this->showHealthCertModal = true;
@@ -933,7 +1085,7 @@ new class extends Component
             'health_dokter_id' => 'required|exists:master_petugass,id',
         ]);
 
-        $no_surat = 'SKD/SEHAT/' . date('Ymd') . '/' . sprintf('%04d', rand(1, 9999));
+        $no_surat = 'SKD/SEHAT/'.date('Ymd').'/'.sprintf('%04d', rand(1, 9999));
 
         $saved = SuratKeterangan::create([
             'no_surat' => $no_surat,
@@ -963,7 +1115,7 @@ new class extends Component
         $primaryDiag = '';
         foreach ($this->selectedIcd10s as $selected) {
             if ($selected['is_primary']) {
-                $primaryDiag = $selected['kode'] . ' - ' . $selected['nama_penyakit'];
+                $primaryDiag = $selected['kode'].' - '.$selected['nama_penyakit'];
                 break;
             }
         }
@@ -980,7 +1132,7 @@ new class extends Component
             'ref_dokter_id' => 'required|exists:master_petugass,id',
         ]);
 
-        $no_surat = 'RUJ/' . date('Ymd') . '/' . sprintf('%04d', rand(1, 9999));
+        $no_surat = 'RUJ/'.date('Ymd').'/'.sprintf('%04d', rand(1, 9999));
 
         $saved = SuratRujukan::create([
             'no_surat' => $no_surat,

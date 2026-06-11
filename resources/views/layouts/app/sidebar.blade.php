@@ -47,6 +47,9 @@
                 <flux:sidebar.item icon="academic-cap" href="{{ route('layanan.farmasi') }}" :current="request()->routeIs('layanan.farmasi')" wire:navigate>
                     {{ __('Depo Farmasi') }}
                 </flux:sidebar.item>
+                <flux:sidebar.item icon="credit-card" href="{{ route('kasir.index') }}" :current="request()->routeIs('kasir.index')" wire:navigate>
+                    {{ __('Kasir / Billing') }}
+                </flux:sidebar.item>
             </flux:sidebar.group>
         </flux:sidebar.nav>
 

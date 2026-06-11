@@ -12,6 +12,10 @@ class MedicalRecordPrescription extends Model
 
     protected $guarded = ['id'];
 
+    protected $casts = [
+        'dispensed_at' => 'datetime',
+    ];
+
     public function medicalRecord(): BelongsTo
     {
         return $this->belongsTo(MedicalRecord::class, 'medical_record_id');
@@ -25,5 +29,26 @@ class MedicalRecordPrescription extends Model
     public function items(): HasMany
     {
         return $this->hasMany(MedicalRecordPrescriptionItem::class, 'prescription_id');
+    }
+
+    public function apoteker(): BelongsTo
+    {
+        return $this->belongsTo(MasterPetugas::class, 'apoteker_id');
+    }
+
+    public function getDispensingStatusLabelAttribute(): string
+    {
+        return match ($this->dispensing_status) {
+            'dispensed' => 'Selesai',
+            default => 'Menunggu Obat',
+        };
+    }
+
+    public function getDispensingStatusColorAttribute(): string
+    {
+        return match ($this->dispensing_status) {
+            'dispensed' => 'green',
+            default => 'amber',
+        };
     }
 }

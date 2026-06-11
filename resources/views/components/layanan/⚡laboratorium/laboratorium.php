@@ -1,29 +1,41 @@
 <?php
 
-use App\Models\PermintaanLab;
+use App\Models\LabOrder;
+use App\Models\MasterLabTest;
+use Database\Seeders\MasterLabTestSeeder;
 use Livewire\Component;
 
 new class extends Component
 {
+    public string $statusFilter = '';
+
+    public string $searchQuery = '';
+
     public function render()
     {
-        // Fetch active lab requests
-        $requests = PermintaanLab::query()
-            ->join('pendaftarans', 'permintaan_labs.pendaftaran_id', '=', 'pendaftarans.id')
-            ->join('pasiens', 'pendaftarans.pasien_id', '=', 'pasiens.id')
-            ->join('master_petugass', 'pendaftarans.dokter_id', '=', 'master_petugass.id')
-            ->select(
-                'permintaan_labs.*',
-                'pasiens.nama_pasien',
-                'pasiens.no_rekam_medis',
-                'master_petugass.nama_petugas as nama_dokter'
-            )
+        // Auto-seed if master_lab_tests is empty
+        if (MasterLabTest::count() === 0) {
+            app(MasterLabTestSeeder::class)->run();
+        }
+
+        $orders = LabOrder::with([
+            'medicalRecord.pendaftaran.pasien',
+            'medicalRecord.pendaftaran.poli',
+            'requester',
+            'results',
+        ])
+            ->when($this->statusFilter, fn ($q) => $q->where('status', $this->statusFilter))
+            ->when($this->searchQuery, function ($q) {
+                $q->whereHas('medicalRecord.pendaftaran.pasien', function ($sub) {
+                    $sub->where('nama_pasien', 'like', '%'.$this->searchQuery.'%')
+                        ->orWhere('no_rekam_medis', 'like', '%'.$this->searchQuery.'%');
+                });
+            })
             ->latest()
-            ->take(20)
-            ->get();
+            ->paginate(20);
 
         return view('components.layanan.⚡laboratorium.laboratorium', [
-            'requests' => $requests,
+            'orders' => $orders,
         ])->layout('layouts::app');
     }
 };

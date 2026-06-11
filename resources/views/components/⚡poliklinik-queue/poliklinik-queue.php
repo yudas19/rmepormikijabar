@@ -30,13 +30,13 @@ new class extends Component
                     $q->where('nama_poli', 'like', '%gigi%');
                 } elseif ($this->poliklinik === 'kia') {
                     $q->where('nama_poli', 'like', '%kia%')
-                      ->orWhere('nama_poli', 'like', '%anak%')
-                      ->orWhere('nama_poli', 'like', '%ibu%');
+                        ->orWhere('nama_poli', 'like', '%anak%')
+                        ->orWhere('nama_poli', 'like', '%ibu%');
                 } else {
                     $q->where('nama_poli', 'not like', '%gigi%')
-                      ->where('nama_poli', 'not like', '%kia%')
-                      ->where('nama_poli', 'not like', '%anak%')
-                      ->where('nama_poli', 'not like', '%ibu%');
+                        ->where('nama_poli', 'not like', '%kia%')
+                        ->where('nama_poli', 'not like', '%anak%')
+                        ->where('nama_poli', 'not like', '%ibu%');
                 }
             })
             ->whereDate('created_at', today())

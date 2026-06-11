@@ -1,10 +1,10 @@
 <?php
 
+use App\Models\MasterPekerjaan;
 use App\Models\MasterPetugas;
 use App\Models\MedicalRecord;
 use App\Models\Pasien;
 use App\Models\Pendaftaran;
-use App\Models\MasterPekerjaan;
 use App\Models\Poli;
 use App\Models\SuratKeterangan;
 use App\Models\SuratPersetujuan;
@@ -227,7 +227,7 @@ new class extends Component
     {
         $this->resetForm();
         // Auto-generate local rekam medis code
-        $this->no_rekam_medis = 'RM-' . date('Ymd') . '-' . sprintf('%04d', rand(1, 9999));
+        $this->no_rekam_medis = 'RM-'.date('Ymd').'-'.sprintf('%04d', rand(1, 9999));
         $this->showPatientModal = true;
     }
 
@@ -271,12 +271,12 @@ new class extends Component
     public function savePatient()
     {
         $rules = [
-            'no_rekam_medis' => 'required|string|max:20|unique:pasiens,no_rekam_medis,' . ($this->pasien_id ?? 'NULL') . ',id',
+            'no_rekam_medis' => 'required|string|max:20|unique:pasiens,no_rekam_medis,'.($this->pasien_id ?? 'NULL').',id',
             'nama_pasien' => 'required|string|max:100',
             'panggilan' => 'nullable|string|max:50',
-            'nik' => 'required|string|size:16|unique:pasiens,nik,' . ($this->pasien_id ?? 'NULL') . ',id',
-            'no_bpjs' => 'nullable|string|size:13|unique:pasiens,no_bpjs,' . ($this->pasien_id ?? 'NULL') . ',id',
-            'ihs_number' => 'nullable|string|unique:pasiens,ihs_number,' . ($this->pasien_id ?? 'NULL') . ',id',
+            'nik' => 'required|string|size:16|unique:pasiens,nik,'.($this->pasien_id ?? 'NULL').',id',
+            'no_bpjs' => 'nullable|string|size:13|unique:pasiens,no_bpjs,'.($this->pasien_id ?? 'NULL').',id',
+            'ihs_number' => 'nullable|string|unique:pasiens,ihs_number,'.($this->pasien_id ?? 'NULL').',id',
             'gelar' => 'nullable|string|max:20',
             'tempat_lahir' => 'required|string|max:100',
             'tanggal_lahir' => 'required|date',
@@ -386,16 +386,16 @@ new class extends Component
             ->whereDate('created_at', $today)
             ->count();
         $mrSeq = $mrCountToday + 1;
-        $nomor_antrean = $prefix . '-' . sprintf('%02d', $mrSeq);
+        $nomor_antrean = $prefix.'-'.sprintf('%02d', $mrSeq);
 
         // Queue number logic for standard pendaftaran (front desk)
         $queueCount = Pendaftaran::where('poli_id', $this->reg_poli_id)
             ->whereDate('created_at', $today)
             ->count();
         $angka_antrean = $queueCount + 1;
-        $no_antrean = $prefix . '-' . sprintf('%02d', $angka_antrean);
+        $no_antrean = $prefix.'-'.sprintf('%02d', $angka_antrean);
 
-        $no_registrasi = 'REG-' . date('Ymd') . '-' . sprintf('%04d', rand(1, 9999));
+        $no_registrasi = 'REG-'.date('Ymd').'-'.sprintf('%04d', rand(1, 9999));
 
         $pendaftaran = Pendaftaran::create([
             'no_registrasi' => $no_registrasi,
@@ -414,7 +414,7 @@ new class extends Component
         ]);
 
         // Create MedicalRecord representing the Clinical Workspace encounter
-        $encounter_id = 'ENC-' . date('Ymd') . '-' . sprintf('%04d', rand(1, 9999));
+        $encounter_id = 'ENC-'.date('Ymd').'-'.sprintf('%04d', rand(1, 9999));
         $medicalRecord = MedicalRecord::create([
             'encounter_id' => $encounter_id,
             'patient_id' => $this->selectedPasienId,
@@ -428,7 +428,7 @@ new class extends Component
         ]);
 
         $this->showRegisterModal = false;
-        Flux::toast(variant: 'success', text: 'Kunjungan rawat jalan berhasil didaftarkan! No Antrean: ' . $nomor_antrean);
+        Flux::toast(variant: 'success', text: 'Kunjungan rawat jalan berhasil didaftarkan! No Antrean: '.$nomor_antrean);
 
         // Trigger direct print layout stream in a new tab
         $this->dispatch('open-print-tab', ['url' => route('print.queue-ticket', ['id' => $medicalRecord->id])]);
@@ -481,7 +481,7 @@ new class extends Component
 
         $this->validate($rules);
 
-        $no_surat = 'CNT/' . date('Ymd') . '/' . sprintf('%04d', rand(1, 9999));
+        $no_surat = 'CNT/'.date('Ymd').'/'.sprintf('%04d', rand(1, 9999));
 
         $saved = SuratPersetujuan::create([
             'no_surat' => $no_surat,
@@ -527,7 +527,7 @@ new class extends Component
 
         $this->validate($rules);
 
-        $no_surat = 'RUJ/' . date('Ymd') . '/' . sprintf('%04d', rand(1, 9999));
+        $no_surat = 'RUJ/'.date('Ymd').'/'.sprintf('%04d', rand(1, 9999));
 
         $saved = SuratRujukan::create([
             'no_surat' => $no_surat,
@@ -618,7 +618,7 @@ new class extends Component
             ];
         }
 
-        $no_surat = 'SKD/' . strtoupper($this->cert_type) . '/' . date('Ymd') . '/' . sprintf('%04d', rand(1, 9999));
+        $no_surat = 'SKD/'.strtoupper($this->cert_type).'/'.date('Ymd').'/'.sprintf('%04d', rand(1, 9999));
 
         $saved = SuratKeterangan::create([
             'no_surat' => $no_surat,
@@ -644,9 +644,9 @@ new class extends Component
     {
         $data = Pasien::query()
             ->when($this->search, function ($query) {
-                $query->where('nama_pasien', 'like', '%' . $this->search . '%')
-                    ->orWhere('no_rekam_medis', 'like', '%' . $this->search . '%')
-                    ->orWhere('nik', 'like', '%' . $this->search . '%');
+                $query->where('nama_pasien', 'like', '%'.$this->search.'%')
+                    ->orWhere('no_rekam_medis', 'like', '%'.$this->search.'%')
+                    ->orWhere('nik', 'like', '%'.$this->search.'%');
             })
             ->orderBy($this->sortField, $this->sortDirection)
             ->paginate(10);

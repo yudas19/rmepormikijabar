@@ -683,6 +683,113 @@
         </div>
     </div>
 
+    {{-- ─── SECTION 5: Lab Ordering ─────────────────────────────────────────── --}}
+    <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6 shadow-sm">
+        <div class="flex items-center gap-2 mb-6 pb-3 border-b border-zinc-100 dark:border-zinc-800">
+            <flux:icon.beaker class="w-5 h-5 text-purple-500" />
+            <flux:heading size="lg" class="font-bold">5. Permintaan Pemeriksaan Laboratorium</flux:heading>
+            @if ($existingLabOrderId)
+            <flux:badge color="amber" size="sm">Order #{{ $existingLabOrderId }}</flux:badge>
+            @endif
+        </div>
+
+        @if ($isEditable)
+        {{-- Test Search --}}
+        <div class="mb-5 relative">
+            <flux:input
+                wire:model.live="labQuery"
+                label="Cari Tes Laboratorium"
+                placeholder="Ketik nama tes atau kategori (min. 2 karakter)..."
+                icon="magnifying-glass"
+            />
+
+            @if (count($labResults) > 0)
+            <div class="absolute z-30 top-full mt-1 left-0 right-0 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl shadow-xl overflow-hidden">
+                <div class="max-h-60 overflow-y-auto divide-y divide-zinc-100 dark:divide-zinc-800">
+                    @foreach ($labResults as $item)
+                    <button type="button"
+                        wire:click="addLabTest({{ $item['id'] }})"
+                        class="w-full text-left px-4 py-3 hover:bg-purple-50 dark:hover:bg-purple-950/30 transition-colors group">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <span class="font-semibold text-zinc-900 dark:text-white group-hover:text-purple-700 dark:group-hover:text-purple-300">{{ $item['test_name'] }}</span>
+                                <span class="ml-2 text-xs text-zinc-400 font-mono">{{ $item['category'] }}</span>
+                            </div>
+                            <span class="text-sm font-bold text-purple-600 dark:text-purple-400 font-mono">Rp {{ number_format($item['tariff'], 0, ',', '.') }}</span>
+                        </div>
+                        @if ($item['default_normal_range'])
+                        <div class="text-xs text-zinc-400 mt-0.5">Nilai rujukan: {{ $item['default_normal_range'] }} {{ $item['default_unit'] }}</div>
+                        @endif
+                    </button>
+                    @endforeach
+                </div>
+            </div>
+            @endif
+        </div>
+
+        {{-- Clinical Notes --}}
+        <div class="mb-5">
+            <flux:textarea wire:model="labClinicalNotes" label="Catatan Klinis untuk Analis (Opsional)" placeholder="Misal: Puasa 12 jam, curiga DHF, periksa ASAP..." rows="2" />
+        </div>
+        @endif
+
+        {{-- Selected Tests Table --}}
+        @if (count($selectedLabTests) > 0)
+        <div class="border border-zinc-200 dark:border-zinc-800 rounded-lg overflow-hidden">
+            <flux:table>
+                <flux:table.columns>
+                    <flux:table.column>Nama Pemeriksaan</flux:table.column>
+                    <flux:table.column>Kategori</flux:table.column>
+                    <flux:table.column>Nilai Rujukan</flux:table.column>
+                    <flux:table.column>Satuan</flux:table.column>
+                    <flux:table.column>Tarif</flux:table.column>
+                    @if ($isEditable)<flux:table.column></flux:table.column>@endif
+                </flux:table.columns>
+                <flux:table.rows>
+                    @foreach ($selectedLabTests as $idx => $test)
+                    <flux:table.row wire:key="lab-test-{{ $idx }}">
+                        <flux:table.cell class="font-semibold text-zinc-900 dark:text-white">{{ $test['test_name'] }}</flux:table.cell>
+                        <flux:table.cell><flux:badge color="purple" size="sm">{{ $test['category'] }}</flux:badge></flux:table.cell>
+                        <flux:table.cell class="font-mono text-xs text-zinc-600 dark:text-zinc-300">{{ $test['default_normal_range'] ?? '-' }}</flux:table.cell>
+                        <flux:table.cell class="font-mono text-xs text-zinc-500">{{ $test['default_unit'] ?? '-' }}</flux:table.cell>
+                        <flux:table.cell class="font-bold font-mono text-purple-700 dark:text-purple-400">Rp {{ number_format($test['tariff'], 0, ',', '.') }}</flux:table.cell>
+                        @if ($isEditable)
+                        <flux:table.cell>
+                            <flux:button variant="ghost" icon="trash" size="sm" class="text-red-500" wire:click="removeLabTest({{ $idx }})" />
+                        </flux:table.cell>
+                        @endif
+                    </flux:table.row>
+                    @endforeach
+                </flux:table.rows>
+            </flux:table>
+        </div>
+
+        {{-- Total Tariff Summary --}}
+        <div class="mt-4 flex justify-end">
+            <div class="bg-purple-50 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800/50 rounded-lg px-5 py-3 flex items-center gap-4">
+                <span class="text-sm font-semibold text-purple-700 dark:text-purple-300">Total Tarif Lab:</span>
+                <span class="text-xl font-extrabold font-mono text-purple-800 dark:text-purple-200">Rp {{ number_format($labTotalTariff, 0, ',', '.') }}</span>
+                <flux:badge color="purple" size="sm">{{ count($selectedLabTests) }} tes</flux:badge>
+            </div>
+        </div>
+
+        @if ($existingLabOrderId)
+        <div class="mt-3 flex items-center gap-2">
+            <flux:icon.check-circle class="w-4 h-4 text-amber-500" />
+            <p class="text-xs text-amber-600 dark:text-amber-400 font-medium">Order laboratorium akan dikirim ke antrian lab saat data disimpan.</p>
+        </div>
+        @endif
+        @else
+        <div class="text-center py-6 text-xs text-zinc-400 italic border border-dashed border-zinc-200 dark:border-zinc-800 rounded-lg">
+            @if ($isEditable)
+            Cari dan pilih tes laboratorium di atas untuk menambahkan permintaan lab.
+            @else
+            Tidak ada permintaan lab pada kunjungan ini.
+            @endif
+        </div>
+        @endif
+    </div>
+
     <div class="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4 bg-zinc-50 dark:bg-zinc-950 p-6 rounded-xl border border-zinc-200/60 dark:border-zinc-800/80">
         <flux:dropdown>
             <flux:button icon="document-text" icon-trailing="chevron-down">Cetak Surat Keterangan</flux:button>

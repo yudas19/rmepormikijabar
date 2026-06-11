@@ -129,12 +129,12 @@ class DatabaseSeeder extends Seeder
 
         // 4. Master Obat
         $obats = [
-            ['nama_obat' => 'Paracetamol 500 mg', 'satuan' => 'Tablet', 'stok' => 1000, 'harga_beli' => 200, 'harga_jual' => 500, 'kode_kfa' => 'KFA-930001', 'nama_kfa' => 'Paracetamol 500mg Oral Tablet', 'is_aktif' => true],
-            ['nama_obat' => 'Amoxicillin 500 mg', 'satuan' => 'Tablet', 'stok' => 500, 'harga_beli' => 400, 'harga_jual' => 800, 'kode_kfa' => 'KFA-930002', 'nama_kfa' => 'Amoxicillin 500mg Oral Tablet', 'is_aktif' => true],
-            ['nama_obat' => 'Ibuprofen 400 mg', 'satuan' => 'Tablet', 'stok' => 800, 'harga_beli' => 300, 'harga_jual' => 600, 'kode_kfa' => 'KFA-930003', 'nama_kfa' => 'Ibuprofen 400mg Oral Tablet', 'is_aktif' => true],
-            ['nama_obat' => 'Cetirizine 10 mg', 'satuan' => 'Tablet', 'stok' => 1200, 'harga_beli' => 150, 'harga_jual' => 400, 'kode_kfa' => 'KFA-930004', 'nama_kfa' => 'Cetirizine 10mg Oral Tablet', 'is_aktif' => true],
-            ['nama_obat' => 'Metformin 500 mg', 'satuan' => 'Tablet', 'stok' => 1500, 'harga_beli' => 250, 'harga_jual' => 600, 'kode_kfa' => 'KFA-930005', 'nama_kfa' => 'Metformin Hcl 500mg Tablet', 'is_aktif' => true],
-            ['nama_obat' => 'Ambroxol Sirup 15mg/5ml', 'satuan' => 'Botol', 'stok' => 200, 'harga_beli' => 3500, 'harga_jual' => 5000, 'kode_kfa' => 'KFA-930006', 'nama_kfa' => 'Ambroxol Sirup 60ml', 'is_aktif' => true],
+            ['kode_obat' => 'OBT-001', 'nama_obat' => 'Paracetamol 500 mg', 'satuan' => 'Tablet', 'stok_saat_ini' => 1000, 'stok_minimal' => 100, 'tanggal_kadaluarsa' => '2027-12-31', 'harga_beli' => 200, 'harga_jual' => 500, 'kode_kfa' => 'KFA-930001', 'nama_kfa' => 'Paracetamol 500mg Oral Tablet', 'is_aktif' => true],
+            ['kode_obat' => 'OBT-002', 'nama_obat' => 'Amoxicillin 500 mg', 'satuan' => 'Tablet', 'stok_saat_ini' => 500, 'stok_minimal' => 50, 'tanggal_kadaluarsa' => '2027-06-30', 'harga_beli' => 400, 'harga_jual' => 800, 'kode_kfa' => 'KFA-930002', 'nama_kfa' => 'Amoxicillin 500mg Oral Tablet', 'is_aktif' => true],
+            ['kode_obat' => 'OBT-003', 'nama_obat' => 'Ibuprofen 400 mg', 'satuan' => 'Tablet', 'stok_saat_ini' => 800, 'stok_minimal' => 100, 'tanggal_kadaluarsa' => '2028-03-15', 'harga_beli' => 300, 'harga_jual' => 600, 'kode_kfa' => 'KFA-930003', 'nama_kfa' => 'Ibuprofen 400mg Oral Tablet', 'is_aktif' => true],
+            ['kode_obat' => 'OBT-004', 'nama_obat' => 'Cetirizine 10 mg', 'satuan' => 'Tablet', 'stok_saat_ini' => 1200, 'stok_minimal' => 100, 'tanggal_kadaluarsa' => '2027-09-01', 'harga_beli' => 150, 'harga_jual' => 400, 'kode_kfa' => 'KFA-930004', 'nama_kfa' => 'Cetirizine 10mg Oral Tablet', 'is_aktif' => true],
+            ['kode_obat' => 'OBT-005', 'nama_obat' => 'Metformin 500 mg', 'satuan' => 'Tablet', 'stok_saat_ini' => 1500, 'stok_minimal' => 200, 'tanggal_kadaluarsa' => '2028-01-15', 'harga_beli' => 250, 'harga_jual' => 600, 'kode_kfa' => 'KFA-930005', 'nama_kfa' => 'Metformin Hcl 500mg Tablet', 'is_aktif' => true],
+            ['kode_obat' => 'OBT-006', 'nama_obat' => 'Ambroxol Sirup 15mg/5ml', 'satuan' => 'Botol', 'stok_saat_ini' => 200, 'stok_minimal' => 20, 'tanggal_kadaluarsa' => '2026-11-30', 'harga_beli' => 3500, 'harga_jual' => 5000, 'kode_kfa' => 'KFA-930006', 'nama_kfa' => 'Ambroxol Sirup 60ml', 'is_aktif' => true],
         ];
 
         foreach ($obats as $obat) {
@@ -192,5 +192,8 @@ class DatabaseSeeder extends Seeder
         foreach ($icd9s as $icd9) {
             MasterIcd9::create($icd9);
         }
+
+        // 9. Master Lab Tests
+        $this->call(MasterLabTestSeeder::class);
     }
 }

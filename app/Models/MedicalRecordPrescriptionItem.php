@@ -12,7 +12,9 @@ class MedicalRecordPrescriptionItem extends Model
     protected $guarded = ['id'];
 
     protected $casts = [
-        'jumlah' => 'decimal:2',
+        'requested_qty' => 'decimal:2',
+        'dispensed_qty' => 'decimal:2',
+        'subtotal_price' => 'decimal:2',
     ];
 
     public function prescription(): BelongsTo
@@ -20,8 +22,18 @@ class MedicalRecordPrescriptionItem extends Model
         return $this->belongsTo(MedicalRecordPrescription::class, 'prescription_id');
     }
 
-    public function masterObat(): BelongsTo
+    public function requestedObat(): BelongsTo
     {
-        return $this->belongsTo(MasterObat::class, 'master_obat_id');
+        return $this->belongsTo(MasterObat::class, 'requested_obat_id');
+    }
+
+    public function dispensedObat(): BelongsTo
+    {
+        return $this->belongsTo(MasterObat::class, 'dispensed_obat_id');
+    }
+
+    public function apoteker(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'apoteker_id');
     }
 }

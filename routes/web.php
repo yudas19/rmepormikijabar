@@ -36,6 +36,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::livewire('/poli/{poliklinik}', 'poliklinik-queue')->name('poli.queue');
     Route::livewire('/layanan/laboratorium', 'layanan.laboratorium')->name('layanan.laboratorium');
     Route::livewire('/layanan/farmasi', 'layanan.farmasi')->name('layanan.farmasi');
+    Route::livewire('/layanan/farmasi/stok', 'layanan.farmasi-stok')->name('farmasi.stok');
+    Route::livewire('/layanan/farmasi/dispensing/{prescription}', 'layanan.farmasi-dispensing')->name('farmasi.dispensing');
+    Route::livewire('/layanan/laboratorium/{labOrder}/hasil', 'layanan.lab-hasil')->name('lab.hasil');
+    Route::livewire('/layanan/kasir', 'layanan.kasir')->name('kasir.index');
 });
 
 require __DIR__.'/settings.php';
