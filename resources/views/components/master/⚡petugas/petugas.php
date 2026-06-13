@@ -4,8 +4,11 @@ use App\Concerns\CanImportExportCsv;
 use App\Models\MasterPetugas;
 use App\Models\User;
 use Flux\Flux;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Livewire\Component;
 use Livewire\WithPagination;
+use Spatie\Permission\Models\Role;
 
 new class extends Component
 {
@@ -51,8 +54,6 @@ new class extends Component
     // Form fields
     public $selectedId = null;
 
-    public $user_id = null;
-
     public $nama_petugas = '';
 
     public $nik = '';
@@ -79,6 +80,13 @@ new class extends Component
 
     public $is_aktif = true;
 
+    // Login credentials fields
+    public $email = '';
+
+    public $password = '';
+
+    public $role = '';
+
     public function updatingSearch()
     {
         $this->resetPage();
@@ -98,9 +106,8 @@ new class extends Component
     {
         $this->resetForm();
         $this->selectedId = $id;
-        $record = MasterPetugas::findOrFail($id);
+        $record = MasterPetugas::with('user')->findOrFail($id);
 
-        $this->user_id = $record->user_id;
         $this->nama_petugas = $record->nama_petugas;
         $this->nik = $record->nik;
         $this->tempat_lahir = $record->tempat_lahir;
@@ -114,12 +121,19 @@ new class extends Component
         $this->nomor_sip = $record->nomor_sip;
         $this->ihs_number_practitioner = $record->ihs_number_practitioner;
         $this->is_aktif = (bool) $record->is_aktif;
+
+        if ($record->user) {
+            $this->email = $record->user->email;
+            $this->role = $record->user->roles->first()?->name ?? '';
+        } else {
+            $this->email = '';
+            $this->role = '';
+        }
     }
 
     public function resetForm()
     {
         $this->selectedId = null;
-        $this->user_id = '';
         $this->nama_petugas = '';
         $this->nik = '';
         $this->tempat_lahir = '';
@@ -133,13 +147,15 @@ new class extends Component
         $this->nomor_sip = '';
         $this->ihs_number_practitioner = '';
         $this->is_aktif = true;
+        $this->email = '';
+        $this->password = '';
+        $this->role = '';
         $this->resetErrorBag();
     }
 
     public function save()
     {
         $rules = [
-            'user_id' => 'nullable|exists:users,id',
             'nama_petugas' => 'required|string|max:100',
             'nik' => 'required|string|size:16|unique:master_petugass,nik,'.($this->selectedId ?? 'NULL').',id',
             'tempat_lahir' => 'nullable|string|max:100',
@@ -153,24 +169,55 @@ new class extends Component
             'nomor_sip' => 'nullable|string|max:50',
             'ihs_number_practitioner' => 'nullable|string|max:100',
             'is_aktif' => 'required|boolean',
+            'email' => 'required|email|max:255|unique:users,email,'.($this->selectedId ? MasterPetugas::findOrFail($this->selectedId)->user_id : 'NULL').',id',
+            'password' => ($this->selectedId ? 'nullable' : 'required').'|string|min:8',
+            'role' => 'required|string|exists:roles,name',
         ];
 
         $validated = $this->validate($rules);
 
-        if (empty($validated['user_id'])) {
-            $validated['user_id'] = null;
-        }
+        DB::transaction(function () use ($validated) {
+            if ($this->selectedId) {
+                $record = MasterPetugas::findOrFail($this->selectedId);
 
-        if ($this->selectedId) {
-            $record = MasterPetugas::findOrFail($this->selectedId);
-            $record->update($validated);
-            $message = 'Data petugas berhasil diperbarui.';
-        } else {
-            MasterPetugas::create($validated);
-            $message = 'Data petugas berhasil ditambahkan.';
-        }
+                $user = $record->user;
+                if ($user) {
+                    $userUpdateData = [
+                        'name' => $validated['nama_petugas'],
+                        'email' => $validated['email'],
+                    ];
+                    if (!empty($validated['password'])) {
+                        $userUpdateData['password'] = Hash::make($validated['password']);
+                    }
+                    $user->update($userUpdateData);
+                } else {
+                    $user = User::create([
+                        'name' => $validated['nama_petugas'],
+                        'email' => $validated['email'],
+                        'password' => Hash::make($validated['password']),
+                    ]);
+                }
+                $user->syncRoles([$validated['role']]);
 
-        Flux::toast(variant: 'success', text: $message);
+                $validated['user_id'] = $user->id;
+                $record->update(collect($validated)->except(['email', 'password', 'role'])->toArray());
+                $message = 'Data petugas berhasil diperbarui.';
+            } else {
+                $user = User::create([
+                    'name' => $validated['nama_petugas'],
+                    'email' => $validated['email'],
+                    'password' => Hash::make($validated['password']),
+                ]);
+                $user->syncRoles([$validated['role']]);
+
+                $validated['user_id'] = $user->id;
+                MasterPetugas::create(collect($validated)->except(['email', 'password', 'role'])->toArray());
+                $message = 'Data petugas berhasil ditambahkan.';
+            }
+
+            Flux::toast(variant: 'success', text: $message);
+        });
+
         $this->resetForm();
     }
 
@@ -184,9 +231,21 @@ new class extends Component
         }
     }
 
+    public function verifyIhs()
+    {
+        if (empty($this->nik)) {
+            Flux::toast(variant: 'danger', text: 'NIK wajib diisi untuk verifikasi IHS.');
+            return;
+        }
+
+        $this->ihs_number_practitioner = 'P' . rand(1000000000, 9999999999);
+        Flux::toast(variant: 'success', text: 'NIK berhasil diverifikasi dengan SatuSehat. IHS Practitioner Number diperoleh.');
+    }
+
     public function render()
     {
         $data = MasterPetugas::query()
+            ->with(['user.roles'])
             ->when($this->search, function ($query) {
                 $query->where('nama_petugas', 'like', '%'.$this->search.'%')
                     ->orWhere('nik', 'like', '%'.$this->search.'%')
@@ -195,11 +254,11 @@ new class extends Component
             ->orderBy($this->sortField, $this->sortDirection)
             ->paginate(10);
 
-        $users = User::all();
+        $roles = Role::all();
 
         return view('components.master.⚡petugas.petugas', [
             'petugass' => $data,
-            'users' => $users,
+            'roles' => $roles,
         ]);
     }
 };

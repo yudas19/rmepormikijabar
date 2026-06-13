@@ -8,6 +8,8 @@ class MedicalRecordController extends Controller
 {
     public function examine($poliklinik, $encounter_id)
     {
+        abort_if(! auth()->user()->can('akses_rekam_medis'), 403, 'Akses ditolak: Anda tidak memiliki izin untuk melihat rekam medis.');
+
         // 1. Validate polyclinic type parameter
         if (! in_array($poliklinik, ['umum', 'gigi', 'kia'])) {
             abort(404, 'Poliklinik tidak ditemukan.');

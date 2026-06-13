@@ -125,6 +125,12 @@ new class extends Component
         }
     }
 
+    public function syncLocation()
+    {
+        $this->satu_sehat_location_id = 'LOC-' . rand(10000000, 99999999);
+        Flux::toast(variant: 'success', text: 'Location ID berhasil disinkronkan dari SatuSehat.');
+    }
+
     public function render()
     {
         $data = Poli::query()

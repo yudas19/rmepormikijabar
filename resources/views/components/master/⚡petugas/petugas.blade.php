@@ -25,6 +25,7 @@
                         <flux:table.column sortable :sorted="$sortField === 'nama_petugas'" :direction="$sortDirection" wire:click="sortBy('nama_petugas')">Nama</flux:table.column>
                         <flux:table.column sortable :sorted="$sortField === 'nik'" :direction="$sortDirection" wire:click="sortBy('nik')">NIK</flux:table.column>
                         <flux:table.column sortable :sorted="$sortField === 'jenis_petugas'" :direction="$sortDirection" wire:click="sortBy('jenis_petugas')">Peran</flux:table.column>
+                        <flux:table.column>Role / Hak Akses</flux:table.column>
                         <flux:table.column>SIP / STR</flux:table.column>
                         <flux:table.column sortable :sorted="$sortField === 'is_aktif'" :direction="$sortDirection" wire:click="sortBy('is_aktif')">Status</flux:table.column>
                         <flux:table.column>Aksi</flux:table.column>
@@ -42,6 +43,25 @@
                             <flux:table.cell class="font-mono text-xs">{{ $item->nik }}</flux:table.cell>
                             <flux:table.cell>
                                 <flux:badge size="sm" inset="top bottom">{{ $item->jenis_petugas }}</flux:badge>
+                            </flux:table.cell>
+                            <flux:table.cell>
+                                @php
+                                    $roleName = $item->user?->getRoleNames()->first();
+                                    $badgeColor = match($roleName) {
+                                        'admin' => 'indigo',
+                                        'dokter_umum', 'dokter_gigi' => 'green',
+                                        'perawat', 'bidan' => 'teal',
+                                        'analis_lab' => 'purple',
+                                        'apoteker' => 'orange',
+                                        'kasir' => 'blue',
+                                        default => 'zinc',
+                                    };
+                                @endphp
+                                @if ($roleName)
+                                    <flux:badge color="{{ $badgeColor }}" size="sm" class="uppercase tracking-wider text-[10px] font-mono">{{ str_replace('_', ' ', $roleName) }}</flux:badge>
+                                @else
+                                    <span class="text-xs text-zinc-400 dark:text-zinc-600">-</span>
+                                @endif
                             </flux:table.cell>
                             <flux:table.cell>
                                 <div class="text-[10px] space-y-0.5">
@@ -114,12 +134,31 @@
                         <flux:input wire:model="nomor_sip" label="Nomor SIP" placeholder="Nomor SIP Praktik" />
                     </div>
 
-                    <flux:input wire:model="ihs_number_practitioner" label="IHS Practitioner Number (SatuSehat)" placeholder="Contoh: P00012345678" />
+                    <div>
+                        <div class="flex items-end gap-2">
+                            <flux:input wire:model="ihs_number_practitioner" label="IHS Practitioner Number (SatuSehat)" placeholder="Contoh: P00012345678" class="flex-1" />
+                            <flux:button type="button" variant="primary" size="sm" wire:click="verifyIhs">
+                                Verifikasi IHS SatuSehat
+                            </flux:button>
+                        </div>
+                    </div>
 
-                    <flux:select wire:model="user_id" label="Akun Login (User)">
-                        <flux:select.option value="">-- Hubungkan Akun (Opsional) --</flux:select.option>
-                        @foreach ($users as $user)
-                        <flux:select.option value="{{ $user->id }}">{{ $user->name }} ({{ $user->email }})</flux:select.option>
+                    <flux:input wire:model="email" type="email" label="Email Login" required placeholder="Contoh: staff@klinik.com" />
+
+                    <flux:input 
+                        wire:model="password" 
+                        type="password" 
+                        label="Password" 
+                        :required="!$selectedId" 
+                        placeholder="{{ $selectedId ? 'Kosongkan jika tidak ingin mengubah password' : 'Min. 8 karakter' }}" 
+                    />
+
+                    <flux:select wire:model="role" label="Hak Akses / Role" required placeholder="Pilih Hak Akses...">
+                        @foreach ($roles as $r)
+                            @php
+                                $roleDisplay = ucwords(str_replace('_', ' ', $r->name));
+                            @endphp
+                            <flux:select.option value="{{ $r->name }}">{{ $roleDisplay }}</flux:select.option>
                         @endforeach
                     </flux:select>
 

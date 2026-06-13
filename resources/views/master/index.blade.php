@@ -113,6 +113,24 @@
                 </div>
                 <p class="font-normal text-sm text-gray-600 dark:text-zinc-400">Konfigurasi dan data bridging Kemenkes SatuSehat.</p>
             </a>
+
+            <!-- 13. Profil Faskes -->
+            <a href="{{ route('master.faskes-profile') }}" wire:navigate class="block p-6 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-lg shadow hover:bg-gray-50 dark:hover:bg-zinc-800 transition duration-200 group">
+                <div class="flex items-center space-x-3 mb-2">
+                    <span class="text-2xl">🏢</span>
+                    <h5 class="text-lg font-bold tracking-tight text-gray-900 dark:text-white group-hover:text-indigo-600">Profil Faskes</h5>
+                </div>
+                <p class="font-normal text-sm text-gray-600 dark:text-zinc-400">Atur profil klinik, dokter penanggung jawab, dan logo.</p>
+            </a>
+
+            <!-- 14. Jadwal Dokter -->
+            <a href="{{ route('master.jadwal-dokter') }}" wire:navigate class="block p-6 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-lg shadow hover:bg-gray-50 dark:hover:bg-zinc-800 transition duration-200 group">
+                <div class="flex items-center space-x-3 mb-2">
+                    <span class="text-2xl">📅</span>
+                    <h5 class="text-lg font-bold tracking-tight text-gray-900 dark:text-white group-hover:text-indigo-600">Jadwal Dokter</h5>
+                </div>
+                <p class="font-normal text-sm text-gray-600 dark:text-zinc-400">Atur jadwal praktik, kuota pasien, dan jam operasional dokter.</p>
+            </a>
         </div>
     </div>
 </x-layouts::app>

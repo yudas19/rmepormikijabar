@@ -78,7 +78,14 @@
 
                     <div class="grid grid-cols-1 gap-3">
                         <flux:input wire:model="kode_poli_bpjs" label="Kode Poli BPJS (HFIS)" placeholder="Contoh: 001" />
-                        <flux:input wire:model="satu_sehat_location_id" label="Location ID SatuSehat" placeholder="Contoh: 10000003" />
+                        <div>
+                            <div class="flex items-end gap-2">
+                                <flux:input wire:model="satu_sehat_location_id" label="Location ID SatuSehat" placeholder="Contoh: 10000003" class="flex-1" />
+                                <flux:button type="button" variant="filled" size="sm" wire:click="syncLocation">
+                                    Sinkronkan Ruangan
+                                </flux:button>
+                            </div>
+                        </div>
                     </div>
 
                     <flux:select wire:model="is_active" label="Status Keaktifan">

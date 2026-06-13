@@ -22,36 +22,69 @@
             </flux:sidebar.group>
         </flux:sidebar.nav>
 
-        <flux:sidebar.item icon="folder" :href="route('master.index')" :current="request()->routeIs('master.*')" wire:navigate>
+        <flux:sidebar.item icon="folder" :href="route('master.index')" :current="request()->routeIs('master.*') && !request()->routeIs('master.jadwal-dokter')" wire:navigate>
             {{ __('Master Data') }}
         </flux:sidebar.item>
 
+        <flux:sidebar.item icon="calendar" :href="route('master.jadwal-dokter')" :current="request()->routeIs('master.jadwal-dokter')" wire:navigate>
+            {{ __('Jadwal Dokter') }}
+        </flux:sidebar.item>
+
+        @can('akses_pendaftaran')
         <flux:sidebar.item icon="user-plus" :href="route('pendaftaran.index')" :current="request()->routeIs('pendaftaran.*')" wire:navigate>
             {{ __('Pendaftaran') }}
         </flux:sidebar.item>
+        @endcan
 
         <flux:sidebar.nav>
             <flux:sidebar.group :heading="__('Poliklinik & Layanan')" class="grid">
+                @can('akses_poli_umum')
                 <flux:sidebar.item icon="building-office-2" href="{{ route('poli.queue', ['poliklinik' => 'umum']) }}" :current="request()->is('poli/umum*')" wire:navigate>
                     {{ __('Poli Umum') }}
                 </flux:sidebar.item>
+                @endcan
+
+                @can('akses_poli_gigi')
                 <flux:sidebar.item icon="building-office-2" href="{{ route('poli.queue', ['poliklinik' => 'gigi']) }}" :current="request()->is('poli/gigi*')" wire:navigate>
                     {{ __('Poli Gigi') }}
                 </flux:sidebar.item>
+                @endcan
+
+                @can('akses_poli_kia')
                 <flux:sidebar.item icon="building-office-2" href="{{ route('poli.queue', ['poliklinik' => 'kia']) }}" :current="request()->is('poli/kia*')" wire:navigate>
                     {{ __('Klinik KIA') }}
                 </flux:sidebar.item>
+                @endcan
+
+                @can('akses_laboratorium')
                 <flux:sidebar.item icon="beaker" href="{{ route('layanan.laboratorium') }}" :current="request()->routeIs('layanan.laboratorium')" wire:navigate>
                     {{ __('Laboratorium') }}
                 </flux:sidebar.item>
+                @endcan
+
+                @can('akses_farmasi')
                 <flux:sidebar.item icon="academic-cap" href="{{ route('layanan.farmasi') }}" :current="request()->routeIs('layanan.farmasi')" wire:navigate>
                     {{ __('Depo Farmasi') }}
                 </flux:sidebar.item>
+                @endcan
+
+                @can('akses_kasir')
                 <flux:sidebar.item icon="credit-card" href="{{ route('kasir.index') }}" :current="request()->routeIs('kasir.index')" wire:navigate>
                     {{ __('Kasir / Billing') }}
                 </flux:sidebar.item>
+                @endcan
             </flux:sidebar.group>
         </flux:sidebar.nav>
+
+        @can('akses_pengaturan_akses')
+        <flux:sidebar.nav>
+            <flux:sidebar.group :heading="__('Pengaturan')" class="grid">
+                <flux:sidebar.item icon="cog" :href="route('admin.hak-akses')" :current="request()->routeIs('admin.hak-akses')" wire:navigate>
+                    {{ __('Hak Akses') }}
+                </flux:sidebar.item>
+            </flux:sidebar.group>
+        </flux:sidebar.nav>
+        @endcan
 
         <flux:spacer />
 

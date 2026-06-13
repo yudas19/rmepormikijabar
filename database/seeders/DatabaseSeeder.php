@@ -195,5 +195,8 @@ class DatabaseSeeder extends Seeder
 
         // 9. Master Lab Tests
         $this->call(MasterLabTestSeeder::class);
+
+        // 10. Permissions
+        $this->call(PermissionsSeeder::class);
     }
 }

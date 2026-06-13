@@ -12,6 +12,9 @@ new class extends Component
         if (! in_array($poliklinik, ['umum', 'gigi', 'kia'])) {
             abort(404);
         }
+
+        abort_if(! auth()->user()->can('akses_poli_'.$poliklinik), 403, 'Akses ditolak: Anda tidak memiliki izin untuk melihat antrean Poliklinik ini.');
+
         $this->poliklinik = $poliklinik;
     }
 

@@ -22,9 +22,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::livewire('/master/tindakan', 'master.tindakan')->name('master.tindakan');
     Route::livewire('/master/provinsi', 'master.provinsi')->name('master.provinsi');
     Route::livewire('/master/kabupaten-kota', 'master.kabupaten-kota')->name('master.kabupaten-kota');
+    Route::livewire('/master/faskes-profile', 'master.faskes-profile')->name('master.faskes-profile');
+    Route::livewire('/master/jadwal-dokter', 'master.jadwal-dokter')->name('master.jadwal-dokter');
+
+    // Access Control Management Route
+    Route::livewire('/admin/hak-akses', 'admin.hak-akses')
+        ->middleware('permission:akses_pengaturan_akses')
+        ->name('admin.hak-akses');
 });
 
-Route::livewire('/pendaftaran', '⚡pendaftaran')->name('pendaftaran.index');
+// Pendaftaran (Requires auth, verified, and akses_pendaftaran)
+Route::livewire('/pendaftaran', '⚡pendaftaran')
+    ->middleware(['auth', 'verified', 'permission:akses_pendaftaran'])
+    ->name('pendaftaran.index');
 
 Route::get('/print/consent/{id}', [PrintController::class, 'printConsent'])->name('print.consent');
 Route::get('/print/referral/{id}', [PrintController::class, 'printReferral'])->name('print.referral');
@@ -32,14 +42,35 @@ Route::get('/print/certificate/{id}', [PrintController::class, 'printCertificate
 Route::get('/print/queue-ticket/{id}', [PrintController::class, 'printQueueTicket'])->name('print.queue-ticket');
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/poli/{poliklinik}/examine/{encounter_id}', [MedicalRecordController::class, 'examine'])->name('medical-record.examine');
+    // Poliklinik (dynamic permissions checked inside component mount)
     Route::livewire('/poli/{poliklinik}', 'poliklinik-queue')->name('poli.queue');
-    Route::livewire('/layanan/laboratorium', 'layanan.laboratorium')->name('layanan.laboratorium');
-    Route::livewire('/layanan/farmasi', 'layanan.farmasi')->name('layanan.farmasi');
-    Route::livewire('/layanan/farmasi/stok', 'layanan.farmasi-stok')->name('farmasi.stok');
-    Route::livewire('/layanan/farmasi/dispensing/{prescription}', 'layanan.farmasi-dispensing')->name('farmasi.dispensing');
-    Route::livewire('/layanan/laboratorium/{labOrder}/hasil', 'layanan.lab-hasil')->name('lab.hasil');
-    Route::livewire('/layanan/kasir', 'layanan.kasir')->name('kasir.index');
+
+    // Rekam Medis (Examine workspace)
+    Route::get('/poli/{poliklinik}/examine/{encounter_id}', [MedicalRecordController::class, 'examine'])
+        ->middleware('permission:akses_rekam_medis')
+        ->name('medical-record.examine');
+
+    // Laboratorium
+    Route::middleware('permission:akses_laboratorium')->group(function () {
+        Route::livewire('/layanan/laboratorium', 'layanan.laboratorium')->name('layanan.laboratorium');
+        Route::livewire('/layanan/laboratorium/{labOrder}/hasil', 'layanan.lab-hasil')->name('lab.hasil');
+    });
+
+    // Farmasi
+    Route::middleware('permission:akses_farmasi')->group(function () {
+        Route::livewire('/layanan/farmasi', 'layanan.farmasi')->name('layanan.farmasi');
+        Route::livewire('/layanan/farmasi/dispensing/{prescription}', 'layanan.farmasi-dispensing')->name('farmasi.dispensing');
+    });
+
+    // Stock Opname / Farmasi Stok
+    Route::livewire('/layanan/farmasi/stok', 'layanan.farmasi-stok')
+        ->middleware('permission:akses_stock_opname')
+        ->name('farmasi.stok');
+
+    // Kasir
+    Route::livewire('/layanan/kasir', 'layanan.kasir')
+        ->middleware('permission:akses_kasir')
+        ->name('kasir.index');
 });
 
 require __DIR__.'/settings.php';
