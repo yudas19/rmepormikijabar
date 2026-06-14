@@ -25,6 +25,9 @@
                     <flux:input wire:model.live.debounce.300ms="searchQuery" placeholder="Cari nama pasien atau No. RM..." icon="magnifying-glass" size="sm" />
                 </div>
                 <div>
+                    <flux:input type="date" wire:model.live="filterDate" size="sm" class="min-w-40" />
+                </div>
+                <div>
                     <flux:select wire:model.live="statusFilter" class="min-w-44" size="sm">
                         <flux:select.option value="unpaid">🟡 Menunggu Pembayaran</flux:select.option>
                         <flux:select.option value="paid">🟢 Lunas (Paid)</flux:select.option>

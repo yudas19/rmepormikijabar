@@ -4,6 +4,7 @@ use Flux\Flux;
 use Livewire\Component;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
+use Spatie\Permission\PermissionRegistrar;
 
 new class extends Component
 {
@@ -51,7 +52,7 @@ new class extends Component
         $role->syncPermissions($permissionsToSync);
 
         // Clear Spatie permission cache
-        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+        app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
         Flux::toast(variant: 'success', text: "Hak akses untuk role '{$role->name}' berhasil diperbarui.");
     }

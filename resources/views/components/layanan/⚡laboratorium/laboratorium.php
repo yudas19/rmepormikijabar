@@ -11,6 +11,13 @@ new class extends Component
 
     public string $searchQuery = '';
 
+    public string $filterDate = '';
+
+    public function mount(): void
+    {
+        $this->filterDate = date('Y-m-d');
+    }
+
     public function render()
     {
         // Auto-seed if master_lab_tests is empty
@@ -24,6 +31,10 @@ new class extends Component
             'requester',
             'results',
         ])
+            ->whereHas('medicalRecord', function ($q) {
+                $q->whereDate('tanggal_kunjungan', $this->filterDate)
+                    ->where('status', '!=', 'batal');
+            })
             ->when($this->statusFilter, fn ($q) => $q->where('status', $this->statusFilter))
             ->when($this->searchQuery, function ($q) {
                 $q->whereHas('medicalRecord.pendaftaran.pasien', function ($sub) {

@@ -80,6 +80,8 @@ new class extends Component
 
     public $isEditable = true;
 
+    public $tanggal_kunjungan;
+
     // Autocomplete states
     public $icd10Query = '';
 
@@ -241,9 +243,26 @@ new class extends Component
         $this->keluhan_utama = $record->keluhan_utama ?? $record->pendaftaran->keluhan_awal ?? '';
         $this->riwayat_alergi = $record->riwayat_alergi ?? '';
 
-        // Load status
+        // Load status & Smart Locking Logic
         $this->status = $record->status;
-        $this->isEditable = ($this->status !== 'completed');
+
+        $this->tanggal_kunjungan = $record->tanggal_kunjungan ? Carbon::parse($record->tanggal_kunjungan)->format('Y-m-d') : date('Y-m-d');
+
+        $isAdminOrRekamMedis = auth()->user()->hasRole('admin') || auth()->user()->hasRole('rekam_medis');
+
+        $isCompleted = in_array($this->status, ['completed', 'completed_all']);
+        $lockTime = Carbon::parse($this->tanggal_kunjungan)->addDays(3);
+        $isPastLimit = now()->greaterThanOrEqualTo($lockTime);
+
+        if ($isAdminOrRekamMedis) {
+            if ($isCompleted || $isPastLimit) {
+                $this->isEditable = false;
+            } else {
+                $this->isEditable = true;
+            }
+        } else {
+            $this->isEditable = ! ($isCompleted || $isPastLimit);
+        }
 
         // Automatically set status to anamnesis or examination based on current status
         if ($this->status === 'waiting') {
@@ -881,6 +900,7 @@ new class extends Component
             'evaluation' => $this->evaluation,
             'keluhan_utama' => $this->keluhan_utama,
             'riwayat_alergi' => $this->riwayat_alergi,
+            'tanggal_kunjungan' => $this->tanggal_kunjungan,
             'updated_by' => Auth::id(),
         ];
 

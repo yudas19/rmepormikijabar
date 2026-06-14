@@ -11,7 +11,7 @@
             <!-- Schedules grouped by Polyclinic -->
             <div class="space-y-6">
                 @forelse ($groupedSchedules as $poliName => $schedules)
-                    <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl overflow-hidden shadow-sm">
+                    <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl overflow-hidden shadow-sm p-2">
                         <!-- Group Header -->
                         <div class="px-5 py-3.5 bg-zinc-50/50 dark:bg-zinc-900/50 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
                             <h4 class="text-sm font-bold text-zinc-900 dark:text-white flex items-center gap-2">

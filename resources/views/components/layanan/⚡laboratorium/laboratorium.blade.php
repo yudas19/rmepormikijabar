@@ -10,6 +10,7 @@
                 <flux:subheading class="mt-1 font-medium">Monitoring permintaan tes lab, status pemeriksaan, dan input hasil analisis.</flux:subheading>
             </div>
             <div class="flex gap-3 flex-wrap">
+                <flux:input type="date" wire:model.live="filterDate" class="min-w-40" />
                 <flux:select wire:model.live="statusFilter" class="min-w-40">
                     <flux:select.option value="">Semua Status</flux:select.option>
                     <flux:select.option value="pending">Menunggu</flux:select.option>

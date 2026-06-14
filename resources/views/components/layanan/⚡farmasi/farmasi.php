@@ -12,6 +12,13 @@ new class extends Component
 
     public string $searchQuery = '';
 
+    public string $filterDate = '';
+
+    public function mount(): void
+    {
+        $this->filterDate = date('Y-m-d');
+    }
+
     public function render()
     {
         $prescriptions = MedicalRecordPrescription::with([
@@ -22,6 +29,10 @@ new class extends Component
             'metodeRacik',
             'apoteker',
         ])
+            ->whereHas('medicalRecord', function ($q) {
+                $q->whereDate('tanggal_kunjungan', $this->filterDate)
+                    ->where('status', '!=', 'batal');
+            })
             ->when($this->statusFilter, fn ($q) => $q->where('dispensing_status', $this->statusFilter))
             ->when($this->searchQuery, function ($q) {
                 $q->whereHas('medicalRecord.pendaftaran.pasien', function ($sub) {

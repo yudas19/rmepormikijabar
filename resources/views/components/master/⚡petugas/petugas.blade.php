@@ -19,7 +19,7 @@
             </div>
 
             <!-- Data Table -->
-            <div class="border border-zinc-200 dark:border-zinc-800 rounded-lg overflow-hidden">
+            <div class="border p-2 border-zinc-200 dark:border-zinc-800 rounded-lg overflow-hidden">
                 <flux:table>
                     <flux:table.columns>
                         <flux:table.column sortable :sorted="$sortField === 'nama_petugas'" :direction="$sortDirection" wire:click="sortBy('nama_petugas')">Nama</flux:table.column>

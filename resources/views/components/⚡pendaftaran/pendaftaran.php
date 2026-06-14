@@ -9,6 +9,7 @@ use App\Models\Poli;
 use App\Models\SuratKeterangan;
 use App\Models\SuratPersetujuan;
 use App\Models\SuratRujukan;
+use Carbon\Carbon;
 use Flux\Flux;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -38,6 +39,20 @@ new class extends Component
     public $selectedPasienId = null;
 
     public $activePendaftaranId = null;
+
+    public $filterDate = '';
+
+    public $reg_tanggal_kunjungan = '';
+
+    public $cancelId = null;
+
+    public $showCancelConfirmation = false;
+
+    public function mount()
+    {
+        $this->filterDate = date('Y-m-d');
+        $this->reg_tanggal_kunjungan = date('Y-m-d');
+    }
 
     // --- FORM PATIENT FIELDS ---
     public $pasien_id = null;
@@ -350,6 +365,7 @@ new class extends Component
         $this->reg_no_rujukan = '';
         $this->reg_jenis_kunjungan = 'Baru';
         $this->reg_keluhan_awal = '';
+        $this->reg_tanggal_kunjungan = date('Y-m-d');
         $this->showRegisterModal = true;
     }
 
@@ -363,6 +379,7 @@ new class extends Component
             'reg_no_rujukan' => 'required_if:reg_cara_bayar,BPJS|nullable|string|max:30',
             'reg_jenis_kunjungan' => 'required|in:Baru,Lama,Kontrol',
             'reg_keluhan_awal' => 'required|string',
+            'reg_tanggal_kunjungan' => 'required|date',
         ];
 
         $this->validate($rules);
@@ -380,20 +397,13 @@ new class extends Component
             $prefix = 'C';
         }
 
-        // Daily resetting queue calculation for medical_records
-        $today = date('Y-m-d');
+        // Daily resetting queue calculation for medical_records based on specific visit date
+        $visitDate = $this->reg_tanggal_kunjungan;
         $mrCountToday = MedicalRecord::where('poli_id', $this->reg_poli_id)
-            ->whereDate('created_at', $today)
+            ->whereDate('tanggal_kunjungan', $visitDate)
             ->count();
         $mrSeq = $mrCountToday + 1;
         $nomor_antrean = $prefix.'-'.sprintf('%02d', $mrSeq);
-
-        // Queue number logic for standard pendaftaran (front desk)
-        $queueCount = Pendaftaran::where('poli_id', $this->reg_poli_id)
-            ->whereDate('created_at', $today)
-            ->count();
-        $angka_antrean = $queueCount + 1;
-        $no_antrean = $prefix.'-'.sprintf('%02d', $angka_antrean);
 
         $no_registrasi = 'REG-'.date('Ymd').'-'.sprintf('%04d', rand(1, 9999));
 
@@ -402,8 +412,8 @@ new class extends Component
             'pasien_id' => $this->selectedPasienId,
             'poli_id' => $this->reg_poli_id,
             'dokter_id' => $this->reg_dokter_id,
-            'no_antrean' => $no_antrean,
-            'angka_antrean' => $angka_antrean,
+            'no_antrean' => $nomor_antrean,
+            'angka_antrean' => $mrSeq,
             'status_antrean' => 'menunggu',
             'cara_bayar' => $this->reg_cara_bayar,
             'no_sep' => $this->reg_no_sep ?: null,
@@ -411,6 +421,7 @@ new class extends Component
             'jenis_kunjungan' => $this->reg_jenis_kunjungan,
             'keluhan_awal' => $this->reg_keluhan_awal,
             'created_by' => auth()->id(),
+            'created_at' => Carbon::parse($visitDate.' '.date('H:i:s')),
         ]);
 
         // Create MedicalRecord representing the Clinical Workspace encounter
@@ -425,6 +436,8 @@ new class extends Component
             'dokter_id' => $this->reg_dokter_id,
             'keluhan_utama' => $this->reg_keluhan_awal,
             'created_by' => auth()->id(),
+            'tanggal_kunjungan' => $visitDate,
+            'created_at' => Carbon::parse($visitDate.' '.date('H:i:s')),
         ]);
 
         $this->showRegisterModal = false;
@@ -640,6 +653,26 @@ new class extends Component
         $this->dispatch('open-print-tab', ['url' => route('print.queue-ticket', ['id' => $id])]);
     }
 
+    public function confirmCancel($id)
+    {
+        $this->cancelId = $id;
+        $this->showCancelConfirmation = true;
+    }
+
+    public function cancelPendaftaran()
+    {
+        if ($this->cancelId) {
+            $record = MedicalRecord::findOrFail($this->cancelId);
+            $record->update(['status' => 'batal']);
+            if ($record->pendaftaran) {
+                $record->pendaftaran->update(['status_antrean' => 'batal']);
+            }
+            Flux::toast(variant: 'success', text: 'Registrasi antrean berhasil dibatalkan.');
+        }
+        $this->cancelId = null;
+        $this->showCancelConfirmation = false;
+    }
+
     public function render()
     {
         $data = Pasien::query()
@@ -652,7 +685,8 @@ new class extends Component
             ->paginate(10);
 
         $todayQueues = MedicalRecord::with(['pasien', 'poli', 'pendaftaran.dokter', 'pendaftaran.poli'])
-            ->whereDate('created_at', today())
+            ->whereDate('tanggal_kunjungan', $this->filterDate)
+            ->where('status', '!=', 'batal')
             ->orderBy('id', 'desc')
             ->get();
 

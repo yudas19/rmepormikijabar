@@ -26,9 +26,9 @@
             {{ __('Master Data') }}
         </flux:sidebar.item>
 
-        <flux:sidebar.item icon="calendar" :href="route('master.jadwal-dokter')" :current="request()->routeIs('master.jadwal-dokter')" wire:navigate>
+        {{-- <flux:sidebar.item icon="calendar" :href="route('master.jadwal-dokter')" :current="request()->routeIs('master.jadwal-dokter')" wire:navigate>
             {{ __('Jadwal Dokter') }}
-        </flux:sidebar.item>
+        </flux:sidebar.item> --}}
 
         @can('akses_pendaftaran')
         <flux:sidebar.item icon="user-plus" :href="route('pendaftaran.index')" :current="request()->routeIs('pendaftaran.*')" wire:navigate>
@@ -81,6 +81,9 @@
             <flux:sidebar.group :heading="__('Pengaturan')" class="grid">
                 <flux:sidebar.item icon="cog" :href="route('admin.hak-akses')" :current="request()->routeIs('admin.hak-akses')" wire:navigate>
                     {{ __('Hak Akses') }}
+                </flux:sidebar.item>
+                <flux:sidebar.item icon="cpu-chip" :href="route('admin.satusehat-dashboard')" :current="request()->routeIs('admin.satusehat-dashboard')" wire:navigate>
+                    {{ __('SatuSehat Dashboard') }}
                 </flux:sidebar.item>
             </flux:sidebar.group>
         </flux:sidebar.nav>

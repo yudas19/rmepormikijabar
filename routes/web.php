@@ -2,9 +2,12 @@
 
 use App\Http\Controllers\MedicalRecordController;
 use App\Http\Controllers\PrintController;
+use App\Http\Controllers\SatuSehatDashboardController;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome')->name('home');
+
+Route::livewire('/display-antrean', '⚡display-antrean')->name('display-antrean');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::view('dashboard', 'dashboard')->name('dashboard');
@@ -29,6 +32,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::livewire('/admin/hak-akses', 'admin.hak-akses')
         ->middleware('permission:akses_pengaturan_akses')
         ->name('admin.hak-akses');
+
+    // SatuSehat Bridging Dashboard Routes
+    Route::get('/admin/satusehat-dashboard', [SatuSehatDashboardController::class, 'index'])
+        ->name('admin.satusehat-dashboard');
+    Route::post('/admin/satusehat-dashboard/{record}/dispatch', [SatuSehatDashboardController::class, 'dispatchRecord'])
+        ->name('admin.satusehat-dashboard.dispatch');
+    Route::post('/admin/satusehat-dashboard/dispatch-all-ready', [SatuSehatDashboardController::class, 'dispatchAllReady'])
+        ->name('admin.satusehat-dashboard.dispatch-all-ready');
 });
 
 // Pendaftaran (Requires auth, verified, and akses_pendaftaran)

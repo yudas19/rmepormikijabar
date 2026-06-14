@@ -27,6 +27,7 @@ class MedicalRecord extends Model
         'gcs_verbal' => 'integer',
         'gcs_motor' => 'integer',
         'gcs_score' => 'integer',
+        'tanggal_kunjungan' => 'date',
     ];
 
     public function pasien(): BelongsTo
@@ -121,5 +122,75 @@ class MedicalRecord extends Model
     public function invoice(): HasOne
     {
         return $this->hasOne(Invoice::class, 'medical_record_id');
+    }
+
+    /**
+     * Evaluate if the medical record is valid for transmission to SatuSehat Kemenkes.
+     *
+     * @return array{status: string, missing: string[]}
+     */
+    public function evaluateSatusehatValidation(): array
+    {
+        $missing = [];
+
+        // 1. Patient NIK & IHS Validation
+        $patient = $this->pasien;
+        if (! $patient) {
+            $missing[] = 'Pasien Tidak Ditemukan';
+        } else {
+            if (empty($patient->nik)) {
+                $missing[] = 'NIK Pasien Kosong';
+            } elseif (strlen($patient->nik) !== 16) {
+                $missing[] = 'NIK Pasien Harus 16 Digit';
+            }
+
+            if (empty($patient->ihs_number)) {
+                $missing[] = 'IHS Pasien Kosong';
+            }
+        }
+
+        // 2. Doctor IHS Practitioner Validation
+        $dokter = $this->dokter;
+        if (! $dokter) {
+            $missing[] = 'Dokter Pemeriksa Kosong';
+        } else {
+            if (empty($dokter->ihs_number_practitioner)) {
+                $missing[] = 'IHS Dokter Kosong';
+            }
+        }
+
+        // 3. Location/Poli Location ID Validation
+        $poli = $this->poli;
+        if (! $poli) {
+            $missing[] = 'Poli Kosong';
+        } else {
+            $locationId = $poli->satu_sehat_location_id ?: ($poli->satusehat?->satusehat_location_id ?? null);
+            if (empty($locationId)) {
+                $missing[] = 'ID Lokasi SatuSehat Poli Kosong';
+            }
+        }
+
+        // 4. Vital Signs (TTV) Validation: Suhu, Tensi, Nadi
+        if (is_null($this->temperature)) {
+            $missing[] = 'Suhu Tubuh Belum Diisi';
+        }
+        if (is_null($this->tensi_sistole) || is_null($this->tensi_diastole)) {
+            $missing[] = 'Tekanan Darah Belum Diisi';
+        }
+        if (is_null($this->pulse_rate)) {
+            $missing[] = 'Nadi Belum Diisi';
+        }
+
+        // 5. Diagnosis Validation: Minimum one ICD-10
+        if (! $this->icd10s()->exists()) {
+            $missing[] = 'ICD-10 Belum Diisi';
+        }
+
+        $status = empty($missing) ? 'ready' : 'incomplete';
+
+        return [
+            'status' => $status,
+            'missing' => $missing,
+        ];
     }
 }

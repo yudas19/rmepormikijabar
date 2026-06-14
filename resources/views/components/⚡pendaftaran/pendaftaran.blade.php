@@ -14,7 +14,7 @@
         </div>
 
         <!-- Data Table -->
-        <div class="border border-zinc-200 dark:border-zinc-800 rounded-lg overflow-hidden bg-white dark:bg-zinc-900">
+        <div class="border border-zinc-200 dark:border-zinc-800 rounded-lg overflow-hidden bg-white dark:bg-zinc-900 p-2">
             <flux:table>
                 <flux:table.columns>
                     <flux:table.column sortable :sorted="$sortField === 'no_rekam_medis'" :direction="$sortDirection" wire:click="sortBy('no_rekam_medis')">No. RM</flux:table.column>
@@ -77,12 +77,17 @@
 
     <!-- Antrean Hari Ini Card -->
     <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg p-6 shadow-sm mt-6">
-        <div class="mb-4">
-            <flux:heading size="lg">Antrean Kunjungan Hari Ini</flux:heading>
-            <flux:subheading class="mt-1">Daftar pasien yang terdaftar di poliklinik hari ini.</flux:subheading>
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+            <div>
+                <flux:heading size="lg">Antrean Kunjungan</flux:heading>
+                <flux:subheading class="mt-1">Daftar pasien yang terdaftar di poliklinik.</flux:subheading>
+            </div>
+            <div class="w-full sm:w-auto min-w-[200px]">
+                <flux:input type="date" wire:model.live="filterDate" size="sm" label="Pilih Tanggal Kunjungan" />
+            </div>
         </div>
 
-        <div class="border border-zinc-200 dark:border-zinc-800 rounded-lg overflow-hidden bg-white dark:bg-zinc-900">
+        <div class="border border-zinc-200 dark:border-zinc-800 rounded-lg overflow-hidden bg-white dark:bg-zinc-900 p-2">
             <flux:table>
                 <flux:table.columns>
                     <flux:table.column>No. Antrean</flux:table.column>
@@ -137,6 +142,7 @@
                             <flux:button variant="primary" size="sm" href="{{ route('medical-record.examine', ['poliklinik' => $q->poliklinik_type, 'encounter_id' => $q->encounter_id]) }}" wire:navigate>
                                 Periksa
                             </flux:button>
+                            <flux:button variant="ghost" icon="trash" size="sm" class="text-red-500 hover:text-red-700" wire:click="confirmCancel({{ $q->id }})" title="Batalkan Kunjungan" />
                         </flux:table.cell>
                     </flux:table.row>
                     @empty
@@ -279,6 +285,7 @@
                         <flux:select.option value="Lama">Kunjungan Lama</flux:select.option>
                         <flux:select.option value="Kontrol">Kontrol Ulang</flux:select.option>
                     </flux:select>
+                    <flux:input type="date" wire:model="reg_tanggal_kunjungan" label="Tanggal Kunjungan" required />
                 </div>
 
                 @if ($reg_cara_bayar === 'BPJS')
@@ -455,4 +462,18 @@
             });
         });
     </script>
+
+    <!-- MODAL CANCEL CONFIRMATION -->
+    @if ($showCancelConfirmation)
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
+        <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-xl w-full max-w-md p-6 space-y-4">
+            <flux:heading size="lg" class="text-red-600 dark:text-red-400">Konfirmasi Pembatalan</flux:heading>
+            <p class="text-sm text-zinc-600 dark:text-zinc-400">Apakah Anda yakin ingin membatalkan registrasi kunjungan pasien ini? Pasien yang dibatalkan akan dihapus dari semua antrean aktif poliklinik dan penunjang.</p>
+            <div class="flex justify-end gap-2 pt-2">
+                <flux:button variant="filled" wire:click="$set('showCancelConfirmation', false)">Batal</flux:button>
+                <flux:button variant="danger" wire:click="cancelPendaftaran">Ya, Batalkan</flux:button>
+            </div>
+        </div>
+    </div>
+    @endif
 </div>

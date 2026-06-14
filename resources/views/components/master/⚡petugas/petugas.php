@@ -186,7 +186,7 @@ new class extends Component
                         'name' => $validated['nama_petugas'],
                         'email' => $validated['email'],
                     ];
-                    if (!empty($validated['password'])) {
+                    if (! empty($validated['password'])) {
                         $userUpdateData['password'] = Hash::make($validated['password']);
                     }
                     $user->update($userUpdateData);
@@ -235,10 +235,11 @@ new class extends Component
     {
         if (empty($this->nik)) {
             Flux::toast(variant: 'danger', text: 'NIK wajib diisi untuk verifikasi IHS.');
+
             return;
         }
 
-        $this->ihs_number_practitioner = 'P' . rand(1000000000, 9999999999);
+        $this->ihs_number_practitioner = 'P'.rand(1000000000, 9999999999);
         Flux::toast(variant: 'success', text: 'NIK berhasil diverifikasi dengan SatuSehat. IHS Practitioner Number diperoleh.');
     }
 

@@ -1,7 +1,7 @@
 <div class="space-y-6">
     <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6 shadow-sm">
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div>
+            <div clas>
                 <div class="flex items-center gap-2">
                     @php
                         $workspaceLabel = match($poliklinik) {
@@ -19,6 +19,9 @@
                     <flux:badge color="{{ $workspaceBadgeColor }}" size="md">Workspace</flux:badge>
                 </div>
                 <flux:subheading class="mt-1 font-medium">No. Antrean: <span class="font-bold text-zinc-900 dark:text-white">{{ $record->nomor_antrean }}</span> | Encounter ID: <span class="font-mono text-xs">{{ $record->encounter_id }}</span></flux:subheading>
+                <div class="mt-3 max-w-[200px]">
+                    <flux:input type="date" wire:model="tanggal_kunjungan" label="Tanggal Kunjungan" :disabled="!$isEditable" />
+                </div>
             </div>
 
             <div class="flex items-center gap-2 bg-zinc-50 dark:bg-zinc-950 p-2 rounded-lg border border-zinc-200/60 dark:border-zinc-800/80">
@@ -36,6 +39,11 @@
                 </button>
                 @else
                 <flux:badge color="green" size="md" icon="check-circle" class="px-3 py-1.5 font-bold">Pemeriksaan Selesai (Locked)</flux:badge>
+                @if (auth()->user()->hasRole('admin') || auth()->user()->hasRole('rekam_medis'))
+                <flux:button variant="filled" color="red" size="xs" wire:click="$set('isEditable', true)" class="ml-2 font-bold">
+                    Edit / Buka Kunci
+                </flux:button>
+                @endif
                 @endif
             </div>
         </div>

@@ -40,9 +40,11 @@ new class extends Component
 
     public array $tindakanSearchResults = [];
 
+    public string $filterDate = '';
+
     public function mount(): void
     {
-        // Default empty mount
+        $this->filterDate = date('Y-m-d');
     }
 
     public function selectRecord(int $recordId): void
@@ -322,6 +324,8 @@ new class extends Component
     public function render()
     {
         $query = MedicalRecord::with(['pasien', 'poli', 'pendaftaran.dokter', 'invoice'])
+            ->whereDate('tanggal_kunjungan', $this->filterDate)
+            ->where('status', '!=', 'batal')
             ->where(function ($q) {
                 // Done polyclinic
                 $q->where('status', 'completed')

@@ -7,6 +7,8 @@ new class extends Component
 {
     public $poliklinik;
 
+    public $filterDate = '';
+
     public function mount($poliklinik)
     {
         if (! in_array($poliklinik, ['umum', 'gigi', 'kia'])) {
@@ -16,6 +18,14 @@ new class extends Component
         abort_if(! auth()->user()->can('akses_poli_'.$poliklinik), 403, 'Akses ditolak: Anda tidak memiliki izin untuk melihat antrean Poliklinik ini.');
 
         $this->poliklinik = $poliklinik;
+        $this->filterDate = date('Y-m-d');
+    }
+
+    public function panggilAntrean($id)
+    {
+        $record = MedicalRecord::findOrFail($id);
+        $record->update(['status_panggilan' => 'memanggil']);
+        Flux::toast(variant: 'success', text: 'Memanggil nomor antrean '.$record->nomor_antrean.'.');
     }
 
     public function render()
@@ -42,7 +52,8 @@ new class extends Component
                         ->where('nama_poli', 'not like', '%ibu%');
                 }
             })
-            ->whereDate('created_at', today())
+            ->whereDate('tanggal_kunjungan', $this->filterDate)
+            ->where('status', '!=', 'batal')
             ->orderBy('status', 'asc') // Group active statuses first
             ->orderBy('id', 'asc')     // First registered first
             ->get();

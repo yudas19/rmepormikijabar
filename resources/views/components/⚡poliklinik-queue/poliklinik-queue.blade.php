@@ -1,14 +1,19 @@
 <div class="py-6 px-6">
     <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl p-6 shadow-sm">
-        <div class="mb-6">
-            <div class="flex items-center gap-2">
-                <flux:heading size="xl" class="font-extrabold tracking-tight">{{ $title }}</flux:heading>
-                <flux:badge color="blue" size="md">Antrean Hari Ini</flux:badge>
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+            <div>
+                <div class="flex items-center gap-2">
+                    <flux:heading size="xl" class="font-extrabold tracking-tight">{{ $title }}</flux:heading>
+                    <flux:badge color="blue" size="md">Antrean Kunjungan</flux:badge>
+                </div>
+                <flux:subheading class="mt-1 font-medium">Kelola antrean kunjungan pasien dan pemeriksaan klinis medis secara real-time.</flux:subheading>
             </div>
-            <flux:subheading class="mt-1 font-medium">Kelola antrean kunjungan pasien dan pemeriksaan klinis medis secara real-time.</flux:subheading>
+            <div class="w-full sm:w-auto min-w-[200px]">
+                <flux:input type="date" wire:model.live="filterDate" size="sm" label="Pilih Tanggal Kunjungan" />
+            </div>
         </div>
 
-        <div class="border border-zinc-200 dark:border-zinc-800 rounded-lg overflow-hidden bg-white dark:bg-zinc-900">
+        <div class="border border-zinc-200 dark:border-zinc-800 rounded-lg overflow-hidden bg-white dark:bg-zinc-900 p-2">
             <flux:table>
                 <flux:table.columns>
                     <flux:table.column>No. Antrean</flux:table.column>
@@ -82,8 +87,14 @@
                             </flux:table.cell>
 
                             <!-- Actions -->
-                            <flux:table.cell>
-                                @if ($q->status === 'completed')
+                            <flux:table.cell class="flex items-center gap-2">
+                                @if ($q->status !== 'completed' && $q->status !== 'completed_all')
+                                    <flux:button variant="filled" color="green" size="sm" wire:click="panggilAntrean({{ $q->id }})">
+                                        Panggil Antrean
+                                    </flux:button>
+                                @endif
+
+                                @if ($q->status === 'completed' || $q->status === 'completed_all')
                                     <flux:button variant="ghost" size="sm" href="{{ route('medical-record.examine', ['poliklinik' => $this->poliklinik, 'encounter_id' => $q->encounter_id]) }}" wire:navigate>
                                         Detail
                                     </flux:button>
