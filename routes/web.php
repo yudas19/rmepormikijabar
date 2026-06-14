@@ -4,6 +4,9 @@ use App\Http\Controllers\MedicalLetterController;
 use App\Http\Controllers\MedicalRecordController;
 use App\Http\Controllers\PrintController;
 use App\Http\Controllers\SatuSehatDashboardController;
+use App\Models\Pasien;
+use App\Models\Pendaftaran;
+use App\Models\Poli;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome')->name('home');
@@ -11,7 +14,26 @@ Route::view('/', 'welcome')->name('home');
 Route::livewire('/display-antrean', '⚡display-antrean')->name('display-antrean');
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::view('dashboard', 'dashboard')->name('dashboard');
+    Route::get('/dashboard', function () {
+        $todayCount = Pendaftaran::whereDate('created_at', today())
+            ->where('status_antrean', '!=', 'batal')
+            ->count();
+
+        $totalPatients = Pasien::count();
+
+        $poliStats = Poli::withCount(['pendaftaran' => function ($query) {
+            $query->whereDate('created_at', today())
+                ->where('status_antrean', '!=', 'batal');
+        }])->get();
+
+        $jobStats = Pasien::selectRaw('COALESCE(NULLIF(pekerjaan, ""), "Tidak Mengisi") as pekerjaan, count(*) as count')
+            ->groupBy('pekerjaan')
+            ->orderByDesc('count')
+            ->take(8)
+            ->get();
+
+        return view('dashboard', compact('todayCount', 'totalPatients', 'poliStats', 'jobStats'));
+    })->name('dashboard');
     Route::view('/master', 'master.index')->name('master.index');
 
     Route::livewire('/master/petugas', 'master.petugas')->name('master.petugas');

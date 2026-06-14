@@ -10,20 +10,20 @@
                 <flux:subheading class="mt-1 font-medium">Monitoring permintaan tes lab, status pemeriksaan, dan input hasil analisis.</flux:subheading>
             </div>
             <div class="flex gap-3 flex-wrap">
-                <flux:input type="date" wire:model.live="filterDate" class="min-w-40" />
-                <flux:select wire:model.live="statusFilter" class="min-w-40">
+                <flux:input type="date" wire:model.live="filterDate" class="max-w-32" />
+                <flux:select wire:model.live="statusFilter" class="max-w-32">
                     <flux:select.option value="">Semua Status</flux:select.option>
                     <flux:select.option value="pending">Menunggu</flux:select.option>
                     <flux:select.option value="processing">Proses</flux:select.option>
                     <flux:select.option value="completed">Selesai</flux:select.option>
                 </flux:select>
-                <flux:input wire:model.live.debounce.300ms="searchQuery" placeholder="Cari pasien / No. RM..." icon="magnifying-glass" class="min-w-52" />
+                <flux:input wire:model.live.debounce.300ms="searchQuery" placeholder="Cari pasien / No. RM..." icon="magnifying-glass" class="max-w-32" />
             </div>
         </div>
     </div>
 
     {{-- Orders Table --}}
-    <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl shadow-sm overflow-hidden">
+    <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl shadow-sm overflow-hidden p-2">
         <flux:table>
             <flux:table.columns>
                 <flux:table.column>No. Order</flux:table.column>

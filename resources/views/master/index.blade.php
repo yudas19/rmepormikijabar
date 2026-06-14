@@ -1,5 +1,5 @@
 <x-layouts::app title="Dashboard Master Data">
-    <div class="py-6">
+    <div class="py-6 rounded-2xl p-8 bg-grey-200 shadow-xl shadow-yellow-500/50">
         <div class="mb-6">
             <h3 class="text-xl font-bold text-gray-900 dark:text-white">Master Data</h3>
             <p class="text-sm text-gray-600 dark:text-zinc-400">Lengkapi Data-data Master untuk memastikan sistem berjalan dengan baik.</p>
