@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\MedicalLetterController;
 use App\Models\KiaAncRecord;
 use App\Models\LabOrder;
 use App\Models\LabOrderResult;
@@ -16,10 +17,10 @@ use App\Models\MedicalRecordPrescription;
 use App\Models\MedicalRecordPrescriptionItem;
 use App\Models\OdontogramRecord;
 use App\Models\Pendaftaran;
-use App\Models\SuratKeterangan;
 use App\Models\SuratRujukan;
 use Carbon\Carbon;
 use Flux\Flux;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
@@ -197,9 +198,11 @@ new class extends Component
 
     public $health_tensi = '';
 
-    public $health_butawarna = 'tidak';
+    public $health_butawarna = 'Tidak';
 
-    public $health_catatan = 'Fisik dalam batas normal';
+    public $health_golongan_darah = 'O';
+
+    public $health_catatan = 'Sehat';
 
     public $health_dokter_id = '';
 
@@ -1052,6 +1055,9 @@ new class extends Component
     public function openSickLeave()
     {
         $this->sick_dokter_id = $this->record->pendaftaran->dokter_id ?? '';
+        $this->sick_start_date = date('Y-m-d');
+        $this->sick_end_date = date('Y-m-d');
+        $this->sick_diagnose = '';
         $this->showSickLeaveModal = true;
     }
 
@@ -1064,33 +1070,44 @@ new class extends Component
             'sick_dokter_id' => 'required|exists:master_petugass,id',
         ]);
 
-        $no_surat = 'SKD/SAKIT/'.date('Ymd').'/'.sprintf('%04d', rand(1, 9999));
+        $startDate = Carbon::parse($this->sick_start_date);
+        $endDate = Carbon::parse($this->sick_end_date);
+        $days = $startDate->diffInDays($endDate) + 1;
 
-        $saved = SuratKeterangan::create([
-            'no_surat' => $no_surat,
-            'pendaftaran_id' => $this->record->pendaftaran_id,
+        $requestData = [
+            'medical_record_id' => $this->record->id,
             'pasien_id' => $this->record->patient_id,
             'dokter_id' => $this->sick_dokter_id,
-            'jenis_surat' => 'sakit',
-            'konten_surat' => [
-                'tanggal_mulai' => $this->sick_start_date,
-                'tanggal_selesai' => $this->sick_end_date,
-                'diagnosa' => $this->sick_diagnose,
+            'jenis_surat' => 'surat_sakit',
+            'meta_data' => [
+                'jumlah_hari' => $days,
+                'dari_tanggal' => $this->sick_start_date,
+                'sampai_tanggal' => $this->sick_end_date,
+                'alasan' => $this->sick_diagnose ?: 'Sakit Rest',
             ],
-        ]);
+        ];
 
-        $this->showSickLeaveModal = false;
-        Flux::toast(variant: 'success', text: 'Surat Keterangan Sakit berhasil dibuat. Membuka tab cetak...');
+        $request = new Request($requestData);
+        $controller = new MedicalLetterController;
+        $response = $controller->store($request);
+        $result = json_decode($response->getContent(), true);
 
-        $this->dispatch('open-print-tab', ['url' => route('print.certificate', ['id' => $saved->id])]);
+        if (isset($result['success']) && $result['success']) {
+            $this->showSickLeaveModal = false;
+            Flux::toast(variant: 'success', text: 'Surat Keterangan Sakit berhasil dibuat. Membuka tab cetak...');
+            $this->dispatch('open-print-tab', ['url' => $result['print_url']]);
+        }
     }
 
     public function openHealthCert()
     {
         $this->health_dokter_id = $this->record->pendaftaran->dokter_id ?? '';
         $this->health_tensi = ($this->tensi_sistole && $this->tensi_diastole) ? $this->tensi_sistole.'/'.$this->tensi_diastole : '120/80';
-        $this->health_height = $this->height;
-        $this->health_weight = $this->weight;
+        $this->health_height = $this->height ?: '';
+        $this->health_weight = $this->weight ?: '';
+        $this->health_golongan_darah = $this->record->pasien->golongan_darah ?? 'O';
+        $this->health_butawarna = 'Tidak';
+        $this->health_catatan = 'Sehat';
         $this->showHealthCertModal = true;
     }
 
@@ -1100,32 +1117,42 @@ new class extends Component
             'health_height' => 'required|numeric',
             'health_weight' => 'required|numeric',
             'health_tensi' => 'required|string|max:15',
-            'health_butawarna' => 'required|in:ya,tidak',
-            'health_catatan' => 'nullable|string',
+            'health_butawarna' => 'required|in:Ya,Tidak',
+            'health_golongan_darah' => 'required|in:A,B,AB,O',
+            'health_catatan' => 'required|string',
             'health_dokter_id' => 'required|exists:master_petugass,id',
         ]);
 
-        $no_surat = 'SKD/SEHAT/'.date('Ymd').'/'.sprintf('%04d', rand(1, 9999));
-
-        $saved = SuratKeterangan::create([
-            'no_surat' => $no_surat,
-            'pendaftaran_id' => $this->record->pendaftaran_id,
+        $requestData = [
+            'medical_record_id' => $this->record->id,
             'pasien_id' => $this->record->patient_id,
             'dokter_id' => $this->health_dokter_id,
-            'jenis_surat' => 'sehat',
-            'konten_surat' => [
-                'tinggi_badan' => $this->health_height,
-                'berat_badan' => $this->health_weight,
+            'jenis_surat' => 'surat_sehat',
+            'meta_data' => [
+                'tinggi_badan' => (int) $this->health_height,
+                'berat_badan' => (int) $this->health_weight,
                 'tekanan_darah' => $this->health_tensi,
+                'golongan_darah' => $this->health_golongan_darah,
                 'buta_warna' => $this->health_butawarna,
-                'catatan' => $this->health_catatan,
+                'kesimpulan' => $this->health_catatan,
             ],
-        ]);
+        ];
 
-        $this->showHealthCertModal = false;
-        Flux::toast(variant: 'success', text: 'Surat Keterangan Sehat berhasil dibuat. Membuka tab cetak...');
+        $request = new Request($requestData);
+        $controller = new MedicalLetterController;
+        $response = $controller->store($request);
+        $result = json_decode($response->getContent(), true);
 
-        $this->dispatch('open-print-tab', ['url' => route('print.certificate', ['id' => $saved->id])]);
+        if (isset($result['success']) && $result['success']) {
+            $this->showHealthCertModal = false;
+            Flux::toast(variant: 'success', text: 'Surat Keterangan Sehat berhasil dibuat. Membuka tab cetak...');
+            $this->dispatch('open-print-tab', ['url' => $result['print_url']]);
+        }
+    }
+
+    public function printLetter(int $id)
+    {
+        $this->dispatch('open-print-tab', ['url' => route('medical-letters.print', ['id' => $id])]);
     }
 
     public function openReferral()

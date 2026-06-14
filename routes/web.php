@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\MedicalLetterController;
 use App\Http\Controllers\MedicalRecordController;
 use App\Http\Controllers\PrintController;
 use App\Http\Controllers\SatuSehatDashboardController;
@@ -40,6 +41,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('admin.satusehat-dashboard.dispatch');
     Route::post('/admin/satusehat-dashboard/dispatch-all-ready', [SatuSehatDashboardController::class, 'dispatchAllReady'])
         ->name('admin.satusehat-dashboard.dispatch-all-ready');
+
+    // Medical Letters Routes
+    Route::post('/medical-letters', [MedicalLetterController::class, 'store'])->name('medical-letters.store');
+    Route::get('/medical-letters/{id}/print', [MedicalLetterController::class, 'print'])->name('medical-letters.print');
 });
 
 // Pendaftaran (Requires auth, verified, and akses_pendaftaran)

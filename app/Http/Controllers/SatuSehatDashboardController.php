@@ -20,6 +20,7 @@ class SatuSehatDashboardController extends Controller
         // Fetch medical records for the selected date
         $records = MedicalRecord::with(['pasien', 'dokter', 'poli', 'poli.satusehat', 'icd10s'])
             ->whereDate('created_at', $date)
+            ->where('status', '!=', 'batal')
             ->get();
 
         // Dynamically evaluate status for non-sent records and update DB if needed
@@ -83,6 +84,7 @@ class SatuSehatDashboardController extends Controller
 
         $records = MedicalRecord::whereDate('created_at', $date)
             ->where('satusehat_status', 'ready')
+            ->where('status', '!=', 'batal')
             ->get();
 
         if ($records->isEmpty()) {

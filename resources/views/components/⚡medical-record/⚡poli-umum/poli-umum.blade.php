@@ -798,6 +798,67 @@
         @endif
     </div>
 
+    {{-- ─── SECTION 6: Medical Letters (Surat Keterangan) ─────────────────────── --}}
+    <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6 shadow-sm">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 pb-3 border-b border-zinc-100 dark:border-zinc-800">
+            <div class="flex items-center gap-2">
+                <flux:icon.document-text class="w-5 h-5 text-teal-500" />
+                <flux:heading size="lg" class="font-bold">6. Cetak Surat Keterangan</flux:heading>
+            </div>
+            @if ($isEditable)
+            <div class="flex gap-2">
+                <flux:button variant="filled" icon="document-text" wire:click="openSickLeave">Buat Surat Keterangan Sakit</flux:button>
+                <flux:button variant="primary" icon="document-check" wire:click="openHealthCert">Buat Surat Keterangan Sehat</flux:button>
+            </div>
+            @endif
+        </div>
+
+        @php
+            $generatedLetters = \App\Models\MedicalLetter::where('medical_record_id', $record->id)->get();
+        @endphp
+
+        @if ($generatedLetters->count() > 0)
+        <div class="border border-zinc-200 dark:border-zinc-800 rounded-lg overflow-hidden">
+            <flux:table>
+                <flux:table.columns>
+                    <flux:table.column>Nomor Surat</flux:table.column>
+                    <flux:table.column>Jenis Surat</flux:table.column>
+                    <flux:table.column>Detail / Meta Data</flux:table.column>
+                    <flux:table.column>Aksi</flux:table.column>
+                </flux:table.columns>
+                <flux:table.rows>
+                    @foreach ($generatedLetters as $letter)
+                    <flux:table.row wire:key="letter-row-{{ $letter->id }}">
+                        <flux:table.cell class="font-mono font-bold text-zinc-900 dark:text-white">{{ $letter->nomor_surat }}</flux:table.cell>
+                        <flux:table.cell>
+                            @if ($letter->jenis_surat === 'surat_sakit')
+                            <flux:badge color="orange" size="sm">Surat Sakit</flux:badge>
+                            @else
+                            <flux:badge color="green" size="sm">Surat Sehat</flux:badge>
+                            @endif
+                        </flux:table.cell>
+                        <flux:table.cell class="text-xs text-zinc-600 dark:text-zinc-300">
+                            @if ($letter->jenis_surat === 'surat_sakit')
+                            Mulai: {{ \Carbon\Carbon::parse($letter->meta_data['dari_tanggal'] ?? '')->format('d-m-Y') }} s/d {{ \Carbon\Carbon::parse($letter->meta_data['sampai_tanggal'] ?? '')->format('d-m-Y') }} ({{ $letter->meta_data['jumlah_hari'] ?? 0 }} hari) - Alasan: {{ $letter->meta_data['alasan'] ?? '-' }}
+                            @else
+                            TB: {{ $letter->meta_data['tinggi_badan'] ?? '-' }} cm | BB: {{ $letter->meta_data['berat_badan'] ?? '-' }} kg | Gol. Darah: {{ $letter->meta_data['golongan_darah'] ?? '-' }} | Buta Warna: {{ $letter->meta_data['buta_warna'] ?? '-' }} | Kesimpulan: {{ $letter->meta_data['kesimpulan'] ?? '-' }}
+                            @endif
+                        </flux:table.cell>
+                        <flux:table.cell>
+                            <flux:button variant="ghost" icon="printer" size="sm" wire:click="printLetter({{ $letter->id }})" title="Cetak Surat" />
+                        </flux:table.cell>
+                    </flux:table.row>
+                    @endforeach
+                </flux:table.rows>
+            </flux:table>
+        </div>
+        @else
+        <div class="text-center py-6 text-xs text-zinc-400 italic border border-dashed border-zinc-200 dark:border-zinc-800 rounded-lg">
+            Belum ada surat keterangan yang dibuat untuk kunjungan ini.
+        </div>
+        @endif
+    </div>
+
     <div class="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4 bg-zinc-50 dark:bg-zinc-950 p-6 rounded-xl border border-zinc-200/60 dark:border-zinc-800/80">
         <flux:dropdown>
             <flux:button icon="document-text" icon-trailing="chevron-down">Cetak Surat Keterangan</flux:button>
@@ -863,18 +924,24 @@
             </div>
 
             <form wire:submit.prevent="generateHealthCert" class="p-6 space-y-4">
-                <div class="grid grid-cols-3 gap-4">
+                <div class="grid grid-cols-4 gap-4">
                     <flux:input wire:model="health_height" label="Tinggi Badan (cm)" required type="number" />
                     <flux:input wire:model="health_weight" label="Berat Badan (kg)" required type="number" />
                     <flux:input wire:model="health_tensi" label="Tekanan Darah" required placeholder="120/80" />
+                    <flux:select wire:model="health_golongan_darah" label="Gol. Darah" required>
+                        <flux:select.option value="A">A</flux:select.option>
+                        <flux:select.option value="B">B</flux:select.option>
+                        <flux:select.option value="AB">AB</flux:select.option>
+                        <flux:select.option value="O">O</flux:select.option>
+                    </flux:select>
                 </div>
 
                 <div class="grid grid-cols-2 gap-4">
                     <flux:select wire:model="health_butawarna" label="Buta Warna" required>
-                        <flux:select.option value="tidak">Tidak Buta Warna</flux:select.option>
-                        <flux:select.option value="ya">Buta Warna</flux:select.option>
+                        <flux:select.option value="Tidak">Tidak Buta Warna</flux:select.option>
+                        <flux:select.option value="Ya">Buta Warna</flux:select.option>
                     </flux:select>
-                    <flux:input wire:model="health_catatan" label="Catatan Medis" required />
+                    <flux:input wire:model="health_catatan" label="Kesimpulan / Catatan" required />
                 </div>
 
                 <flux:select wire:model="health_dokter_id" label="Dokter TTD" required>
