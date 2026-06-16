@@ -16,7 +16,7 @@ class MedicalRecordController extends Controller
         }
 
         // 2. Fetch medical record by encounter_id (unique identifier)
-        $record = MedicalRecord::with(['pasien', 'poli', 'pendaftaran.dokter', 'icd10s', 'icd9s', 'prescriptions.items.masterObat'])
+        $record = MedicalRecord::with(['pasien', 'poli', 'pendaftaran.dokter', 'icd10s', 'icd9s', 'prescriptions.items.masterObat', 'perawat', 'dokter'])
             ->where('encounter_id', $encounter_id)
             ->firstOrFail();
 

@@ -39,19 +39,31 @@
         <flux:sidebar.nav>
             <flux:sidebar.group :heading="__('Poliklinik & Layanan')" class="grid">
                 @can('akses_poli_umum')
-                <flux:sidebar.item icon="building-office-2" href="{{ route('poli.queue', ['poliklinik' => 'umum']) }}" :current="request()->is('poli/umum*')" wire:navigate>
+                <flux:sidebar.item icon="building-office-2" href="{{ route('poli.queue', ['poliklinik' => 'umum']) }}" :current="request()->is('poli/umum*')" wire:navigate
+                    :badge="($waitingCounts['umum'] ?? 0) > 0 ? $waitingCounts['umum'] : null"
+                    badge-color="red"
+                    badge:variant="solid"
+                    badge:class="rounded-full">
                     {{ __('Poli Umum') }}
                 </flux:sidebar.item>
                 @endcan
 
                 @can('akses_poli_gigi')
-                <flux:sidebar.item icon="building-office-2" href="{{ route('poli.queue', ['poliklinik' => 'gigi']) }}" :current="request()->is('poli/gigi*')" wire:navigate>
+                <flux:sidebar.item icon="building-office-2" href="{{ route('poli.queue', ['poliklinik' => 'gigi']) }}" :current="request()->is('poli/gigi*')" wire:navigate
+                    :badge="($waitingCounts['gigi'] ?? 0) > 0 ? $waitingCounts['gigi'] : null"
+                    badge-color="red"
+                    badge:variant="solid"
+                    badge:class="rounded-full">
                     {{ __('Poli Gigi') }}
                 </flux:sidebar.item>
                 @endcan
 
                 @can('akses_poli_kia')
-                <flux:sidebar.item icon="building-office-2" href="{{ route('poli.queue', ['poliklinik' => 'kia']) }}" :current="request()->is('poli/kia*')" wire:navigate>
+                <flux:sidebar.item icon="building-office-2" href="{{ route('poli.queue', ['poliklinik' => 'kia']) }}" :current="request()->is('poli/kia*')" wire:navigate
+                    :badge="($waitingCounts['kia'] ?? 0) > 0 ? $waitingCounts['kia'] : null"
+                    badge-color="red"
+                    badge:variant="solid"
+                    badge:class="rounded-full">
                     {{ __('Klinik KIA') }}
                 </flux:sidebar.item>
                 @endcan
@@ -95,6 +107,10 @@
             </flux:sidebar.group>
         </flux:sidebar.nav>
         @endcan
+
+        <flux:sidebar.item icon="computer-desktop" href="{{ route('display-antrean') }}" :current="request()->routeIs('display-antrean')" wire:navigate>
+            {{ __('Display Antrean') }}
+        </flux:sidebar.item>
 
         <flux:spacer />
 

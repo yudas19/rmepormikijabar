@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\FaskesProfile;
 use App\Models\MedicalRecord;
+use App\Models\MedicalRecordPrescription;
 use App\Models\SuratKeterangan;
 use App\Models\SuratPersetujuan;
 use App\Models\SuratRujukan;
@@ -31,8 +33,9 @@ class PrintController extends Controller
     public function printCertificate($id)
     {
         $certificate = SuratKeterangan::with(['pasien', 'dokter'])->findOrFail($id);
+        $profile = FaskesProfile::find(1);
 
-        $pdf = Pdf::loadView('print.certificate', compact('certificate'));
+        $pdf = Pdf::loadView('print.certificate', compact('certificate', 'profile'));
 
         return $pdf->stream('certificate_'.$certificate->no_surat.'.pdf');
     }
@@ -42,5 +45,21 @@ class PrintController extends Controller
         $record = MedicalRecord::with(['pasien', 'pendaftaran'])->findOrFail($id);
 
         return view('print.queue-ticket', compact('record'));
+    }
+
+    public function printPrescription($id)
+    {
+        $prescription = MedicalRecordPrescription::with([
+            'medicalRecord.pasien',
+            'medicalRecord.dokter',
+            'items.requestedObat',
+            'items.dispensedObat',
+            'metodeRacik',
+            'apoteker',
+        ])->findOrFail($id);
+
+        $profile = FaskesProfile::find(1);
+
+        return view('print.resep', compact('prescription', 'profile'));
     }
 }

@@ -278,3 +278,59 @@ test('poliklinik queue calling button and TV Display works', function () {
 
     expect($mr->fresh()->status_panggilan)->toBe('selesai');
 });
+
+test('sidebar shows waiting patients count badge for each poli', function () {
+    $user = User::first();
+    $this->actingAs($user);
+
+    // Initial state: there should be no waiting patients in seeded data
+    $response = $this->get('/dashboard');
+    $response->assertOk();
+    file_put_contents(storage_path('logs/response_failed.html'), $response->getContent());
+    $response->assertDontSee('bg-red-500');
+
+    // Create a patient and register in Poli Gigi
+    $pasien = Pasien::create([
+        'no_rekam_medis' => 'RM-TEST-BADGE-1',
+        'nama_pasien' => 'Badge Patient Gigi',
+        'nik' => '9999999999999991',
+        'tempat_lahir' => 'Bandung',
+        'tanggal_lahir' => '1990-01-01',
+        'jenis_kelamin' => 'L',
+        'golongan_darah' => 'O',
+        'alamat' => 'Jl. Gigi No. 1',
+        'status_pasien' => 'aktif',
+    ]);
+
+    $gigiPoli = Poli::where('kode_poli', 'GIG')->first();
+    $dokter = MasterPetugas::where('jenis_petugas', 'Dokter')->first();
+
+    $pendaftaran = Pendaftaran::create([
+        'no_registrasi' => 'REG-TEST-BADGE-1',
+        'pasien_id' => $pasien->id,
+        'poli_id' => $gigiPoli->id,
+        'dokter_id' => $dokter->id,
+        'no_antrean' => 'B-01',
+        'angka_antrean' => 1,
+        'status_antrean' => 'menunggu',
+        'cara_bayar' => 'Umum',
+        'jenis_kunjungan' => 'Baru',
+        'keluhan_awal' => 'Sakit Gigi',
+    ]);
+
+    $mr = MedicalRecord::create([
+        'encounter_id' => 'ENC-TEST-BADGE-1',
+        'patient_id' => $pasien->id,
+        'pendaftaran_id' => $pendaftaran->id,
+        'poli_id' => $gigiPoli->id,
+        'status' => 'waiting',
+        'nomor_antrean' => 'B-01',
+        'tanggal_kunjungan' => date('Y-m-d'),
+    ]);
+
+    // Request dashboard to see if the badge with count 1 is visible
+    $response = $this->get('/dashboard');
+    $response->assertOk();
+    $response->assertSee('bg-red-500');
+    $response->assertSee('1');
+});

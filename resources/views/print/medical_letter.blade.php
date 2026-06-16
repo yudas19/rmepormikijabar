@@ -332,7 +332,12 @@
             <div class="sign-off">
                 <p>{{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}</p>
                 <p>Dokter Pemeriksa,</p>
-                <div class="signature-space"></div>
+                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 10px 0;">
+                    <div style="display: inline-block; padding: 4px; border: 1px solid #ddd; background: #fff; line-height: 0;">
+                        {!! App\Services\QrCodeService::generateSvg(url('/verify-document/' . encrypt('letter-' . $letter->id)), 70) !!}
+                    </div>
+                    <span style="font-size: 8px; color: #666; display: block; margin-top: 4px; line-height: 1.2;">Tanda Tangan Elektronik<br>Validitas dapat dicek dengan memindai QR Code ini.</span>
+                </div>
                 <p><strong>dr. {{ $letter->dokter->nama_petugas ?? '-' }}</strong></p>
                 <p style="font-size: 11px; margin-top: -5px;">SIP: {{ $letter->dokter->nomor_sip ?? '-' }}</p>
                 @if (!empty($letter->dokter->ihs_number_practitioner))

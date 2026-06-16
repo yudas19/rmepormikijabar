@@ -20,9 +20,12 @@
                     <span class="font-bold text-zinc-900 dark:text-white">{{ $prescription->medicalRecord?->pendaftaran?->pasien?->nama_pasien ?? '-' }}</span>
                 </flux:subheading>
             </div>
-            <a href="{{ route('layanan.farmasi') }}">
-                <flux:button variant="ghost" icon="arrow-left" size="sm">Kembali ke Antrian</flux:button>
-            </a>
+            <div class="flex items-center gap-2">
+                <flux:button variant="filled" icon="printer" size="sm" onclick="window.open('{{ route('print.resep', $prescription->id) }}', '_blank')">Cetak Resep</flux:button>
+                <a href="{{ route('layanan.farmasi') }}">
+                    <flux:button variant="ghost" icon="arrow-left" size="sm">Kembali ke Antrian</flux:button>
+                </a>
+            </div>
         </div>
     </div>
 

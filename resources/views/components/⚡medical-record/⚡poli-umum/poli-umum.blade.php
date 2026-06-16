@@ -140,6 +140,14 @@
                 </flux:badge>
             </div>
         </div>
+
+        <div class="mt-4 pt-4 border-t border-zinc-100 dark:border-zinc-800 text-xs text-zinc-500 dark:text-zinc-400 font-medium">
+            @if ($record->perawat)
+                ⚠️ Diinput oleh: <span class="font-bold text-zinc-700 dark:text-zinc-300">{{ $record->perawat->nama_petugas }}</span> pada {{ $record->created_at->format('d-m-Y H:i') }}
+            @else
+                ⚠️ Diinput oleh: - pada -
+            @endif
+        </div>
     </div>
 
     <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6 shadow-sm">
@@ -550,6 +558,14 @@
                 </div>
             </div>
         </div>
+
+        <div class="mt-4 pt-4 border-t border-zinc-100 dark:border-zinc-800 text-xs text-zinc-500 dark:text-zinc-400 font-medium">
+            @if ($record->dokter)
+                🩺 Dokter Penanggung Jawab: <span class="font-bold text-zinc-700 dark:text-zinc-300">dr. {{ $record->dokter->nama_petugas }}</span> (SIP: {{ $record->dokter->nomor_sip ?? '-' }}) pada {{ $record->updated_at->format('d-m-Y H:i') }}
+            @else
+                🩺 Dokter Penanggung Jawab: dr. - (SIP: -) pada -
+            @endif
+        </div>
     </div>
 
     <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6 shadow-sm">
@@ -641,9 +657,7 @@
                     <flux:table.column>Detail Kandungan</flux:table.column>
                     <flux:table.column>Aturan Pakai</flux:table.column>
                     <flux:table.column>Catatan</flux:table.column>
-                    @if ($isEditable)
                     <flux:table.column>Aksi</flux:table.column>
-                    @endif
                 </flux:table.columns>
 
                 <flux:table.rows>
@@ -675,15 +689,20 @@
                         </flux:table.cell>
                         <flux:table.cell class="font-medium font-mono text-xs text-zinc-800 dark:text-zinc-200">{{ $presc['aturan_pakai'] }}</flux:table.cell>
                         <flux:table.cell>{{ $presc['catatan'] ?: '-' }}</flux:table.cell>
-                        @if ($isEditable)
                         <flux:table.cell>
-                            <flux:button variant="ghost" icon="trash" size="sm" class="text-red-500" wire:click="removePrescription({{ $index }})" />
+                            <div class="flex items-center gap-2">
+                                @if (isset($presc['id']))
+                                <flux:button variant="ghost" icon="printer" size="sm" class="text-zinc-600 dark:text-zinc-400" wire:click="printPrescription({{ $presc['id'] }})" title="Cetak Resep" />
+                                @endif
+                                @if ($isEditable)
+                                <flux:button variant="ghost" icon="trash" size="sm" class="text-red-500" wire:click="removePrescription({{ $index }})" title="Hapus Resep" />
+                                @endif
+                            </div>
                         </flux:table.cell>
-                        @endif
                     </flux:table.row>
                     @empty
                     <flux:table.row>
-                        <flux:table.cell colspan="{{ $isEditable ? 6 : 5 }}" class="text-center text-zinc-500 py-8">Belum ada obat yang diresepkan.</flux:table.cell>
+                        <flux:table.cell colspan="6" class="text-center text-zinc-500 py-8">Belum ada obat yang diresepkan.</flux:table.cell>
                     </flux:table.row>
                     @endforelse
                 </flux:table.rows>

@@ -188,7 +188,12 @@
             <td>
                 <p>Bandung, {{ $certificate->created_at->format('d-m-Y') }}</p>
                 <p>Dokter Pemeriksa,</p>
-                <div class="signature-space"></div>
+                <div style="display: inline-block; text-align: center; margin: 10px 0; padding-right: 20px;">
+                    <div style="display: inline-block; padding: 4px; border: 1px solid #ddd; background: #fff; line-height: 0; text-align: center;">
+                        {!! App\Services\QrCodeService::generateSvg(url('/verify-document/' . encrypt('cert-' . $certificate->id)), 70) !!}
+                    </div>
+                    <span style="font-size: 8px; color: #666; display: block; margin-top: 4px; line-height: 1.2; text-align: center;">Tanda Tangan Elektronik<br>Validitas dapat dicek dengan memindai QR Code ini.</span>
+                </div>
                 <p><strong>{{ $certificate->dokter->nama_petugas ?? '-' }}</strong></p>
                 <p style="font-size: 10px; color: #666; margin-top: -10px;">SIP: {{ $certificate->dokter->nomor_sip ?? '-' }}</p>
             </td>

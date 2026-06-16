@@ -306,6 +306,7 @@ new class extends Component
             }
 
             $this->prescriptionsList[] = [
+                'id' => $presc->id,
                 'type' => $presc->type,
                 'nama_racikan' => $presc->nama_racikan,
                 'metode_racik_id' => $presc->metode_racik_id,
@@ -1049,6 +1050,39 @@ new class extends Component
                 $this->existingLabOrderId = null;
             }
         }
+
+        $this->record->load(['perawat', 'dokter']);
+
+        // Re-load the prescriptions from DB so that they have valid IDs for printing
+        $this->record->load(['prescriptions.items.requestedObat', 'prescriptions.metodeRacik']);
+        $this->prescriptionsList = [];
+        foreach ($this->record->prescriptions as $presc) {
+            $items = [];
+            foreach ($presc->items as $item) {
+                $items[] = [
+                    'master_obat_id' => $item->requested_obat_id,
+                    'nama_obat' => $item->requestedObat?->nama_obat ?? '-',
+                    'jumlah' => $item->requested_qty,
+                    'satuan' => $item->satuan,
+                ];
+            }
+            $this->prescriptionsList[] = [
+                'id' => $presc->id,
+                'type' => $presc->type,
+                'nama_racikan' => $presc->nama_racikan,
+                'metode_racik_id' => $presc->metode_racik_id,
+                'metode_racik_nama' => $presc->metodeRacik ? $presc->metodeRacik->nama_metode_racik : '',
+                'jumlah_kemasan' => $presc->jumlah_kemasan,
+                'aturan_pakai' => $presc->aturan_pakai,
+                'catatan' => $presc->catatan,
+                'items' => $items,
+            ];
+        }
+    }
+
+    public function printPrescription($id)
+    {
+        $this->dispatch('open-print-tab', ['url' => route('print.resep', ['id' => $id])]);
     }
 
     // Letters Generation Logic

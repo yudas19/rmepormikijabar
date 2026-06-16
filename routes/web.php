@@ -5,6 +5,7 @@ use App\Http\Controllers\MedicalRecordController;
 use App\Http\Controllers\PrintController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SatuSehatDashboardController;
+use App\Http\Controllers\VerificationController;
 use App\Models\Pasien;
 use App\Models\Pendaftaran;
 use App\Models\Poli;
@@ -85,6 +86,8 @@ Route::get('/print/consent/{id}', [PrintController::class, 'printConsent'])->nam
 Route::get('/print/referral/{id}', [PrintController::class, 'printReferral'])->name('print.referral');
 Route::get('/print/certificate/{id}', [PrintController::class, 'printCertificate'])->name('print.certificate');
 Route::get('/print/queue-ticket/{id}', [PrintController::class, 'printQueueTicket'])->name('print.queue-ticket');
+Route::get('/print/resep/{id}', [PrintController::class, 'printPrescription'])->name('print.resep');
+Route::get('/verify-document/{encrypted_id}', [VerificationController::class, 'verify'])->name('document.verify');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     // Poliklinik (dynamic permissions checked inside component mount)

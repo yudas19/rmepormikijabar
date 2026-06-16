@@ -25,4 +25,19 @@ class Pasien extends Model
     {
         return $this->hasMany(Pendaftaran::class, 'pasien_id');
     }
+
+    /**
+     * Bootstrap the model and its traits.
+     */
+    protected static function booted(): void
+    {
+        static::saving(function (Pasien $pasien) {
+            if (is_null($pasien->ihs_number) || trim($pasien->ihs_number) === '') {
+                $pasien->ihs_number = null;
+            }
+            if (is_null($pasien->no_bpjs) || trim($pasien->no_bpjs) === '') {
+                $pasien->no_bpjs = null;
+            }
+        });
+    }
 }
