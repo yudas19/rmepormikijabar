@@ -73,6 +73,10 @@
                     {{ __('Kasir / Billing') }}
                 </flux:sidebar.item>
                 @endcan
+
+                <flux:sidebar.item icon="document-text" href="{{ route('admin.daftar-surat') }}" :current="request()->routeIs('admin.daftar-surat')" wire:navigate>
+                    {{ __('Arsip Surat Keterangan') }}
+                </flux:sidebar.item>
             </flux:sidebar.group>
         </flux:sidebar.nav>
 
@@ -84,6 +88,9 @@
                 </flux:sidebar.item>
                 <flux:sidebar.item icon="cpu-chip" :href="route('admin.satusehat-dashboard')" :current="request()->routeIs('admin.satusehat-dashboard')" wire:navigate>
                     {{ __('SatuSehat Dashboard') }}
+                </flux:sidebar.item>
+                <flux:sidebar.item icon="chart-bar" :href="route('admin.laporan-eksekutif')" :current="request()->routeIs('admin.laporan-eksekutif')" wire:navigate>
+                    {{ __('Laporan Eksekutif') }}
                 </flux:sidebar.item>
             </flux:sidebar.group>
         </flux:sidebar.nav>

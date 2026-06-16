@@ -3,6 +3,7 @@
 use App\Http\Controllers\MedicalLetterController;
 use App\Http\Controllers\MedicalRecordController;
 use App\Http\Controllers\PrintController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SatuSehatDashboardController;
 use App\Models\Pasien;
 use App\Models\Pendaftaran;
@@ -65,8 +66,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('admin.satusehat-dashboard.dispatch-all-ready');
 
     // Medical Letters Routes
+    Route::livewire('/admin/daftar-surat', 'admin.daftar-surat')->name('admin.daftar-surat');
     Route::post('/medical-letters', [MedicalLetterController::class, 'store'])->name('medical-letters.store');
     Route::get('/medical-letters/{id}/print', [MedicalLetterController::class, 'print'])->name('medical-letters.print');
+
+    // Executive Report Route
+    Route::get('/admin/laporan-eksekutif', [ReportController::class, 'index'])
+        ->middleware('permission:akses_pengaturan_akses')
+        ->name('admin.laporan-eksekutif');
 });
 
 // Pendaftaran (Requires auth, verified, and akses_pendaftaran)
