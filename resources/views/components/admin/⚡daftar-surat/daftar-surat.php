@@ -35,7 +35,7 @@ new class extends Component
             ->when($this->searchQuery, function ($query) {
                 $query->whereHas('pasien', function ($q) {
                     $q->where('nama_pasien', 'like', '%'.$this->searchQuery.'%')
-                      ->orWhere('no_rekam_medis', 'like', '%'.$this->searchQuery.'%');
+                        ->orWhere('no_rekam_medis', 'like', '%'.$this->searchQuery.'%');
                 });
             })
             ->when($this->dateFilter, function ($query) {

@@ -17,6 +17,8 @@ use App\Models\MedicalRecordPrescription;
 use App\Models\MedicalRecordPrescriptionItem;
 use App\Models\OdontogramRecord;
 use App\Models\Pendaftaran;
+use App\Models\SuratKeterangan;
+use App\Models\SuratPersetujuan;
 use App\Models\SuratRujukan;
 use Carbon\Carbon;
 use Flux\Flux;
@@ -174,6 +176,8 @@ new class extends Component
 
     public string $labQuery = '';
 
+    public string $selectedLabTestId = '';
+
     /** @var array<int, mixed> */
     public array $labResults = [];
 
@@ -213,6 +217,32 @@ new class extends Component
     public $ref_catatan = '';
 
     public $ref_dokter_id = '';
+
+    // Keterangan Bebas Narkoba
+    public $showNarkobaModal = false;
+
+    public $narkoba_keperluan = '';
+
+    public $narkoba_hasil = 'Negatif untuk seluruh parameter uji (Amphetamine, THC, Morphine)';
+
+    public $narkoba_dokter_id = '';
+
+    // Informed / General Consent
+    public $showConsentModal = false;
+
+    public $consent_type = 'general_consent';
+
+    public $consent_nama_penanggung_jawab = '';
+
+    public $consent_hubungan_penanggung_jawab = 'diri_sendiri';
+
+    public $consent_nik_penanggung_jawab = '';
+
+    public $consent_nama_tindakan_medis = '';
+
+    public $consent_pernyataan = 'setuju';
+
+    public $consent_petugas_id = '';
 
     public function mount($record)
     {
@@ -1232,12 +1262,176 @@ new class extends Component
         $this->dispatch('open-print-tab', ['url' => route('print.referral', ['id' => $saved->id])]);
     }
 
+    public function openBebasNarkoba()
+    {
+        $this->narkoba_keperluan = '';
+        $this->narkoba_hasil = 'Negatif untuk seluruh parameter uji (Amphetamine, THC, Morphine)';
+        $this->narkoba_dokter_id = $this->record->pendaftaran->dokter_id ?? '';
+        $this->showNarkobaModal = true;
+    }
+
+    public function generateNarkoba()
+    {
+        $this->validate([
+            'narkoba_keperluan' => 'required|string|max:100',
+            'narkoba_hasil' => 'required|string',
+            'narkoba_dokter_id' => 'required|exists:master_petugass,id',
+        ]);
+
+        $no_surat = 'SKD/BEBAS_NARKOBA/'.date('Ymd').'/'.sprintf('%04d', rand(1, 9999));
+
+        $saved = SuratKeterangan::create([
+            'no_surat' => $no_surat,
+            'pendaftaran_id' => $this->record->pendaftaran_id,
+            'pasien_id' => $this->record->patient_id,
+            'dokter_id' => $this->narkoba_dokter_id,
+            'jenis_surat' => 'bebas_narkoba',
+            'konten_surat' => [
+                'keperluan' => $this->narkoba_keperluan,
+                'hasil_tes' => $this->narkoba_hasil,
+            ],
+        ]);
+
+        $this->showNarkobaModal = false;
+        Flux::toast(variant: 'success', text: 'Surat Keterangan Bebas Narkoba berhasil dibuat. Membuka tab cetak...');
+
+        $this->dispatch('open-print-tab', ['url' => route('print.certificate', ['id' => $saved->id])]);
+    }
+
+    public function openGeneralConsent()
+    {
+        $this->consent_type = 'general_consent';
+        $this->consent_nama_penanggung_jawab = $this->record->pasien->nama_pasien ?? '';
+        $this->consent_hubungan_penanggung_jawab = 'diri_sendiri';
+        $this->consent_nik_penanggung_jawab = $this->record->pasien->nik ?? '';
+        $this->consent_nama_tindakan_medis = '';
+        $this->consent_pernyataan = 'setuju';
+        $petugas = MasterPetugas::where('user_id', Auth::id())->first();
+        $this->consent_petugas_id = $petugas ? $petugas->id : '';
+        $this->showConsentModal = true;
+    }
+
+    public function openInformedConsent()
+    {
+        $this->consent_type = 'informed_consent_tindakan';
+        $this->consent_nama_penanggung_jawab = $this->record->pasien->nama_pasien ?? '';
+        $this->consent_hubungan_penanggung_jawab = 'diri_sendiri';
+        $this->consent_nik_penanggung_jawab = $this->record->pasien->nik ?? '';
+        $this->consent_nama_tindakan_medis = '';
+        $this->consent_pernyataan = 'setuju';
+        $petugas = MasterPetugas::where('user_id', Auth::id())->first();
+        $this->consent_petugas_id = $petugas ? $petugas->id : '';
+        $this->showConsentModal = true;
+    }
+
+    public function generateConsent()
+    {
+        $rules = [
+            'consent_nama_penanggung_jawab' => 'required|string|max:100',
+            'consent_hubungan_penanggung_jawab' => 'required|in:diri_sendiri,suami,istri,ayah,ibu,anak,lainnya',
+            'consent_nik_penanggung_jawab' => 'nullable|string|max:16',
+            'consent_nama_tindakan_medis' => 'required_if:consent_type,informed_consent_tindakan|nullable|string|max:100',
+            'consent_pernyataan' => 'required|in:setuju,menolak',
+            'consent_petugas_id' => 'required|exists:master_petugass,id',
+        ];
+
+        $this->validate($rules);
+
+        $no_surat = 'CNT/'.date('Ymd').'/'.sprintf('%04d', rand(1, 9999));
+
+        $saved = SuratPersetujuan::create([
+            'no_surat' => $no_surat,
+            'pendaftaran_id' => $this->record->pendaftaran_id,
+            'jenis_persetujuan' => $this->consent_type,
+            'nama_penanggung_jawab' => $this->consent_nama_penanggung_jawab,
+            'hubungan_penanggung_jawab' => $this->consent_hubungan_penanggung_jawab,
+            'nik_penanggung_jawab' => $this->consent_nik_penanggung_jawab ?: null,
+            'nama_tindakan_medis' => $this->consent_nama_tindakan_medis ?: null,
+            'pernyataan' => $this->consent_pernyataan,
+            'petugas_id' => $this->consent_petugas_id,
+        ]);
+
+        $this->showConsentModal = false;
+        Flux::toast(variant: 'success', text: 'Surat Persetujuan berhasil dibuat. Membuka tab cetak...');
+
+        $this->dispatch('open-print-tab', ['url' => route('print.consent', ['id' => $saved->id])]);
+    }
+
+    public function updatedSelectedLabTestId($value)
+    {
+        if ($value) {
+            $this->addLabTest(intval($value));
+            $this->selectedLabTestId = '';
+        }
+    }
+
+    public function saveTtv()
+    {
+        if (! $this->isEditable) {
+            return;
+        }
+        $this->saveData();
+        Flux::toast(variant: 'success', text: 'Tanda-tanda Vital & Pemeriksaan Fisik berhasil disimpan.');
+    }
+
+    public function saveSoape()
+    {
+        if (! $this->isEditable) {
+            return;
+        }
+        $this->saveData();
+        Flux::toast(variant: 'success', text: 'Deskripsi Medis (SOAPE) berhasil disimpan.');
+    }
+
+    public function saveIcd()
+    {
+        if (! $this->isEditable) {
+            return;
+        }
+        $this->saveData();
+        Flux::toast(variant: 'success', text: 'Kode Diagnosis & Prosedur (ICD-10 & ICD-9) berhasil disimpan.');
+    }
+
+    public function savePrescription()
+    {
+        if (! $this->isEditable) {
+            return;
+        }
+        $this->saveData();
+        Flux::toast(variant: 'success', text: 'Rencana Resep Elektronik berhasil disimpan.');
+    }
+
+    public function saveLabOrder()
+    {
+        if (! $this->isEditable) {
+            return;
+        }
+        $this->saveData();
+        Flux::toast(variant: 'success', text: 'Permintaan Pemeriksaan Laboratorium berhasil disimpan.');
+    }
+
+    public function saveOdontogram()
+    {
+        if (! $this->isEditable) {
+            return;
+        }
+        $this->saveData();
+        Flux::toast(variant: 'success', text: 'Pemeriksaan Odontogram berhasil disimpan.');
+    }
+
+    public function printUnified($url)
+    {
+        $this->dispatch('open-print-tab', ['url' => $url]);
+    }
+
     public function render()
     {
         return view('components.⚡medical-record.⚡poli-umum.poli-umum', [
             'metodeRaciks' => MasterMetodeRacik::all(),
             'aturanPakais' => MasterAturanPakai::all(),
             'doctors' => MasterPetugas::where('jenis_petugas', 'Dokter')->where('is_aktif', true)->get(),
+            'staff' => MasterPetugas::where('is_aktif', true)->get(),
+            'allLabTests' => MasterLabTest::where('is_aktif', true)->orderBy('category')->orderBy('test_name')->get(),
         ]);
     }
 };
