@@ -46,6 +46,8 @@ test('it updates the faskes profile details successfully', function () {
         ->set('no_telp', '021-111111')
         ->set('email', 'admin@sehatwalafiat.com')
         ->set('kode_faskes_kemenkes', 'F-99999')
+        ->set('latitude', '-6.914744')
+        ->set('longitude', '107.609810')
         ->call('save')
         ->assertHasNoErrors();
 
@@ -53,6 +55,8 @@ test('it updates the faskes profile details successfully', function () {
     expect($profile->nama_faskes)->toBe('Klinik Sehat Walafiat');
     expect($profile->penanggung_jawab)->toBe('dr. Budi Setiawan');
     expect($profile->email)->toBe('admin@sehatwalafiat.com');
+    expect(floatval($profile->latitude))->toBe(-6.914744);
+    expect(floatval($profile->longitude))->toBe(107.609810);
 });
 
 test('it validates required fields', function () {

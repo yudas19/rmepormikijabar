@@ -39,6 +39,10 @@
                 <flux:input wire:model="no_telp" label="Nomor Telepon" required placeholder="Contoh: 022-7654321" />
 
                 <flux:input wire:model="email" type="email" label="Email Faskes" required placeholder="Contoh: info@rmepormikijabar.com" />
+                <div class="hidden md:block"></div>
+
+                <flux:input wire:model="latitude" label="Latitude (Lintang)" placeholder="Contoh: -6.914744" />
+                <flux:input wire:model="longitude" label="Longitude (Bujur)" placeholder="Contoh: 107.609810" />
             </div>
 
             <flux:input wire:model="alamat" label="Alamat Lengkap" required placeholder="Tuliskan alamat lengkap faskes..." />

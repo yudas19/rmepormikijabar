@@ -21,6 +21,10 @@ new class extends Component
 
     public $kode_faskes_kemenkes = '';
 
+    public $latitude = '';
+
+    public $longitude = '';
+
     public $logo;
 
     public $logo_path = '';
@@ -45,6 +49,8 @@ new class extends Component
         $this->no_telp = $profile->no_telp;
         $this->email = $profile->email;
         $this->kode_faskes_kemenkes = $profile->kode_faskes_kemenkes;
+        $this->latitude = $profile->latitude;
+        $this->longitude = $profile->longitude;
         $this->logo_path = $profile->logo_path;
     }
 
@@ -57,6 +63,8 @@ new class extends Component
             'no_telp' => 'required|string|max:50',
             'email' => 'required|email|max:255',
             'kode_faskes_kemenkes' => 'required|string|max:100',
+            'latitude' => 'nullable|numeric|between:-90,90',
+            'longitude' => 'nullable|numeric|between:-180,180',
             'logo' => 'nullable|image|max:2048',
         ];
 
@@ -78,6 +86,8 @@ new class extends Component
             'no_telp' => $this->no_telp,
             'email' => $this->email,
             'kode_faskes_kemenkes' => $this->kode_faskes_kemenkes,
+            'latitude' => $this->latitude !== '' && $this->latitude !== null ? floatval($this->latitude) : null,
+            'longitude' => $this->longitude !== '' && $this->longitude !== null ? floatval($this->longitude) : null,
         ]);
 
         Flux::toast(variant: 'success', text: 'Profil Fasilitas Kesehatan berhasil diperbarui.');

@@ -1,5 +1,8 @@
-<div class="space-y-6">
-    <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6 shadow-sm">
+<div class="w-full">
+    <div class="grid grid-cols-1 lg:grid-cols-10 gap-6 items-start p-6">
+        <!-- Left Column: Form & Workspace (70%) -->
+        <div class="lg:col-span-7 space-y-6">
+            <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6 shadow-sm">
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div clas>
                 <div class="flex items-center gap-2">
@@ -49,11 +52,48 @@
         </div>
     </div>
 
-    <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6 shadow-sm">
-        <div class="flex items-center gap-2 mb-6 pb-3 border-b border-zinc-100 dark:border-zinc-800">
-            <flux:icon.heart class="w-5 h-5 text-red-500" />
-            <flux:heading size="lg" class="font-bold">1. Tanda-Tanda Vital (TTV) & Pemeriksaan Fisik</flux:heading>
+    <div x-data="{ activeTab: 'ttv' }" class="space-y-6">
+        <!-- Tabs Menu Bar -->
+        <div class="bg-zinc-100 dark:bg-zinc-800/50 p-1.5 rounded-2xl flex flex-wrap gap-1 border border-zinc-200/50 dark:border-zinc-800/40">
+            <button type="button" @click="activeTab = 'ttv'" :class="activeTab === 'ttv' ? 'bg-emerald-600 text-white shadow-md dark:bg-emerald-500' : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200/50 dark:hover:bg-zinc-800/60 hover:text-zinc-900 dark:hover:text-zinc-200'" class="px-4 py-2 text-xs md:text-sm font-semibold rounded-xl transition-all duration-200 flex items-center gap-2">
+                <flux:icon.heart class="w-4 h-4" />
+                TTV & Fisik
+            </button>
+            <button type="button" @click="activeTab = 'soape'" :class="activeTab === 'soape' ? 'bg-emerald-600 text-white shadow-md dark:bg-emerald-500' : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200/50 dark:hover:bg-zinc-800/60 hover:text-zinc-900 dark:hover:text-zinc-200'" class="px-4 py-2 text-xs md:text-sm font-semibold rounded-xl transition-all duration-200 flex items-center gap-2">
+                <flux:icon.document-text class="w-4 h-4" />
+                SOAPE
+            </button>
+            @if ($poliklinik === 'gigi' || $poliklinik === 'kia')
+            <button type="button" @click="activeTab = 'khusus'" :class="activeTab === 'khusus' ? 'bg-emerald-600 text-white shadow-md dark:bg-emerald-500' : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200/50 dark:hover:bg-zinc-800/60 hover:text-zinc-900 dark:hover:text-zinc-200'" class="px-4 py-2 text-xs md:text-sm font-semibold rounded-xl transition-all duration-200 flex items-center gap-2">
+                <flux:icon.sparkles class="w-4 h-4" />
+                Pemeriksaan Khusus
+            </button>
+            @endif
+            <button type="button" @click="activeTab = 'diagnosis'" :class="activeTab === 'diagnosis' ? 'bg-emerald-600 text-white shadow-md dark:bg-emerald-500' : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200/50 dark:hover:bg-zinc-800/60 hover:text-zinc-900 dark:hover:text-zinc-200'" class="px-4 py-2 text-xs md:text-sm font-semibold rounded-xl transition-all duration-200 flex items-center gap-2">
+                <flux:icon.clipboard class="w-4 h-4" />
+                Diagnosis (ICD)
+            </button>
+            <button type="button" @click="activeTab = 'resep'" :class="activeTab === 'resep' ? 'bg-emerald-600 text-white shadow-md dark:bg-emerald-500' : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200/50 dark:hover:bg-zinc-800/60 hover:text-zinc-900 dark:hover:text-zinc-200'" class="px-4 py-2 text-xs md:text-sm font-semibold rounded-xl transition-all duration-200 flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75" /></svg>
+                Resep Obat
+            </button>
+            <button type="button" @click="activeTab = 'lab'" :class="activeTab === 'lab' ? 'bg-emerald-600 text-white shadow-md dark:bg-emerald-500' : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200/50 dark:hover:bg-zinc-800/60 hover:text-zinc-900 dark:hover:text-zinc-200'" class="px-4 py-2 text-xs md:text-sm font-semibold rounded-xl transition-all duration-200 flex items-center gap-2">
+                <flux:icon.beaker class="w-4 h-4" />
+                Pemeriksaan Lab
+            </button>
+            <button type="button" @click="activeTab = 'dokumen'" :class="activeTab === 'dokumen' ? 'bg-emerald-600 text-white shadow-md dark:bg-emerald-500' : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200/50 dark:hover:bg-zinc-800/60 hover:text-zinc-900 dark:hover:text-zinc-200'" class="px-4 py-2 text-xs md:text-sm font-semibold rounded-xl transition-all duration-200 flex items-center gap-2">
+                <flux:icon.bookmark class="w-4 h-4" />
+                Dokumen & Surat
+            </button>
         </div>
+
+        <!-- Tab Content Pane: TTV & Fisik -->
+        <div x-show="activeTab === 'ttv'" class="space-y-6" x-transition>
+            <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6 shadow-sm">
+                <div class="flex items-center gap-2 mb-6 pb-3 border-b border-zinc-100 dark:border-zinc-800">
+                    <flux:icon.heart class="w-5 h-5 text-red-500" />
+                    <flux:heading size="lg" class="font-bold">1. Tanda-Tanda Vital (TTV) & Pemeriksaan Fisik</flux:heading>
+                </div>
 
         <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
             <div class="grid grid-cols-2 gap-2">
@@ -169,7 +209,10 @@
             @endif
         </div>
     </div>
+</div> {{-- End of TTV Tab --}}
 
+<!-- Tab Content Pane: SOAPE -->
+<div x-show="activeTab === 'soape'" class="space-y-6" x-transition>
     <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6 shadow-sm">
         <div class="flex items-center gap-2 mb-6 pb-3 border-b border-zinc-100 dark:border-zinc-800">
             <flux:icon.document-text class="w-5 h-5 text-blue-500" />
@@ -194,7 +237,11 @@
             @endif
         </div>
     </div>
+</div> {{-- End of SOAPE Tab --}}
 
+@if ($poliklinik === 'gigi' || $poliklinik === 'kia')
+<!-- Tab Content Pane: Pemeriksaan Khusus -->
+<div x-show="activeTab === 'khusus'" class="space-y-6" x-transition>
     {{-- ─── ODONTOGRAM SECTION (Poli Gigi only) ──────────────────────────────────────── --}}
     @if ($poliklinik === 'gigi')
     <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6 shadow-sm">
@@ -508,12 +555,16 @@
         </div>
     </div>
     @endif
+</div> {{-- End of Pemeriksaan Khusus Tab --}}
+@endif
 
-<div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6 shadow-sm">
-    <div class="flex items-center gap-2 mb-6 pb-3 border-b border-zinc-100 dark:border-zinc-800">
-        <flux:icon.hashtag class="w-5 h-5 text-indigo-500" />
-        <flux:heading size="lg" class="font-bold">3. Kode Diagnosis (ICD-10) & Prosedur (ICD-9)</flux:heading>
-    </div>
+<!-- Tab Content Pane: Diagnosis -->
+<div x-show="activeTab === 'diagnosis'" class="space-y-6" x-transition>
+    <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6 shadow-sm">
+        <div class="flex items-center gap-2 mb-6 pb-3 border-b border-zinc-100 dark:border-zinc-800">
+            <flux:icon.hashtag class="w-5 h-5 text-indigo-500" />
+            <flux:heading size="lg" class="font-bold">3. Kode Diagnosis (ICD-10) & Prosedur (ICD-9)</flux:heading>
+        </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div class="space-y-4">
@@ -626,10 +677,13 @@
         @endif
     </div>
 </div>
+</div> {{-- End of Diagnosis Tab --}}
 
+<!-- Tab Content Pane: Resep -->
+<div x-show="activeTab === 'resep'" class="space-y-6" x-transition>
     <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6 shadow-sm">
         <div class="flex items-center gap-2 mb-6 pb-3 border-b border-zinc-100 dark:border-zinc-800">
-            <flux:icon.beaker class="w-5 h-5 text-emerald-500" />
+            <svg class="w-5 h-5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75" /></svg>
             <flux:heading size="lg" class="font-bold">4. Rencana Resep Elektronik (E-Resep)</flux:heading>
         </div>
 
@@ -796,7 +850,10 @@
             @endif
         </div>
     </div>
+</div> {{-- End of Resep Tab --}}
 
+<!-- Tab Content Pane: Lab -->
+<div x-show="activeTab === 'lab'" class="space-y-6" x-transition>
     {{-- ─── SECTION 5: Lab Ordering ─────────────────────────────────────────── --}}
     <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6 shadow-sm">
         <div class="flex items-center gap-2 mb-6 pb-3 border-b border-zinc-100 dark:border-zinc-800">
@@ -888,7 +945,10 @@
             @endif
         </div>
     </div>
+</div> {{-- End of Lab Tab --}}
 
+<!-- Tab Content Pane: Dokumen -->
+<div x-show="activeTab === 'dokumen'" class="space-y-6" x-transition>
     {{-- ─── SECTION 6: Medical Letters & Consents (Dokumen & Persetujuan) ─────────────────────── --}}
     <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6 shadow-sm">
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 pb-3 border-b border-zinc-100 dark:border-zinc-800">
@@ -1003,6 +1063,8 @@
         </div>
         @endif
     </div>
+</div> {{-- End of Dokumen Tab --}}
+</div> {{-- End of Tabbed Workspace x-data --}}
 
     <div class="flex justify-end bg-zinc-50 dark:bg-zinc-950 p-6 rounded-xl border border-zinc-200/60 dark:border-zinc-800/80">
         <div class="flex gap-2">
@@ -1014,6 +1076,187 @@
             @endif
         </div>
     </div>
+</div> {{-- End of Left Column --}}
+
+<!-- Right Column: Sidebar (30%) -->
+<div class="lg:col-span-3 lg:sticky lg:top-6 space-y-6">
+    <!-- Patient Info Card -->
+    <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6 shadow-sm">
+        <div class="flex items-center gap-2 mb-4 pb-3 border-b border-zinc-100 dark:border-zinc-800">
+            <flux:icon.user class="w-5 h-5 text-emerald-500" />
+            <flux:heading size="lg" class="font-bold">Informasi Pasien</flux:heading>
+        </div>
+
+        <div class="space-y-4 text-sm">
+            <div>
+                <div class="text-xs text-zinc-500 font-semibold uppercase tracking-wider">Nama Pasien</div>
+                <div class="font-bold text-base text-zinc-900 dark:text-white mt-0.5">{{ $record->pasien->nama_pasien }}</div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <div class="text-xs text-zinc-500 font-semibold uppercase tracking-wider">No. Rekam Medis</div>
+                    <div class="font-mono font-semibold text-emerald-600 dark:text-emerald-400 mt-0.5">{{ $record->pasien->no_rekam_medis }}</div>
+                </div>
+                <div>
+                    <div class="text-xs text-zinc-500 font-semibold uppercase tracking-wider">No. BPJS</div>
+                    <div class="font-mono mt-0.5 text-zinc-850 dark:text-zinc-200">{{ $record->pasien->no_bpjs ?? '-' }}</div>
+                </div>
+            </div>
+
+            <div>
+                <div class="text-xs text-zinc-500 font-semibold uppercase tracking-wider">NIK</div>
+                <div class="font-mono mt-0.5 text-zinc-850 dark:text-zinc-200">{{ $record->pasien->nik }}</div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <div class="text-xs text-zinc-500 font-semibold uppercase tracking-wider">Jenis Kelamin</div>
+                    <div class="mt-0.5">{{ $record->pasien->jenis_kelamin === 'L' ? 'Laki-laki' : 'Perempuan' }}</div>
+                </div>
+                <div>
+                    <div class="text-xs text-zinc-500 font-semibold uppercase tracking-wider">Umur / Tgl Lahir</div>
+                    <div class="mt-0.5">
+                        {{ $record->pasien->tanggal_lahir ? $record->pasien->tanggal_lahir->diffInYears(now()) . ' Thn' : '-' }}
+                        <span class="text-xs text-zinc-400">({{ $record->pasien->tanggal_lahir ? $record->pasien->tanggal_lahir->format('d-m-Y') : '-' }})</span>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <div class="text-xs text-zinc-500 font-semibold uppercase tracking-wider">Alamat</div>
+                <div class="text-zinc-700 dark:text-zinc-300 leading-relaxed mt-0.5">{{ $record->pasien->alamat }}</div>
+            </div>
+
+            <div>
+                <div class="text-xs text-zinc-500 font-semibold uppercase tracking-wider">No. WhatsApp</div>
+                <div class="mt-0.5 font-mono text-zinc-850 dark:text-zinc-200">{{ $record->pasien->no_whatsapp ?? '-' }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Laboratory Results Card -->
+    <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6 shadow-sm">
+        <div class="flex items-center gap-2 mb-4 pb-3 border-b border-zinc-100 dark:border-zinc-800">
+            <flux:icon.beaker class="w-5 h-5 text-purple-500" />
+            <flux:heading size="lg" class="font-bold">Hasil Laboratorium</flux:heading>
+        </div>
+
+        @php
+            $activeLabOrder = $labOrders->first();
+        @endphp
+
+        @if ($activeLabOrder)
+            <div class="space-y-4">
+                <div class="flex justify-between items-center bg-zinc-50 dark:bg-zinc-950 p-2.5 rounded-lg border border-zinc-200/50 dark:border-zinc-800/40">
+                    <span class="text-xs font-semibold text-zinc-600 dark:text-zinc-400">Status Order:</span>
+                    @php
+                        $statusColor = match($activeLabOrder->status) {
+                            'pending' => 'amber',
+                            'processing' => 'blue',
+                            'completed' => 'green',
+                            default => 'zinc'
+                        };
+                    @endphp
+                    <flux:badge color="{{ $statusColor }}" size="sm" class="font-bold uppercase">{{ $activeLabOrder->status_label }}</flux:badge>
+                </div>
+
+                <div class="divide-y divide-zinc-100 dark:divide-zinc-800/80">
+                    @foreach ($activeLabOrder->results as $result)
+                        <div class="py-3 first:pt-0 last:pb-0">
+                            <div class="flex justify-between items-start gap-2">
+                                <span class="font-bold text-sm text-zinc-900 dark:text-white leading-tight">{{ $result->test_name_snapshot }}</span>
+                                @if ($activeLabOrder->status === 'completed')
+                                    @if ($result->is_abnormal)
+                                        <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-red-100 dark:bg-red-950 text-red-700 dark:text-red-300 ring-1 ring-red-500/20">Abnormal</span>
+                                    @else
+                                        <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 ring-1 ring-emerald-500/20">Normal</span>
+                                    @endif
+                                @endif
+                            </div>
+                            <div class="flex justify-between items-center mt-1.5">
+                                <div class="text-xs">
+                                    <span class="text-zinc-400">Hasil:</span>
+                                    @if ($activeLabOrder->status === 'completed')
+                                        <span class="font-mono text-sm font-bold {{ $result->is_abnormal ? 'text-red-600 dark:text-red-400 animate-pulse' : 'text-zinc-900 dark:text-white' }}">
+                                            {{ $result->result_value ?? '-' }}
+                                        </span>
+                                        <span class="text-[10px] text-zinc-500 font-mono">{{ $result->unit_snapshot }}</span>
+                                    @else
+                                        <span class="text-zinc-400 italic font-mono text-xs">Menunggu analis</span>
+                                    @endif
+                                </div>
+                                <div class="text-[10px] text-zinc-400 font-mono">
+                                    Rujukan: {{ $result->normal_range_snapshot ?? '-' }}
+                                </div>
+                            </div>
+                            @if ($activeLabOrder->status === 'completed' && $result->analis)
+                                <div class="mt-1 text-[9px] text-zinc-400 italic text-right">
+                                    Analis: {{ $result->analis->nama_petugas }}
+                                </div>
+                            @endif
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        @else
+            <div class="text-center py-6 text-xs text-zinc-400 dark:text-zinc-500 italic border border-dashed border-zinc-200 dark:border-zinc-800 rounded-lg">
+                Tidak ada permintaan lab pada kunjungan ini.
+            </div>
+        @endif
+    </div>
+
+    <!-- Riwayat Kunjungan Timeline Card -->
+    <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6 shadow-sm">
+        <div class="flex items-center gap-2 mb-4 pb-3 border-b border-zinc-100 dark:border-zinc-800">
+            <flux:icon.clock class="w-5 h-5 text-indigo-500" />
+            <flux:heading size="lg" class="font-bold">Riwayat Kunjungan</flux:heading>
+        </div>
+
+        <div class="relative pl-4 border-l-2 border-zinc-200 dark:border-zinc-800 space-y-6">
+            @forelse ($recentHistory as $history)
+                <div class="relative">
+                    <!-- Bullet marker -->
+                    <div class="absolute -left-[23px] mt-1 w-3.5 h-3.5 rounded-full bg-zinc-300 dark:bg-zinc-700 border-2 border-white dark:border-zinc-900"></div>
+
+                    <div class="text-xs text-zinc-500 dark:text-zinc-400 font-mono font-semibold">{{ $history->created_at->format('d-m-Y H:i') }}</div>
+                    <div class="font-bold text-sm text-zinc-800 dark:text-zinc-200 uppercase mt-0.5">
+                        {{ $history->poliklinik_type === 'umum' ? 'Poli Umum' : ($history->poliklinik_type === 'gigi' ? 'Poli Gigi' : 'Klinik KIA') }}
+                    </div>
+                    <div class="text-xs text-zinc-500 dark:text-zinc-400">
+                        🩺 {{ $history->dokter->nama_petugas ?? '-' }} 
+                        @if($history->dokter?->nomor_sip)
+                            <span class="text-[10px] text-zinc-400">(SIP: {{ $history->dokter->nomor_sip }})</span>
+                        @endif
+                    </div>
+
+                    <!-- Diagnoses List -->
+                    <div class="mt-2 flex flex-wrap gap-1">
+                        @forelse($history->icd10s as $diag)
+                            <flux:badge size="sm" color="zinc" class="text-[10px] font-mono" title="{{ $diag->icd10_name }}">{{ $diag->icd10_code }}</flux:badge>
+                        @empty
+                            <span class="text-zinc-400 dark:text-zinc-500 text-xs italic">Tanpa ICD-10</span>
+                        @endforelse
+                    </div>
+
+                    <div class="mt-2 text-xs text-zinc-600 dark:text-zinc-400 line-clamp-3 leading-relaxed bg-zinc-50 dark:bg-zinc-950 p-2.5 rounded-lg border border-zinc-100 dark:border-zinc-800/80">
+                        <strong>S:</strong> {{ $history->subjective ?? '-' }}<br>
+                        <strong>A:</strong> {{ $history->assessment ?? '-' }}
+                    </div>
+
+                    @if ($history->perawat)
+                        <div class="mt-1.5 text-[9px] text-zinc-400 dark:text-zinc-500 italic">
+                            ⚠️ Diinput oleh: {{ $history->perawat->nama_petugas }} pada {{ $history->created_at->format('d-m-Y H:i') }}
+                        </div>
+                    @endif
+                </div>
+            @empty
+                <div class="text-center py-4 text-xs text-zinc-400 dark:text-zinc-500 italic">Tidak ada riwayat medis sebelumnya.</div>
+            @endforelse
+        </div>
+    </div>
+</div>
+</div> {{-- End of Main Grid Wrapper --}}
 
     @if ($showSickLeaveModal)
     <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">

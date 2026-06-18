@@ -3,12 +3,18 @@
 namespace App\Http\Controllers;
 
 use App\Models\MedicalRecord;
+use App\Models\User;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\View\View;
 
 class MedicalRecordController extends Controller
 {
-    public function examine($poliklinik, $encounter_id)
+    public function examine(string $poliklinik, string $encounter_id): View
     {
-        abort_if(! auth()->user()->can('akses_rekam_medis'), 403, 'Akses ditolak: Anda tidak memiliki izin untuk melihat rekam medis.');
+        /** @var User|null $user */
+        $user = Auth::user();
+
+        abort_if(! $user || ! $user->can('akses_rekam_medis'), 403, 'Akses ditolak: Anda tidak memiliki izin untuk melihat rekam medis.');
 
         // 1. Validate polyclinic type parameter
         if (! in_array($poliklinik, ['umum', 'gigi', 'kia'])) {

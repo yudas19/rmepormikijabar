@@ -11,6 +11,7 @@ use App\Models\MasterLabTest;
 use App\Models\MasterMetodeRacik;
 use App\Models\MasterObat;
 use App\Models\MasterPetugas;
+use App\Models\MedicalRecord;
 use App\Models\MedicalRecordIcd10;
 use App\Models\MedicalRecordIcd9;
 use App\Models\MedicalRecordPrescription;
@@ -1426,12 +1427,27 @@ new class extends Component
 
     public function render()
     {
+        $recentHistory = MedicalRecord::with(['icd10s', 'pendaftaran.dokter', 'dokter', 'perawat'])
+            ->where('patient_id', $this->record->patient_id)
+            ->where('status', 'completed')
+            ->where('id', '!=', $this->record->id)
+            ->latest()
+            ->take(3)
+            ->get();
+
+        $labOrders = LabOrder::with(['results.masterLabTest', 'results.analis'])
+            ->where('medical_record_id', $this->record->id)
+            ->latest()
+            ->get();
+
         return view('components.⚡medical-record.⚡poli-umum.poli-umum', [
             'metodeRaciks' => MasterMetodeRacik::all(),
             'aturanPakais' => MasterAturanPakai::all(),
             'doctors' => MasterPetugas::where('jenis_petugas', 'Dokter')->where('is_aktif', true)->get(),
             'staff' => MasterPetugas::where('is_aktif', true)->get(),
             'allLabTests' => MasterLabTest::where('is_aktif', true)->orderBy('category')->orderBy('test_name')->get(),
+            'recentHistory' => $recentHistory,
+            'labOrders' => $labOrders,
         ]);
     }
 };
