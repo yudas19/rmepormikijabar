@@ -124,7 +124,7 @@
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div>
                     <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Tingkat Kesadaran</label>
-                    <select wire:model="kesadaran_gcs" class="block w-full rounded-lg border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3 py-2 text-sm text-zinc-900 dark:text-white focus:border-indigo-500 focus:ring-indigo-500 shadow-sm" {{ !$isEditable ? 'disabled' : '' }}>
+                    <select wire:model="kesadaran_gcs" class="block w-full rounded-lg border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3 py-2 text-xs text-zinc-900 dark:text-white focus:border-indigo-500 focus:ring-indigo-500 shadow-sm" {{ !$isEditable ? 'disabled' : '' }}>
                         <option value="Compos Mentis">Compos Mentis (Sadar Penuh)</option>
                         <option value="Apatis">Apatis (Acuh tak acuh)</option>
                         <option value="Somnolen">Somnolen (Mengantuk)</option>
@@ -134,8 +134,8 @@
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Eye (E) - Refleks Mata</label>
-                    <select wire:model.live="gcs_eye" class="block w-full rounded-lg border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3 py-2 text-sm text-zinc-900 dark:text-white focus:border-indigo-500 focus:ring-indigo-500 shadow-sm" {{ !$isEditable ? 'disabled' : '' }}>
+                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Eye - Refleks Mata</label>
+                    <select wire:model.live="gcs_eye" class="block w-full rounded-lg border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3 py-2 text-xs text-zinc-900 dark:text-white focus:border-indigo-500 focus:ring-indigo-500 shadow-sm" {{ !$isEditable ? 'disabled' : '' }}>
                         <option value="4">4 - Spontan membuka mata</option>
                         <option value="3">3 - Membuka mata terhadap suara</option>
                         <option value="2">2 - Membuka mata terhadap nyeri</option>
@@ -144,8 +144,8 @@
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Verbal (V) - Respons Suara</label>
-                    <select wire:model.live="gcs_verbal" class="block w-full rounded-lg border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3 py-2 text-sm text-zinc-900 dark:text-white focus:border-indigo-500 focus:ring-indigo-500 shadow-sm" {{ !$isEditable ? 'disabled' : '' }}>
+                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Verbal - Respons Suara</label>
+                    <select wire:model.live="gcs_verbal" class="block w-full rounded-lg border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3 py-2 text-xs text-zinc-900 dark:text-white focus:border-indigo-500 focus:ring-indigo-500 shadow-sm" {{ !$isEditable ? 'disabled' : '' }}>
                         <option value="5">5 - Orientasi baik & lancar</option>
                         <option value="4">4 - Bingung, bicara kacau</option>
                         <option value="3">3 - Kata-kata tidak teratur</option>
@@ -155,8 +155,8 @@
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Motorik (M) - Respons Gerak</label>
-                    <select wire:model.live="gcs_motor" class="block w-full rounded-lg border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3 py-2 text-sm text-zinc-900 dark:text-white focus:border-indigo-500 focus:ring-indigo-500 shadow-sm" {{ !$isEditable ? 'disabled' : '' }}>
+                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Motorik - Respons Gerak</label>
+                    <select wire:model.live="gcs_motor" class="block w-full rounded-lg border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3 py-2 text-xs text-zinc-900 dark:text-white focus:border-indigo-500 focus:ring-indigo-500 shadow-sm" {{ !$isEditable ? 'disabled' : '' }}>
                         <option value="6">6 - Mematuhi perintah gerak</option>
                         <option value="5">5 - Mengetahui lokasi nyeri</option>
                         <option value="4">4 - Menarik tubuh terhadap nyeri</option>
@@ -168,8 +168,8 @@
             </div>
 
             <div class="flex items-center gap-2 pt-2">
-                <span class="text-sm font-semibold">Total Skor GCS:</span>
-                <flux:badge color="{{ $gcs_score >= 13 ? 'green' : ($gcs_score >= 9 ? 'yellow' : 'red') }}" size="md" class="font-mono text-sm font-bold">
+                <span class="text-xs font-semibold">Total Skor GCS:</span>
+                <flux:badge color="{{ $gcs_score >= 13 ? 'green' : ($gcs_score >= 9 ? 'yellow' : 'red') }}" size="md" class="font-mono text-xs font-bold">
                     E{{ $gcs_eye }}V{{ $gcs_verbal }}M{{ $gcs_motor }} = Score {{ $gcs_score }}
                 </flux:badge>
             </div>

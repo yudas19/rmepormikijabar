@@ -1379,7 +1379,11 @@ new class extends Component
             'allLabTests' => MasterLabTest::where('is_aktif', true)->orderBy('category')->orderBy('test_name')->get(),
             'recentHistory' => MedicalRecord::with(['icd10s', 'pendaftaran.dokter', 'dokter', 'perawat', 'kiaAncRecord'])
                 ->where('patient_id', $this->record->patient_id)
-                ->where('poliklinik_type', 'kia')
+                ->whereHas('poli', function ($query) {
+                    $query->where('nama_poli', 'like', '%kia%')
+                        ->orWhere('nama_poli', 'like', '%anak%')
+                        ->orWhere('nama_poli', 'like', '%ibu%');
+                })
                 ->where('status', 'completed')
                 ->where('id', '!=', $this->recordId)
                 ->latest()
