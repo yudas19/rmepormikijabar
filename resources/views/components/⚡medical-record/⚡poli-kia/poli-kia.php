@@ -11,11 +11,11 @@ use App\Models\MasterLabTest;
 use App\Models\MasterMetodeRacik;
 use App\Models\MasterObat;
 use App\Models\MasterPetugas;
+use App\Models\MedicalRecord;
 use App\Models\MedicalRecordIcd10;
 use App\Models\MedicalRecordIcd9;
 use App\Models\MedicalRecordPrescription;
 use App\Models\MedicalRecordPrescriptionItem;
-use App\Models\OdontogramRecord;
 use App\Models\Pendaftaran;
 use App\Models\SuratKeterangan;
 use App\Models\SuratPersetujuan;
@@ -129,18 +129,6 @@ new class extends Component
 
     public $showReferralModal = false;
 
-    // ─── Odontogram (Poli Gigi) ─────────────────────────────────────────
-    /** @var array<int, array{condition_code: string, notes: string}> tooth_number => data */
-    public array $teethMap = [];
-
-    public ?int $activeTooth = null;
-
-    public string $activeToothCondition = 'SOU';
-
-    public string $activeToothNotes = '';
-
-    public bool $showToothModal = false;
-
     // ─── KIA ANC ────────────────────────────────────────────────────────
     public string $anc_hpht = '';
 
@@ -169,6 +157,18 @@ new class extends Component
     public bool $anc_riwayat_sc = false;
 
     public string $anc_catatan_bidan = '';
+
+    // GPA parameters
+    public $anc_g = '';
+
+    public $anc_p = '';
+
+    public $anc_a = '';
+
+    // TT & Fe tracking
+    public string $anc_imunisasi_tt = '';
+
+    public string $anc_tablet_fe = '';
 
     // ─── Lab Ordering ───────────────────────────────────────────────────────
     /** @var array<int, array{id: int, test_name: string, category: string, tariff: int, default_normal_range: string|null, default_unit: string|null}> */
@@ -358,16 +358,6 @@ new class extends Component
         $this->health_height = $this->height;
         $this->health_weight = $this->weight;
 
-        // Preload Odontogram (Poli Gigi)
-        if ($this->poliklinik === 'gigi') {
-            foreach ($record->odontogramRecords as $tooth) {
-                $this->teethMap[$tooth->tooth_number] = [
-                    'condition_code' => $tooth->condition_code,
-                    'notes' => $tooth->notes ?? '',
-                ];
-            }
-        }
-
         // Preload KIA ANC
         if ($this->poliklinik === 'kia') {
             $anc = $record->kiaAncRecord;
@@ -386,6 +376,12 @@ new class extends Component
                 $this->anc_golongan_darah = $anc->golongan_darah ?? '';
                 $this->anc_riwayat_sc = (bool) $anc->riwayat_sc;
                 $this->anc_catatan_bidan = $anc->catatan_bidan ?? '';
+                // Preload GPA and trackings
+                $this->anc_g = $anc->g !== null ? (string) $anc->g : '';
+                $this->anc_p = $anc->p !== null ? (string) $anc->p : '';
+                $this->anc_a = $anc->a !== null ? (string) $anc->a : '';
+                $this->anc_imunisasi_tt = $anc->imunisasi_tt ?? '';
+                $this->anc_tablet_fe = $anc->tablet_fe !== null ? (string) $anc->tablet_fe : '';
             }
         }
 
@@ -565,52 +561,6 @@ new class extends Component
         array_splice($this->selectedIcd9s, $index, 1);
 
         $this->selectedIcd9s = array_values($this->selectedIcd9s);
-    }
-
-    // ─── Odontogram Methods ──────────────────────────────────────────────
-
-    public function openTooth(int $toothNumber): void
-    {
-        if (! $this->isEditable) {
-            return;
-        }
-
-        $this->activeTooth = $toothNumber;
-        $existing = $this->teethMap[$toothNumber] ?? null;
-        $this->activeToothCondition = $existing['condition_code'] ?? 'SOU';
-        $this->activeToothNotes = $existing['notes'] ?? '';
-        $this->showToothModal = true;
-    }
-
-    public function saveToothCondition(): void
-    {
-        if (! $this->activeTooth || ! $this->isEditable) {
-            return;
-        }
-
-        $this->teethMap[$this->activeTooth] = [
-            'condition_code' => $this->activeToothCondition,
-            'notes' => $this->activeToothNotes,
-        ];
-
-        $this->showToothModal = false;
-        $this->activeTooth = null;
-        $this->activeToothNotes = '';
-    }
-
-    public function closeToothModal(): void
-    {
-        $this->showToothModal = false;
-        $this->activeTooth = null;
-    }
-
-    public function clearTooth(int $toothNumber): void
-    {
-        if (! $this->isEditable) {
-            return;
-        }
-
-        unset($this->teethMap[$toothNumber]);
     }
 
     // ─── ANC (KIA) Methods ──────────────────────────────────────────────
@@ -1001,21 +951,7 @@ new class extends Component
             }
         }
 
-        // 5. Synchronize Odontogram (Poli Gigi only)
-        if ($this->poliklinik === 'gigi') {
-            OdontogramRecord::where('medical_record_id', $this->recordId)->delete();
-
-            foreach ($this->teethMap as $toothNumber => $data) {
-                OdontogramRecord::create([
-                    'medical_record_id' => $this->recordId,
-                    'tooth_number' => $toothNumber,
-                    'condition_code' => $data['condition_code'],
-                    'notes' => $data['notes'] ?: null,
-                ]);
-            }
-        }
-
-        // 6. Upsert KIA ANC Record (KIA only)
+        // 6. Upsert KIA ANC Record
         if ($this->poliklinik === 'kia') {
             KiaAncRecord::updateOrCreate(
                 ['medical_record_id' => $this->recordId],
@@ -1034,6 +970,12 @@ new class extends Component
                     'golongan_darah' => $this->anc_golongan_darah ?: null,
                     'riwayat_sc' => $this->anc_riwayat_sc,
                     'catatan_bidan' => $this->anc_catatan_bidan ?: null,
+                    // New columns
+                    'g' => $this->anc_g !== '' ? intval($this->anc_g) : null,
+                    'p' => $this->anc_p !== '' ? intval($this->anc_p) : null,
+                    'a' => $this->anc_a !== '' ? intval($this->anc_a) : null,
+                    'imunisasi_tt' => $this->anc_imunisasi_tt ?: null,
+                    'tablet_fe' => $this->anc_tablet_fe !== '' ? intval($this->anc_tablet_fe) : null,
                 ]
             );
         }
@@ -1050,7 +992,6 @@ new class extends Component
                     'requested_by_id' => $dokter?->id,
                     'total_tariff' => $totalTariff,
                     'clinical_notes' => $this->labClinicalNotes ?: null,
-                    // Only override status if it's still pending (don't downgrade a completed order)
                     'status' => $this->existingLabOrderId
                         ? LabOrder::find($this->existingLabOrderId)?->status ?? 'pending'
                         : 'pending',
@@ -1059,7 +1000,6 @@ new class extends Component
 
             $this->existingLabOrderId = $labOrder->id;
 
-            // Delete existing results and recreate (snapshot pattern)
             if ($labOrder->status === 'pending') {
                 $labOrder->results()->delete();
 
@@ -1075,7 +1015,6 @@ new class extends Component
                 }
             }
         } elseif ($this->existingLabOrderId) {
-            // Doctor removed all tests — delete the order if still pending
             $labOrder = LabOrder::find($this->existingLabOrderId);
             if ($labOrder && $labOrder->status === 'pending') {
                 $labOrder->results()->delete();
@@ -1085,8 +1024,6 @@ new class extends Component
         }
 
         $this->record->load(['perawat', 'dokter']);
-
-        // Re-load the prescriptions from DB so that they have valid IDs for printing
         $this->record->load(['prescriptions.items.requestedObat', 'prescriptions.metodeRacik']);
         $this->prescriptionsList = [];
         foreach ($this->record->prescriptions as $presc) {
@@ -1225,7 +1162,6 @@ new class extends Component
     public function openReferral()
     {
         $this->ref_dokter_id = $this->record->pendaftaran->dokter_id ?? '';
-        // Pull primary diagnosis if any
         $primaryDiag = '';
         foreach ($this->selectedIcd10s as $selected) {
             if ($selected['is_primary']) {
@@ -1388,6 +1324,16 @@ new class extends Component
         $this->dispatch('refresh-page');
     }
 
+    public function saveAnc()
+    {
+        if (! $this->isEditable) {
+            return;
+        }
+        $this->saveData();
+        Flux::toast(variant: 'success', text: 'Pemeriksaan Kehamilan ANC berhasil disimpan.');
+        $this->dispatch('refresh-page');
+    }
+
     public function saveIcd()
     {
         if (! $this->isEditable) {
@@ -1418,16 +1364,6 @@ new class extends Component
         $this->dispatch('refresh-page');
     }
 
-    public function saveOdontogram()
-    {
-        if (! $this->isEditable) {
-            return;
-        }
-        $this->saveData();
-        Flux::toast(variant: 'success', text: 'Pemeriksaan Odontogram berhasil disimpan.');
-        $this->dispatch('refresh-page');
-    }
-
     public function printUnified($url)
     {
         $this->dispatch('open-print-tab', ['url' => $url]);
@@ -1435,12 +1371,20 @@ new class extends Component
 
     public function render()
     {
-        return view('components.⚡medical-record.⚡poli-umum.poli-umum', [
+        return view('components.⚡medical-record.⚡poli-kia.poli-kia', [
             'metodeRaciks' => MasterMetodeRacik::all(),
             'aturanPakais' => MasterAturanPakai::all(),
             'doctors' => MasterPetugas::where('jenis_petugas', 'Dokter')->where('is_aktif', true)->get(),
             'staff' => MasterPetugas::where('is_aktif', true)->get(),
             'allLabTests' => MasterLabTest::where('is_aktif', true)->orderBy('category')->orderBy('test_name')->get(),
+            'recentHistory' => MedicalRecord::with(['icd10s', 'pendaftaran.dokter', 'dokter', 'perawat', 'kiaAncRecord'])
+                ->where('patient_id', $this->record->patient_id)
+                ->where('poliklinik_type', 'kia')
+                ->where('status', 'completed')
+                ->where('id', '!=', $this->recordId)
+                ->latest()
+                ->take(3)
+                ->get(),
         ]);
     }
 };

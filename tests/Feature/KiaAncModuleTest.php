@@ -55,7 +55,7 @@ test('KIA ANC section is rendered for kia poliklinik', function () {
         'nomor_antrean' => 'K-01',
     ]);
 
-    Livewire::test('⚡medical-record.poli-umum', ['record' => $medicalRecord])
+    Livewire::test('⚡medical-record.poli-kia', ['record' => $medicalRecord])
         ->assertSet('poliklinik', 'kia')
         ->assertSee('Pemeriksaan ANC');
 });
@@ -107,7 +107,7 @@ test('ANC HPHT update auto-calculates taksiran persalinan via Naegele Rule', fun
     $hpht = '2026-01-01';
     $expectedTp = '2026-10-08'; // 2026-01-01 + 7days - 3months + 1year
 
-    Livewire::test('⚡medical-record.poli-umum', ['record' => $medicalRecord])
+    Livewire::test('⚡medical-record.poli-kia', ['record' => $medicalRecord])
         ->set('anc_hpht', $hpht)
         ->assertSet('anc_tp', $expectedTp);
 });
@@ -153,7 +153,7 @@ test('ANC data is saved and persisted correctly on saveDraft', function () {
         'nomor_antrean' => 'K-03',
     ]);
 
-    Livewire::test('⚡medical-record.poli-umum', ['record' => $medicalRecord])
+    Livewire::test('⚡medical-record.poli-kia', ['record' => $medicalRecord])
         ->set('anc_hpht', '2026-01-01')
         ->set('anc_tfu', '28.5')
         ->set('anc_lila', '24.0')
@@ -226,7 +226,7 @@ test('ANC data is preloaded on component mount', function () {
         'presentasi' => 'Kepala',
     ]);
 
-    Livewire::test('⚡medical-record.poli-umum', ['record' => $medicalRecord])
+    Livewire::test('⚡medical-record.poli-kia', ['record' => $medicalRecord])
         ->assertSet('anc_hpht', '2025-12-01')
         ->assertSet('anc_tp', '2026-09-08')
         ->assertSet('anc_djj', '150')

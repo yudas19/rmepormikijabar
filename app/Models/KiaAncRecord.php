@@ -19,6 +19,10 @@ class KiaAncRecord extends Model
         'lila' => 'decimal:1',
         'djj' => 'integer',
         'riwayat_sc' => 'boolean',
+        'g' => 'integer',
+        'p' => 'integer',
+        'a' => 'integer',
+        'tablet_fe' => 'integer',
     ];
 
     public function medicalRecord(): BelongsTo

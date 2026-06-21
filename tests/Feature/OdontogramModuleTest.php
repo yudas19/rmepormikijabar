@@ -55,7 +55,7 @@ test('odontogram section is rendered for gigi poliklinik', function () {
         'nomor_antrean' => 'G-01',
     ]);
 
-    Livewire::test('⚡medical-record.poli-umum', ['record' => $medicalRecord])
+    Livewire::test('⚡medical-record.poli-gigi', ['record' => $medicalRecord])
         ->assertSet('poliklinik', 'gigi')
         ->assertSee('Pemeriksaan Odontogram');
 });
@@ -101,7 +101,7 @@ test('clicking a tooth opens the tooth modal and sets active tooth', function ()
         'nomor_antrean' => 'G-02',
     ]);
 
-    Livewire::test('⚡medical-record.poli-umum', ['record' => $medicalRecord])
+    Livewire::test('⚡medical-record.poli-gigi', ['record' => $medicalRecord])
         ->call('openTooth', 36)
         ->assertSet('activeTooth', 36)
         ->assertSet('showToothModal', true)
@@ -149,7 +149,7 @@ test('tooth condition can be saved and appears in teethMap', function () {
         'nomor_antrean' => 'G-03',
     ]);
 
-    Livewire::test('⚡medical-record.poli-umum', ['record' => $medicalRecord])
+    Livewire::test('⚡medical-record.poli-gigi', ['record' => $medicalRecord])
         ->call('openTooth', 11)
         ->set('activeToothCondition', 'CAR')
         ->set('activeToothNotes', 'Karies profunda mesial')
@@ -199,7 +199,7 @@ test('odontogram data is persisted to database on saveDraft', function () {
         'nomor_antrean' => 'G-04',
     ]);
 
-    Livewire::test('⚡medical-record.poli-umum', ['record' => $medicalRecord])
+    Livewire::test('⚡medical-record.poli-gigi', ['record' => $medicalRecord])
         // Simulate user clicking teeth and setting conditions
         ->call('openTooth', 36)
         ->set('activeToothCondition', 'CAR')
@@ -278,7 +278,7 @@ test('odontogram data is preloaded on component mount', function () {
         'notes' => null,
     ]);
 
-    $component = Livewire::test('⚡medical-record.poli-umum', ['record' => $medicalRecord]);
+    $component = Livewire::test('⚡medical-record.poli-gigi', ['record' => $medicalRecord]);
 
     $teethMap = $component->get('teethMap');
 

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\LabOrder;
 use App\Models\MedicalRecord;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
@@ -32,7 +33,7 @@ class MedicalRecordController extends Controller
         }
 
         // 4. Fetch the 3 most recent medical histories
-        $recentHistory = MedicalRecord::with(['icd10s', 'pendaftaran.dokter'])
+        $recentHistory = MedicalRecord::with(['icd10s', 'pendaftaran.dokter', 'dokter', 'perawat'])
             ->where('patient_id', $record->patient_id)
             ->where('status', 'completed')
             ->where('id', '!=', $record->id)
@@ -40,12 +41,19 @@ class MedicalRecordController extends Controller
             ->take(3)
             ->get();
 
-        // 5. Load the base view and pass required variables
+        // 5. Fetch lab orders for this record
+        $labOrders = LabOrder::with(['results.masterLabTest', 'results.analis'])
+            ->where('medical_record_id', $record->id)
+            ->latest()
+            ->get();
+
+        // 6. Load the base view and pass required variables
         return view('medical_records.examine', [
             'record' => $record,
             'poliklinik' => $poliklinik,
             'patient' => $record->pasien,
             'recentHistory' => $recentHistory,
+            'labOrders' => $labOrders,
         ]);
     }
 }
