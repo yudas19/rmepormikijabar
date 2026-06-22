@@ -8,8 +8,9 @@
                 </div>
                 <flux:subheading class="mt-1 font-medium">Kelola antrean kunjungan pasien dan pemeriksaan klinis medis secara real-time.</flux:subheading>
             </div>
-            <div class="w-full sm:w-auto min-w-[200px]">
-                <flux:input type="date" wire:model.live="filterDate" size="sm" label="Pilih Tanggal Kunjungan" />
+            <div class="flex gap-4 w-full sm:w-auto">
+                <flux:input type="date" wire:model.live="filterStartDate" size="sm" label="Mulai Tanggal" />
+                <flux:input type="date" wire:model.live="filterEndDate" size="sm" label="Sampai Tanggal" />
             </div>
         </div>
 
@@ -48,13 +49,13 @@
 
                             <!-- Doctor -->
                             <flux:table.cell class="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                                dr. {{ $q->pendaftaran->dokter->nama_petugas ?? '-' }}
+                                dr. {{ $q->pendaftaran?->dokter?->nama_petugas ?? '-' }}
                             </flux:table.cell>
 
                             <!-- Payment Method -->
                             <flux:table.cell>
-                                <flux:badge size="sm" color="{{ $q->pendaftaran->cara_bayar === 'BPJS' ? 'indigo' : 'zinc' }}">
-                                    {{ $q->pendaftaran->cara_bayar ?? 'Umum' }}
+                                <flux:badge size="sm" color="{{ ($q->pendaftaran?->cara_bayar ?? 'Umum') === 'BPJS' ? 'indigo' : 'zinc' }}">
+                                    {{ $q->pendaftaran?->cara_bayar ?? 'Umum' }}
                                 </flux:badge>
                             </flux:table.cell>
 
@@ -89,8 +90,11 @@
                             <!-- Actions -->
                             <flux:table.cell class="flex items-center gap-2">
                                 @if ($q->status !== 'completed' && $q->status !== 'completed_all')
-                                    <flux:button variant="filled" color="green" size="sm" wire:click="panggilAntrean({{ $q->id }})">
-                                        Panggil Antrean
+                                    @php
+                                        $sudahDipanggil = in_array($q->status_panggilan, ['memanggil', 'selesai']);
+                                    @endphp
+                                    <flux:button variant="filled" color="{{ $sudahDipanggil ? 'green' : 'zinc' }}" size="sm" wire:click="panggilAntrean({{ $q->id }})">
+                                        {{ $sudahDipanggil ? 'Panggil Ulang' : 'Panggil Antrean' }}
                                     </flux:button>
                                 @endif
 

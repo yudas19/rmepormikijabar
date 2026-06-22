@@ -18,7 +18,9 @@ class PrintController extends Controller
 
         $pdf = Pdf::loadView('print.consent', compact('consent'));
 
-        return $pdf->stream('consent_'.$consent->no_surat.'.pdf');
+        $filename = 'consent_'.str_replace(['/', '\\'], '_', $consent->no_surat).'.pdf';
+
+        return $pdf->stream($filename);
     }
 
     public function printReferral($id)
@@ -27,7 +29,9 @@ class PrintController extends Controller
 
         $pdf = Pdf::loadView('print.referral', compact('referral'));
 
-        return $pdf->stream('referral_'.$referral->no_surat.'.pdf');
+        $filename = 'referral_'.str_replace(['/', '\\'], '_', $referral->no_surat).'.pdf';
+
+        return $pdf->stream($filename);
     }
 
     public function printCertificate($id)
@@ -37,7 +41,9 @@ class PrintController extends Controller
 
         $pdf = Pdf::loadView('print.certificate', compact('certificate', 'profile'));
 
-        return $pdf->stream('certificate_'.$certificate->no_surat.'.pdf');
+        $filename = 'certificate_'.str_replace(['/', '\\'], '_', $certificate->no_surat).'.pdf';
+
+        return $pdf->stream($filename);
     }
 
     public function printQueueTicket($id)

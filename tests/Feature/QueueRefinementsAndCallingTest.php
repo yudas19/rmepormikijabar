@@ -68,10 +68,12 @@ test('pendaftaran queue filters by date and allows cancel', function () {
 
     // Test livewire pendaftaran date filtering
     Livewire::test('⚡pendaftaran')
-        ->set('filterDate', date('Y-m-d'))
+        ->set('filterStartDate', date('Y-m-d'))
+        ->set('filterEndDate', date('Y-m-d'))
         ->assertSee('A-01')
         ->assertDontSee('A-02')
-        ->set('filterDate', date('Y-m-d', strtotime('-1 day')))
+        ->set('filterStartDate', date('Y-m-d', strtotime('-1 day')))
+        ->set('filterEndDate', date('Y-m-d', strtotime('-1 day')))
         ->assertSee('A-02')
         ->assertDontSee('A-01')
         // Cancel the pendaftaran

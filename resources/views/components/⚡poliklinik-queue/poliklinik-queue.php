@@ -7,7 +7,9 @@ new class extends Component
 {
     public $poliklinik;
 
-    public $filterDate = '';
+    public $filterStartDate = '';
+
+    public $filterEndDate = '';
 
     public function mount($poliklinik)
     {
@@ -18,7 +20,8 @@ new class extends Component
         abort_if(! auth()->user()->can('akses_poli_'.$poliklinik), 403, 'Akses ditolak: Anda tidak memiliki izin untuk melihat antrean Poliklinik ini.');
 
         $this->poliklinik = $poliklinik;
-        $this->filterDate = date('Y-m-d');
+        $this->filterStartDate = date('Y-m-d');
+        $this->filterEndDate = date('Y-m-d');
     }
 
     public function panggilAntrean($id)
@@ -52,7 +55,8 @@ new class extends Component
                         ->where('nama_poli', 'not like', '%ibu%');
                 }
             })
-            ->whereDate('tanggal_kunjungan', $this->filterDate)
+            ->whereDate('tanggal_kunjungan', '>=', $this->filterStartDate)
+            ->whereDate('tanggal_kunjungan', '<=', $this->filterEndDate)
             ->where('status', '!=', 'batal')
             ->orderBy('status', 'asc') // Group active statuses first
             ->orderBy('id', 'asc')     // First registered first

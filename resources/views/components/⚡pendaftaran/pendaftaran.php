@@ -35,12 +35,20 @@ new class extends Component
 
     public $showCertificateModal = false;
 
+    public $showSuccessPrintModal = false;
+
+    public $successPrintUrl = '';
+
+    public $successPrintMessage = '';
+
     // Active Patient Selection
     public $selectedPasienId = null;
 
     public $activePendaftaranId = null;
 
-    public $filterDate = '';
+    public $filterStartDate = '';
+
+    public $filterEndDate = '';
 
     public $reg_tanggal_kunjungan = '';
 
@@ -50,7 +58,8 @@ new class extends Component
 
     public function mount()
     {
-        $this->filterDate = date('Y-m-d');
+        $this->filterStartDate = date('Y-m-d');
+        $this->filterEndDate = date('Y-m-d');
         $this->reg_tanggal_kunjungan = date('Y-m-d');
     }
 
@@ -443,8 +452,9 @@ new class extends Component
         $this->showRegisterModal = false;
         Flux::toast(variant: 'success', text: 'Kunjungan rawat jalan berhasil didaftarkan! No Antrean: '.$nomor_antrean);
 
-        // Trigger direct print layout stream in a new tab
-        $this->dispatch('open-print-tab', ['url' => route('print.queue-ticket', ['id' => $medicalRecord->id])]);
+        $this->successPrintUrl = route('print.queue-ticket', ['id' => $medicalRecord->id]);
+        $this->successPrintMessage = 'Pendaftaran rawat jalan berhasil didaftarkan! No Antrean: '.$nomor_antrean.'.';
+        $this->showSuccessPrintModal = true;
     }
 
     // --- CONSENT & LETTERS ACTIONS ---
@@ -509,10 +519,11 @@ new class extends Component
         ]);
 
         $this->showConsentModal = false;
-        Flux::toast(variant: 'success', text: 'Surat persetujuan berhasil dibuat! Membuka dokumen cetak...');
+        Flux::toast(variant: 'success', text: 'Surat persetujuan berhasil dibuat!');
 
-        // Stream PDF to browser in new tab
-        $this->dispatch('open-print-tab', ['url' => route('print.consent', ['id' => $saved->id])]);
+        $this->successPrintUrl = route('print.consent', ['id' => $saved->id]);
+        $this->successPrintMessage = 'Surat persetujuan berhasil dibuat!';
+        $this->showSuccessPrintModal = true;
     }
 
     public function openReferralModal($pasienId)
@@ -554,9 +565,11 @@ new class extends Component
         ]);
 
         $this->showReferralModal = false;
-        Flux::toast(variant: 'success', text: 'Surat Rujukan berhasil dibuat! Membuka dokumen cetak...');
+        Flux::toast(variant: 'success', text: 'Surat Rujukan berhasil dibuat!');
 
-        $this->dispatch('open-print-tab', ['url' => route('print.referral', ['id' => $saved->id])]);
+        $this->successPrintUrl = route('print.referral', ['id' => $saved->id]);
+        $this->successPrintMessage = 'Surat Rujukan berhasil dibuat!';
+        $this->showSuccessPrintModal = true;
     }
 
     public function openCertificateModal($pasienId, $type)
@@ -643,9 +656,11 @@ new class extends Component
         ]);
 
         $this->showCertificateModal = false;
-        Flux::toast(variant: 'success', text: 'Surat Keterangan berhasil dibuat! Membuka dokumen cetak...');
+        Flux::toast(variant: 'success', text: 'Surat Keterangan berhasil dibuat!');
 
-        $this->dispatch('open-print-tab', ['url' => route('print.certificate', ['id' => $saved->id])]);
+        $this->successPrintUrl = route('print.certificate', ['id' => $saved->id]);
+        $this->successPrintMessage = 'Surat Keterangan berhasil dibuat!';
+        $this->showSuccessPrintModal = true;
     }
 
     public function reprintTicket($id)
@@ -685,7 +700,8 @@ new class extends Component
             ->paginate(10);
 
         $todayQueues = MedicalRecord::with(['pasien', 'poli', 'pendaftaran.dokter', 'pendaftaran.poli'])
-            ->whereDate('tanggal_kunjungan', $this->filterDate)
+            ->whereDate('tanggal_kunjungan', '>=', $this->filterStartDate)
+            ->whereDate('tanggal_kunjungan', '<=', $this->filterEndDate)
             ->where('status', '!=', 'batal')
             ->orderBy('id', 'desc')
             ->get();

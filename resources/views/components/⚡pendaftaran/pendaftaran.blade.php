@@ -82,8 +82,9 @@
                 <flux:heading size="lg">Antrean Kunjungan</flux:heading>
                 <flux:subheading class="mt-1">Daftar pasien yang terdaftar di poliklinik.</flux:subheading>
             </div>
-            <div class="w-full sm:w-auto min-w-[200px]">
-                <flux:input type="date" wire:model.live="filterDate" size="sm" label="Pilih Tanggal Kunjungan" />
+            <div class="flex gap-4">
+                <flux:input type="date" wire:model.live="filterStartDate" size="sm" label="Mulai Tanggal" />
+                <flux:input type="date" wire:model.live="filterEndDate" size="sm" label="Sampai Tanggal" />
             </div>
         </div>
 
@@ -112,9 +113,9 @@
                         <flux:table.cell class="font-semibold">
                             {{ $q->poliklinik_type === 'umum' ? 'Poli Umum' : ($q->poliklinik_type === 'gigi' ? 'Poli Gigi' : 'KIA') }}
                         </flux:table.cell>
-                        <flux:table.cell>{{ $q->pendaftaran->dokter->nama_petugas ?? '-' }}</flux:table.cell>
+                        <flux:table.cell>{{ $q->pendaftaran?->dokter?->nama_petugas ?? '-' }}</flux:table.cell>
                         <flux:table.cell>
-                            <flux:badge size="sm">{{ $q->pendaftaran->cara_bayar ?? 'Umum' }}</flux:badge>
+                            <flux:badge size="sm">{{ $q->pendaftaran?->cara_bayar ?? 'Umum' }}</flux:badge>
                         </flux:table.cell>
                         <flux:table.cell>
                             @php
@@ -138,7 +139,7 @@
                             <flux:badge color="{{ $color }}" size="sm">{{ $name }}</flux:badge>
                         </flux:table.cell>
                         <flux:table.cell class="flex items-center gap-2">
-                            <flux:button variant="ghost" icon="printer" size="sm" wire:click="reprintTicket({{ $q->id }})" title="Cetak Ulang Tiket" />
+                            <flux:button variant="ghost" icon="printer" size="sm" href="{{ route('print.queue-ticket', ['id' => $q->id]) }}" target="_blank" title="Cetak Ulang Tiket" />
                             <flux:button variant="primary" size="sm" href="{{ route('medical-record.examine', ['poliklinik' => $q->poliklinik_type, 'encounter_id' => $q->encounter_id]) }}" wire:navigate>
                                 Periksa
                             </flux:button>
@@ -472,6 +473,23 @@
             <div class="flex justify-end gap-2 pt-2">
                 <flux:button variant="filled" wire:click="$set('showCancelConfirmation', false)">Batal</flux:button>
                 <flux:button variant="danger" wire:click="cancelPendaftaran">Ya, Batalkan</flux:button>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    <!-- MODAL SUCCESS PRINT -->
+    @if ($showSuccessPrintModal)
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
+        <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-xl w-full max-w-md p-6 space-y-4">
+            <div class="flex items-center gap-3 text-green-600 dark:text-green-400">
+                <flux:icon.check-circle class="w-8 h-8 shrink-0" />
+                <flux:heading size="lg">Dokumen Berhasil Dibuat</flux:heading>
+            </div>
+            <p class="text-sm text-zinc-600 dark:text-zinc-400">{{ $successPrintMessage }}</p>
+            <div class="flex justify-end gap-2 pt-2">
+                <flux:button variant="filled" wire:click="$set('showSuccessPrintModal', false)">Tutup</flux:button>
+                <flux:button href="{{ $successPrintUrl }}" target="_blank" variant="primary" wire:click="$set('showSuccessPrintModal', false)">Cetak Dokumen</flux:button>
             </div>
         </div>
     </div>

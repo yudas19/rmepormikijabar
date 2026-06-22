@@ -11,11 +11,14 @@ new class extends Component
 
     public string $searchQuery = '';
 
-    public string $filterDate = '';
+    public string $filterStartDate = '';
+
+    public string $filterEndDate = '';
 
     public function mount(): void
     {
-        $this->filterDate = date('Y-m-d');
+        $this->filterStartDate = date('Y-m-d');
+        $this->filterEndDate = date('Y-m-d');
     }
 
     public function render()
@@ -32,8 +35,9 @@ new class extends Component
             'results',
         ])
             ->whereHas('medicalRecord', function ($q) {
-                $q->whereDate('tanggal_kunjungan', $this->filterDate)
-                    ->where('status', '!=', 'batal');
+                $q->whereDate('tanggal_kunjungan', '>=', $this->filterStartDate)
+                  ->whereDate('tanggal_kunjungan', '<=', $this->filterEndDate)
+                  ->where('status', '!=', 'batal');
             })
             ->when($this->statusFilter, fn ($q) => $q->where('status', $this->statusFilter))
             ->when($this->searchQuery, function ($q) {
