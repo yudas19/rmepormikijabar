@@ -52,7 +52,7 @@
                         <div>
                             <div class="text-xs text-zinc-500 font-semibold uppercase tracking-wider">Umur / Tgl Lahir</div>
                             <div class="mt-0.5">
-                                {{ $patient->tanggal_lahir ? $patient->tanggal_lahir->diffInYears(now()) . ' Thn' : '-' }}
+                                {{ $patient->tanggal_lahir ? number_format((float) $patient->tanggal_lahir->diffInYears(now()), 1) . ' Thn' : '-' }}
                                 <span class="text-xs text-zinc-400">({{ $patient->tanggal_lahir ? $patient->tanggal_lahir->format('d-m-Y') : '-' }})</span>
                             </div>
                         </div>

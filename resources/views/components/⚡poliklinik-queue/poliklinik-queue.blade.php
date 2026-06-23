@@ -44,7 +44,7 @@
                             <!-- Gender & Age -->
                             <flux:table.cell class="text-xs">
                                 <div>{{ $q->pasien->jenis_kelamin === 'L' ? 'Laki-laki' : 'Perempuan' }}</div>
-                                <div class="text-zinc-500 mt-0.5">{{ $q->pasien->tanggal_lahir ? $q->pasien->tanggal_lahir->diffInYears(now()) . ' Tahun' : '-' }}</div>
+                                <div class="text-zinc-500 mt-0.5">{{ $q->pasien->tanggal_lahir ? number_format((float) $q->pasien->tanggal_lahir->diffInYears(now()), 1) . ' Tahun' : '-' }}</div>
                             </flux:table.cell>
 
                             <!-- Doctor -->
@@ -93,9 +93,15 @@
                                     @php
                                         $sudahDipanggil = in_array($q->status_panggilan, ['memanggil', 'selesai']);
                                     @endphp
-                                    <flux:button variant="filled" color="{{ $sudahDipanggil ? 'green' : 'zinc' }}" size="sm" wire:click="panggilAntrean({{ $q->id }})">
-                                        {{ $sudahDipanggil ? 'Panggil Ulang' : 'Panggil Antrean' }}
-                                    </flux:button>
+                                    @if ($sudahDipanggil)
+                                        <flux:button variant="filled" color="emerald" size="sm" wire:click="panggilAntrean({{ $q->id }})">
+                                            Panggil Ulang
+                                        </flux:button>
+                                    @else
+                                        <flux:button variant="filled" size="sm" wire:click="panggilAntrean({{ $q->id }})">
+                                            Panggil Antrean
+                                        </flux:button>
+                                    @endif
                                 @endif
 
                                 @if ($q->status === 'completed' || $q->status === 'completed_all')

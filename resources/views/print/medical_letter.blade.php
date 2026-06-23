@@ -272,7 +272,7 @@
                     <td class="label">Umur / Tanggal Lahir</td>
                     <td class="colon">:</td>
                     <td>
-                        {{ $letter->pasien->tanggal_lahir ? $letter->pasien->tanggal_lahir->diffInYears(\Carbon\Carbon::now()) . ' Tahun' : '-' }}
+                        {{ $letter->pasien->tanggal_lahir ? number_format((float) $letter->pasien->tanggal_lahir->diffInYears(\Carbon\Carbon::now()), 1) . ' Tahun' : '-' }}
                         ({{ $letter->pasien->tanggal_lahir ? $letter->pasien->tanggal_lahir->format('d-m-Y') : '-' }})
                     </td>
                 </tr>

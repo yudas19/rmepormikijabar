@@ -250,7 +250,7 @@
                 <td style="font-weight: bold;">Umur / JK</td>
                 <td>:</td>
                 <td>
-                    {{ $prescription->medicalRecord->pasien->tanggal_lahir ? $prescription->medicalRecord->pasien->tanggal_lahir->diffInYears(now()) . ' Tahun' : '-' }}
+                    {{ $prescription->medicalRecord->pasien->tanggal_lahir ? number_format((float) $prescription->medicalRecord->pasien->tanggal_lahir->diffInYears(now()), 1) . ' Tahun' : '-' }}
                     / {{ ($prescription->medicalRecord->pasien->jenis_kelamin ?? '') === 'L' ? 'Laki-Laki' : 'Perempuan' }}
                 </td>
                 
