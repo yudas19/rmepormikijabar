@@ -8,9 +8,14 @@
                 </div>
                 <flux:subheading class="mt-1 font-medium">Kelola antrean kunjungan pasien dan pemeriksaan klinis medis secara real-time.</flux:subheading>
             </div>
-            <div class="flex gap-4 w-full sm:w-auto">
-                <flux:input type="date" wire:model.live="filterStartDate" size="sm" label="Mulai Tanggal" />
-                <flux:input type="date" wire:model.live="filterEndDate" size="sm" label="Sampai Tanggal" />
+            <div class="flex flex-col sm:flex-row gap-4 w-full sm:w-auto items-end">
+                <flux:select wire:model.live="selectedPoliId" size="sm" label="Pilih Poliklinik" class="w-full sm:w-56">
+                    @foreach ($polis as $p)
+                        <flux:select.option value="{{ $p->id }}">{{ $p->nama_poli }}</flux:select.option>
+                    @endforeach
+                </flux:select>
+                <flux:input type="date" wire:model.live="filterStartDate" size="sm" label="Mulai Tanggal" class="w-full sm:w-auto" />
+                <flux:input type="date" wire:model.live="filterEndDate" size="sm" label="Sampai Tanggal" class="w-full sm:w-auto" />
             </div>
         </div>
 
@@ -105,11 +110,11 @@
                                 @endif
 
                                 @if ($q->status === 'completed' || $q->status === 'completed_all')
-                                    <flux:button variant="ghost" size="sm" href="{{ route('medical-record.examine', ['poliklinik' => $this->poliklinik, 'encounter_id' => $q->encounter_id]) }}" wire:navigate>
+                                    <flux:button variant="ghost" size="sm" href="{{ route('medical-record.examine', ['poliklinik' => $q->poliklinik_type, 'encounter_id' => $q->encounter_id]) }}" wire:navigate>
                                         Detail
                                     </flux:button>
                                 @else
-                                    <flux:button variant="primary" size="sm" href="{{ route('medical-record.examine', ['poliklinik' => $this->poliklinik, 'encounter_id' => $q->encounter_id]) }}" wire:navigate>
+                                    <flux:button variant="primary" size="sm" href="{{ route('medical-record.examine', ['poliklinik' => $q->poliklinik_type, 'encounter_id' => $q->encounter_id]) }}" wire:navigate>
                                         Periksa
                                     </flux:button>
                                 @endif

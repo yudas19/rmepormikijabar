@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 
 class MedicalRecordPrescription extends Model
 {
@@ -19,6 +20,18 @@ class MedicalRecordPrescription extends Model
     public function medicalRecord(): BelongsTo
     {
         return $this->belongsTo(MedicalRecord::class, 'medical_record_id');
+    }
+
+    public function pendaftaran(): HasOneThrough
+    {
+        return $this->hasOneThrough(
+            Pendaftaran::class,
+            MedicalRecord::class,
+            'id',
+            'id',
+            'medical_record_id',
+            'pendaftaran_id'
+        );
     }
 
     public function metodeRacik(): BelongsTo

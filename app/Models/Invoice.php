@@ -26,6 +26,11 @@ class Invoice extends Model
         return $this->belongsTo(MedicalRecord::class, 'medical_record_id');
     }
 
+    public function pendaftaran(): BelongsTo
+    {
+        return $this->belongsTo(Pendaftaran::class, 'pendaftaran_id');
+    }
+
     public function cashier(): BelongsTo
     {
         return $this->belongsTo(User::class, 'cashier_id');

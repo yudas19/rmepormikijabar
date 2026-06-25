@@ -78,7 +78,16 @@
                 <p class="font-normal text-sm text-gray-600 dark:text-zinc-400">Kelola opsi jenjang pendidikan terakhir pasien.</p>
             </a>
 
-            <!-- 9. Master Provinsi -->
+            <!-- 9. Master Agama -->
+            <a href="{{ route('master.agama') }}" wire:navigate class="block p-6 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-lg shadow hover:bg-gray-50 dark:hover:bg-zinc-800 transition duration-200 group">
+                <div class="flex items-center space-x-3 mb-2">
+                    <span class="text-2xl">🕌</span>
+                    <h5 class="text-lg font-bold tracking-tight text-gray-900 dark:text-white group-hover:text-indigo-600">Master Agama</h5>
+                </div>
+                <p class="font-normal text-sm text-gray-600 dark:text-zinc-400">Kelola daftar agama untuk data demografi pasien.</p>
+            </a>
+
+            <!-- 10. Master Provinsi -->
             <a href="{{ route('master.provinsi') }}" wire:navigate class="block p-6 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-lg shadow hover:bg-gray-50 dark:hover:bg-zinc-800 transition duration-200 group">
                 <div class="flex items-center space-x-3 mb-2">
                     <span class="text-2xl">🗺️</span>

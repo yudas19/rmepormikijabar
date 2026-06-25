@@ -5,23 +5,44 @@ use Livewire\Component;
 
 new class extends Component
 {
-    public $poliklinik;
+    public $selectedPoliId;
 
     public $filterStartDate = '';
 
     public $filterEndDate = '';
 
-    public function mount($poliklinik)
+    public function mount($poliklinik = null)
     {
-        if (! in_array($poliklinik, ['umum', 'gigi', 'kia'])) {
+        if ($poliklinik && ! in_array($poliklinik, ['umum', 'gigi', 'kia'])) {
             abort(404);
         }
 
-        abort_if(! auth()->user()->can('akses_poli_'.$poliklinik), 403, 'Akses ditolak: Anda tidak memiliki izin untuk melihat antrean Poliklinik ini.');
-
-        $this->poliklinik = $poliklinik;
         $this->filterStartDate = date('Y-m-d');
         $this->filterEndDate = date('Y-m-d');
+
+        // Fetch all active medical/medis units
+        $polis = \App\Models\Poli::where('jenis_unit', 'medis')->where('is_active', true)->get();
+
+        if ($poliklinik) {
+            // Support legacy routing (umum, gigi, kia)
+            $matchedPoli = $polis->first(function ($p) use ($poliklinik) {
+                if ($poliklinik === 'gigi') {
+                    return stripos($p->nama_poli, 'gigi') !== false;
+                }
+                if ($poliklinik === 'kia') {
+                    return stripos($p->nama_poli, 'kia') !== false || stripos($p->nama_poli, 'anak') !== false || stripos($p->nama_poli, 'ibu') !== false;
+                }
+                return stripos($p->nama_poli, 'umum') !== false;
+            });
+
+            if ($matchedPoli) {
+                $this->selectedPoliId = $matchedPoli->id;
+            }
+        }
+
+        if (!$this->selectedPoliId && $polis->isNotEmpty()) {
+            $this->selectedPoliId = $polis->first()->id;
+        }
     }
 
     public function panggilAntrean($id)
@@ -33,38 +54,25 @@ new class extends Component
 
     public function render()
     {
-        $namaPoli = [
-            'umum' => 'Poli Umum',
-            'gigi' => 'Poli Gigi',
-            'kia' => 'Klinik KIA',
-        ];
+        $polis = \App\Models\Poli::where('jenis_unit', 'medis')->where('is_active', true)->get();
+        $currentPoli = $polis->firstWhere('id', $this->selectedPoliId);
 
-        // Fetch medical records (encounters) for today for this polyclinic
+        // Fetch medical records for the selected polyclinic
         $queues = MedicalRecord::with(['pasien', 'pendaftaran.dokter', 'poli'])
-            ->whereHas('poli', function ($q) {
-                if ($this->poliklinik === 'gigi') {
-                    $q->where('nama_poli', 'like', '%gigi%');
-                } elseif ($this->poliklinik === 'kia') {
-                    $q->where('nama_poli', 'like', '%kia%')
-                        ->orWhere('nama_poli', 'like', '%anak%')
-                        ->orWhere('nama_poli', 'like', '%ibu%');
-                } else {
-                    $q->where('nama_poli', 'not like', '%gigi%')
-                        ->where('nama_poli', 'not like', '%kia%')
-                        ->where('nama_poli', 'not like', '%anak%')
-                        ->where('nama_poli', 'not like', '%ibu%');
-                }
+            ->when($this->selectedPoliId, function ($q) {
+                $q->where('poli_id', $this->selectedPoliId);
             })
             ->whereDate('tanggal_kunjungan', '>=', $this->filterStartDate)
             ->whereDate('tanggal_kunjungan', '<=', $this->filterEndDate)
             ->where('status', '!=', 'batal')
-            ->orderBy('status', 'asc') // Group active statuses first
-            ->orderBy('id', 'asc')     // First registered first
+            ->orderBy('status', 'asc')
+            ->orderBy('id', 'asc')
             ->get();
 
         return view('components.⚡poliklinik-queue.poliklinik-queue', [
             'queues' => $queues,
-            'title' => $namaPoli[$this->poliklinik],
+            'polis' => $polis,
+            'title' => $currentPoli ? $currentPoli->nama_poli : 'Pemeriksaan Medis',
         ])->layout('layouts::app');
     }
 };

@@ -28,6 +28,8 @@ new class extends Component
 
     public float $adminFee = 15000.00;
 
+    public string $adminFeeCaraBayar = 'umum';
+
     public float $discount = 0.00;
 
     public string $paymentMethod = '';
@@ -52,6 +54,10 @@ new class extends Component
         $this->selectedRecordId = $recordId;
         $this->selectedRecord = MedicalRecord::with(['pasien', 'poli', 'pendaftaran.dokter', 'tindakans'])->findOrFail($recordId);
 
+        $pendaftaran = $this->selectedRecord->pendaftaran;
+        $defaultCaraBayar = ($pendaftaran && $pendaftaran->cara_bayar === 'BPJS') ? 'bpjs' : 'umum';
+        $this->adminFeeCaraBayar = $defaultCaraBayar;
+
         // Migrate doctor's pendaftaran tindakans to medical_record_tindakans if none exists
         if ($this->selectedRecord->tindakans->isEmpty()) {
             $pendaftaranId = $this->selectedRecord->pendaftaran_id;
@@ -63,10 +69,32 @@ new class extends Component
                 $this->selectedRecord->tindakans()->attach($tp->master_tindakan_id, [
                     'qty' => $tp->jumlah,
                     'subtotal' => $tp->jumlah * $tp->tarif_penerapan,
+                    'cara_bayar_item' => $defaultCaraBayar,
                 ]);
             }
 
             $this->selectedRecord->load('tindakans');
+        } else {
+            if ($this->selectedRecord->status !== 'completed_all') {
+                DB::table('medical_record_tindakans')
+                    ->where('medical_record_id', $this->selectedRecordId)
+                    ->update(['cara_bayar_item' => $defaultCaraBayar]);
+            }
+            $this->selectedRecord->load('tindakans');
+        }
+
+        if ($this->selectedRecord->status !== 'completed_all') {
+            // Set defaults for lab test results
+            DB::table('lab_order_results')
+                ->join('lab_orders', 'lab_order_results.lab_order_id', '=', 'lab_orders.id')
+                ->where('lab_orders.medical_record_id', $this->selectedRecordId)
+                ->update(['lab_order_results.cara_bayar_item' => $defaultCaraBayar]);
+
+            // Set defaults for medicine items
+            DB::table('medical_record_prescription_items')
+                ->join('medical_record_prescriptions', 'medical_record_prescription_items.prescription_id', '=', 'medical_record_prescriptions.id')
+                ->where('medical_record_prescriptions.medical_record_id', $this->selectedRecordId)
+                ->update(['medical_record_prescription_items.cara_bayar_item' => $defaultCaraBayar]);
         }
 
         $this->discount = 0.00;
@@ -114,6 +142,9 @@ new class extends Component
             ->where('master_tindakan_id', $tindakanId)
             ->first();
 
+        $pendaftaran = $this->selectedRecord->pendaftaran;
+        $defaultCaraBayar = ($pendaftaran && $pendaftaran->cara_bayar === 'BPJS') ? 'bpjs' : 'umum';
+
         if ($pivot) {
             DB::table('medical_record_tindakans')
                 ->where('id', $pivot->id)
@@ -126,6 +157,7 @@ new class extends Component
             $this->selectedRecord->tindakans()->attach($tindakanId, [
                 'qty' => 1,
                 'subtotal' => $tindakan->tarif,
+                'cara_bayar_item' => $defaultCaraBayar,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
@@ -150,7 +182,77 @@ new class extends Component
         Flux::toast(variant: 'info', text: 'Tindakan dihapus.');
     }
 
+    public function updateTindakanCaraBayar(int $tindakanId, string $val): void
+    {
+        DB::table('medical_record_tindakans')
+            ->where('medical_record_id', $this->selectedRecordId)
+            ->where('master_tindakan_id', $tindakanId)
+            ->update(['cara_bayar_item' => $val]);
+
+        $this->selectedRecord->load('tindakans');
+    }
+
+    public function updateLabTestCaraBayar(int $resultId, string $val): void
+    {
+        DB::table('lab_order_results')
+            ->where('id', $resultId)
+            ->update(['cara_bayar_item' => $val]);
+    }
+
+    public function updateMedicineCaraBayar(int $itemId, string $val): void
+    {
+        DB::table('medical_record_prescription_items')
+            ->where('id', $itemId)
+            ->update(['cara_bayar_item' => $val]);
+    }
+
     public function getSubtotalProperty(): float
+    {
+        $total = ($this->adminFeeCaraBayar === 'umum') ? $this->adminFee : 0.00;
+
+        if ($this->selectedRecord) {
+            foreach ($this->selectedRecord->tindakans as $t) {
+                if (($t->pivot->cara_bayar_item ?? 'umum') === 'umum') {
+                    $total += (float) $t->pivot->subtotal;
+                }
+            }
+        }
+
+        if ($this->selectedRecordId) {
+            // Lab charges
+            $labTests = DB::table('lab_order_results')
+                ->join('lab_orders', 'lab_order_results.lab_order_id', '=', 'lab_orders.id')
+                ->join('master_lab_tests', 'lab_order_results.master_lab_test_id', '=', 'master_lab_tests.id')
+                ->where('lab_orders.medical_record_id', $this->selectedRecordId)
+                ->where('lab_orders.status', 'completed')
+                ->select(DB::raw('COALESCE(lab_order_results.tariff_snapshot, master_lab_tests.tariff) as price'), 'lab_order_results.cara_bayar_item')
+                ->get();
+
+            foreach ($labTests as $lt) {
+                if (($lt->cara_bayar_item ?? 'umum') === 'umum') {
+                    $total += (float) $lt->price;
+                }
+            }
+
+            // Pharmacy charges (dispensed subtotal)
+            $medicines = DB::table('medical_record_prescription_items')
+                ->join('medical_record_prescriptions', 'medical_record_prescription_items.prescription_id', '=', 'medical_record_prescriptions.id')
+                ->where('medical_record_prescriptions.medical_record_id', $this->selectedRecordId)
+                ->where('medical_record_prescriptions.dispensing_status', 'dispensed')
+                ->select('medical_record_prescription_items.subtotal_price', 'medical_record_prescription_items.cara_bayar_item')
+                ->get();
+
+            foreach ($medicines as $m) {
+                if (($m->cara_bayar_item ?? 'umum') === 'umum') {
+                    $total += (float) $m->subtotal_price;
+                }
+            }
+        }
+
+        return $total;
+    }
+
+    public function getOriginalSubtotalProperty(): float
     {
         $total = $this->adminFee;
 
@@ -174,7 +276,7 @@ new class extends Component
                 $total += (float) $lt->price;
             }
 
-            // Pharmacy charges (dispensed subtotal)
+            // Pharmacy charges
             $medicines = DB::table('medical_record_prescription_items')
                 ->join('medical_record_prescriptions', 'medical_record_prescription_items.prescription_id', '=', 'medical_record_prescriptions.id')
                 ->where('medical_record_prescriptions.medical_record_id', $this->selectedRecordId)
@@ -252,6 +354,7 @@ new class extends Component
                     'qty' => 1,
                     'unit_price' => $this->adminFee,
                     'subtotal' => $this->adminFee,
+                    'cara_bayar_item' => $this->adminFeeCaraBayar,
                 ]);
             }
 
@@ -264,6 +367,7 @@ new class extends Component
                     'qty' => $t->pivot->qty,
                     'unit_price' => $t->tarif,
                     'subtotal' => $t->pivot->subtotal,
+                    'cara_bayar_item' => $t->pivot->cara_bayar_item ?? 'umum',
                 ]);
             }
 
@@ -273,7 +377,7 @@ new class extends Component
                 ->join('master_lab_tests', 'lab_order_results.master_lab_test_id', '=', 'master_lab_tests.id')
                 ->where('lab_orders.medical_record_id', $this->selectedRecordId)
                 ->where('lab_orders.status', 'completed')
-                ->select('master_lab_tests.test_name', DB::raw('COALESCE(lab_order_results.tariff_snapshot, master_lab_tests.tariff) as price'))
+                ->select('master_lab_tests.test_name', DB::raw('COALESCE(lab_order_results.tariff_snapshot, master_lab_tests.tariff) as price'), 'lab_order_results.cara_bayar_item')
                 ->get();
 
             foreach ($labTests as $lt) {
@@ -284,6 +388,7 @@ new class extends Component
                     'qty' => 1,
                     'unit_price' => $lt->price,
                     'subtotal' => $lt->price,
+                    'cara_bayar_item' => $lt->cara_bayar_item ?? 'umum',
                 ]);
             }
 
@@ -293,7 +398,7 @@ new class extends Component
                 ->join('master_obats', 'medical_record_prescription_items.dispensed_obat_id', '=', 'master_obats.id')
                 ->where('medical_record_prescriptions.medical_record_id', $this->selectedRecordId)
                 ->where('medical_record_prescriptions.dispensing_status', 'dispensed')
-                ->select('master_obats.nama_obat', 'medical_record_prescription_items.dispensed_qty', 'medical_record_prescription_items.subtotal_price', 'master_obats.harga_jual')
+                ->select('master_obats.nama_obat', 'medical_record_prescription_items.dispensed_qty', 'medical_record_prescription_items.subtotal_price', 'master_obats.harga_jual', 'medical_record_prescription_items.cara_bayar_item')
                 ->get();
 
             foreach ($medicines as $m) {
@@ -304,6 +409,7 @@ new class extends Component
                     'qty' => (int) $m->dispensed_qty,
                     'unit_price' => $m->harga_jual,
                     'subtotal' => $m->subtotal_price,
+                    'cara_bayar_item' => $m->cara_bayar_item ?? 'umum',
                 ]);
             }
 
@@ -361,7 +467,7 @@ new class extends Component
                 ->join('master_lab_tests', 'lab_order_results.master_lab_test_id', '=', 'master_lab_tests.id')
                 ->where('lab_orders.medical_record_id', $this->selectedRecordId)
                 ->where('lab_orders.status', 'completed')
-                ->select('master_lab_tests.test_name', DB::raw('COALESCE(lab_order_results.tariff_snapshot, master_lab_tests.tariff) as price'))
+                ->select('lab_order_results.id', 'master_lab_tests.test_name', DB::raw('COALESCE(lab_order_results.tariff_snapshot, master_lab_tests.tariff) as price'), 'lab_order_results.cara_bayar_item')
                 ->get();
 
             $medicines = DB::table('medical_record_prescription_items')
@@ -369,13 +475,14 @@ new class extends Component
                 ->join('master_obats', 'medical_record_prescription_items.dispensed_obat_id', '=', 'master_obats.id')
                 ->where('medical_record_prescriptions.medical_record_id', $this->selectedRecordId)
                 ->where('medical_record_prescriptions.dispensing_status', 'dispensed')
-                ->select('master_obats.nama_obat', 'medical_record_prescription_items.dispensed_qty', 'medical_record_prescription_items.subtotal_price', 'master_obats.harga_jual')
+                ->select('medical_record_prescription_items.id', 'master_obats.nama_obat', 'medical_record_prescription_items.dispensed_qty', 'medical_record_prescription_items.subtotal_price', 'master_obats.harga_jual', 'medical_record_prescription_items.cara_bayar_item')
                 ->get();
         }
 
         return view('components.layanan.⚡kasir.kasir', [
             'records' => $records,
             'subtotal' => $this->subtotal,
+            'originalSubtotal' => $this->originalSubtotal,
             'grandTotal' => $this->grandTotal,
             'labTests' => $labTests,
             'medicines' => $medicines,

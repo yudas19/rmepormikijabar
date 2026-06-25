@@ -3,17 +3,7 @@
 
         <!-- Left Column: Form & Workspace (70%) -->
         <div class="lg:col-span-7 space-y-6">
-            @if ($poliklinik === 'umum')
-                @livewire('⚡medical-record.poli-umum', ['record' => $record])
-            @elseif ($poliklinik === 'gigi')
-                @livewire('⚡medical-record.poli-gigi', ['record' => $record])
-            @elseif ($poliklinik === 'kia')
-                @livewire('⚡medical-record.poli-kia', ['record' => $record])
-            @else
-                <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg p-6 text-center text-zinc-500">
-                    Workspace untuk Poliklinik ini belum tersedia.
-                </div>
-            @endif
+            @livewire('⚡medical-record.poli-umum', ['record' => $record])
         </div>
 
         <!-- Right Column: Sidebar Patient Info & Timeline (30%) -->

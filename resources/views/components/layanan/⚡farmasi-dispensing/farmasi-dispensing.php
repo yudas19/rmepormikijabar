@@ -59,12 +59,16 @@ new class extends Component
             'medicalRecord.pendaftaran.pasien',
             'medicalRecord.pendaftaran.poli',
             'medicalRecord.pendaftaran.dokter',
-            'items.requestedObat',
             'metodeRacik',
             'apoteker',
         ]);
 
-        $this->isFinalized = $prescription->dispensing_status === 'dispensed';
+        $medicalRecordId = $this->prescription->medical_record_id;
+        $prescriptions = MedicalRecordPrescription::with(['items.requestedObat', 'items.dispensedObat', 'metodeRacik'])
+            ->where('medical_record_id', $medicalRecordId)
+            ->get();
+
+        $this->isFinalized = ! $prescriptions->contains(fn ($p) => $p->dispensing_status !== 'dispensed');
 
         // Auto-assign pharmacist
         $apoteker = MasterPetugas::where('user_id', Auth::id())->first();
@@ -72,25 +76,30 @@ new class extends Component
         $this->apotekerId = $apoteker?->id;
 
         // Build dispensing rows
-        foreach ($prescription->items as $item) {
-            $obat = $item->requestedObat;
-            $dispensedObat = $item->dispensedObat ?? $obat;
-            $dispensedQty = $item->dispensed_qty ?? $item->requested_qty;
-            $hargaJual = $dispensedObat?->harga_jual ?? 0;
+        foreach ($prescriptions as $presc) {
+            foreach ($presc->items as $item) {
+                $obat = $item->requestedObat;
+                $dispensedObat = $item->dispensedObat ?? $obat;
+                $dispensedQty = $item->dispensed_qty ?? $item->requested_qty;
+                $hargaJual = $dispensedObat?->harga_jual ?? 0;
 
-            $this->dispensingRows[] = [
-                'item_id' => $item->id,
-                'requested_obat_name' => $obat?->nama_obat ?? '-',
-                'requested_qty' => (float) $item->requested_qty,
-                'requested_satuan' => $item->satuan ?? $obat?->satuan ?? '-',
-                'dispensed_obat_id' => $item->dispensed_obat_id ?? $obat?->id,
-                'dispensed_obat_name' => $dispensedObat?->nama_obat ?? $obat?->nama_obat ?? '-',
-                'dispensed_qty' => (float) $dispensedQty,
-                'dispensed_signa' => $item->dispensed_signa ?? $item->requested_signa ?? $this->prescription->aturan_pakai ?? '',
-                'harga_jual' => (float) $hargaJual,
-                'subtotal' => (float) ($item->subtotal_price > 0 ? $item->subtotal_price : $hargaJual * $dispensedQty),
-                'stok_available' => $dispensedObat?->stok_saat_ini ?? 0,
-            ];
+                $this->dispensingRows[] = [
+                    'prescription_id' => $presc->id,
+                    'item_id' => $item->id,
+                    'requested_obat_name' => $obat?->nama_obat ?? '-',
+                    'requested_qty' => (float) $item->requested_qty,
+                    'requested_satuan' => $item->satuan ?? $obat?->satuan ?? '-',
+                    'dispensed_obat_id' => $item->dispensed_obat_id ?? $obat?->id,
+                    'dispensed_obat_name' => $dispensedObat?->nama_obat ?? $obat?->nama_obat ?? '-',
+                    'dispensed_qty' => (float) $dispensedQty,
+                    'dispensed_signa' => $item->dispensed_signa ?? $item->requested_signa ?? $presc->aturan_pakai ?? '',
+                    'harga_jual' => (float) $hargaJual,
+                    'subtotal' => (float) ($item->subtotal_price > 0 ? $item->subtotal_price : $hargaJual * $dispensedQty),
+                    'stok_available' => $dispensedObat?->stok_saat_ini ?? 0,
+                    'prescription_type' => $presc->type,
+                    'prescription_nama_racikan' => $presc->nama_racikan,
+                ];
+            }
         }
 
         $this->recalcGrandTotal();
@@ -204,13 +213,15 @@ new class extends Component
                     'quantity' => -$qty,
                     'previous_stock' => $previousStock,
                     'current_stock' => $previousStock - $qty,
-                    'notes' => 'Dispensing resep #'.$this->prescription->id.' untuk '.$this->prescription->medicalRecord?->pendaftaran?->pasien?->nama_pasien,
+                    'notes' => 'Dispensing resep #'.$row['prescription_id'].' untuk '.$this->prescription->medicalRecord?->pendaftaran?->pasien?->nama_pasien,
                     'user_id' => Auth::id(),
-                    'prescription_id' => $this->prescription->id,
+                    'prescription_id' => $row['prescription_id'],
                 ]);
             }
 
-            $this->prescription->update([
+            // Flip all prescriptions of this medical record to dispensed
+            $medicalRecordId = $this->prescription->medical_record_id;
+            MedicalRecordPrescription::where('medical_record_id', $medicalRecordId)->update([
                 'dispensing_status' => 'dispensed',
                 'apoteker_id' => $this->apotekerId,
                 'dispensed_at' => now(),
@@ -225,7 +236,7 @@ new class extends Component
     private function persistItems(): void
     {
         foreach ($this->dispensingRows as $row) {
-            $this->prescription->items()
+            DB::table('medical_record_prescription_items')
                 ->where('id', $row['item_id'])
                 ->update([
                     'dispensed_obat_id' => $row['dispensed_obat_id'],

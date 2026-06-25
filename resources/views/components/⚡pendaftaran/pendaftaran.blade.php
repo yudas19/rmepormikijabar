@@ -173,7 +173,7 @@
                     <flux:heading size="md">Verifikasi SatuSehat Kemenkes</flux:heading>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div class="flex gap-2 items-end">
-                            <flux:input wire:model="nik" label="NIK (16 Digit)" required placeholder="Contoh: 1234567890123456" class="flex-1 font-mono" />
+                            <flux:input maxlength="16" wire:model="nik" label="NIK (16 Digit)" required placeholder="Contoh: 1234567890123456" class="flex-1 font-mono" />
                             <flux:button type="button" variant="filled" wire:click="verifyNik" class="h-10">Verify</flux:button>
                         </div>
                         <flux:input wire:model="ihs_number" label="IHS Number (Read-Only)" readonly placeholder="Akan terisi otomatis jika NIK terverifikasi" class="font-mono bg-zinc-100 dark:bg-zinc-800" />
@@ -194,8 +194,22 @@
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <flux:input wire:model="no_bpjs" label="No. Kartu BPJS (13 Digit)" class="font-mono" />
-                    <flux:input wire:model="tempat_lahir" label="Tempat Lahir" required />
+                    <flux:input maxlength="13" wire:model="no_bpjs" label="No. Kartu BPJS (13 Digit)" class="font-mono" />
+                    <div class="relative">
+                        <flux:input wire:model.live.debounce.250ms="tempatLahirQuery" label="Tempat Lahir" required placeholder="Ketik nama kota/kabupaten..." />
+                        @if (!empty($tempatLahirResults))
+                            <div class="absolute z-50 left-0 right-0 mt-1 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                                @foreach ($tempatLahirResults as $res)
+                                    <div wire:click="selectTempatLahir({{ $res['id'] }}, '{{ $res['nama_kabupaten_kota'] }}')" class="px-4 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 cursor-pointer text-sm text-zinc-900 dark:text-white">
+                                        {{ $res['nama_kabupaten_kota'] }}
+                                    </div>
+                                @endforeach
+                            </div>
+                        @endif
+                        @error('tempat_lahir_kabupaten_id')
+                            <span class="text-xs text-red-500 mt-1 block">{{ $message }}</span>
+                        @enderror
+                    </div>
                     <flux:input wire:model="tanggal_lahir" type="date" label="Tanggal Lahir" required />
                 </div>
 
@@ -214,10 +228,32 @@
                     </flux:select>
                     <flux:input wire:model="gelar" label="Gelar" placeholder="Contoh: S.Pd, dr., dll." />
                 </div>
+
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <flux:input wire:model="nama_orangtua" label="Nama Orang Tua" />
                     <flux:input wire:model="nrp" label="NRP (TNI/POLRI/PNS)" placeholder="Contoh: 123456" />
-                    <flux:select wire:model="pekerjaan_id" label="Pekerjaan">
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <flux:select wire:model="master_agama_id" label="Agama">
+                        <flux:select.option value="">Pilih Agama</flux:select.option>
+                        @foreach($agamas as $agama)
+                        <flux:select.option value="{{ $agama->id }}">
+                            {{ $agama->nama_agama }}
+                        </flux:select.option>
+                        @endforeach
+                    </flux:select>
+
+                    <flux:select wire:model="master_pendidikan_id" label="Pendidikan">
+                        <flux:select.option value="">Pilih Pendidikan</flux:select.option>
+                        @foreach($pendidikans as $pendidikan)
+                        <flux:select.option value="{{ $pendidikan->id }}">
+                            {{ $pendidikan->nama_pendidikan }}
+                        </flux:select.option>
+                        @endforeach
+                    </flux:select>
+
+                    <flux:select wire:model="master_pekerjaan_id" label="Pekerjaan">
                         <flux:select.option value="">Pilih Pekerjaan</flux:select.option>
                         @foreach($pekerjaans as $pekerjaan)
                         <flux:select.option value="{{ $pekerjaan->id }}">
@@ -229,7 +265,7 @@
 
                 <!-- Kontak & Alamat -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <flux:input wire:model="no_whatsapp" label="No. WhatsApp / HP" />
+                    <flux:input maxlength="15" wire:model="no_whatsapp" label="No. WhatsApp / HP" />
                     <flux:input wire:model="email" type="email" label="Alamat Email" />
                     <flux:select wire:model="status_pasien" label="Status Pasien" required>
                         <flux:select.option value="aktif">Aktif</flux:select.option>
@@ -269,14 +305,35 @@
                     @endforeach
                 </flux:select>
 
-                <flux:select wire:model="reg_dokter_id" label="Dokter Pemeriksa" required placeholder="Pilih Dokter">
-                    @foreach ($doctors as $doc)
-                    <flux:select.option value="{{ $doc->id }}">{{ $doc->nama_petugas }} (SIP: {{ $doc->nomor_sip ?? '-' }})</flux:select.option>
-                    @endforeach
-                </flux:select>
+                @if ($this->isWalkInLab)
+                    <!-- Lab Tests Selection Checklist -->
+                    <div class="space-y-2">
+                        <flux:label>Pilih Pemeriksaan Laboratorium</flux:label>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2 border border-zinc-200 dark:border-zinc-800 rounded-lg p-3 max-h-60 overflow-y-auto bg-zinc-50/50 dark:bg-zinc-950/20">
+                            @foreach ($labTests as $test)
+                                <label class="flex items-center gap-2 text-sm text-zinc-900 dark:text-white cursor-pointer hover:bg-zinc-100/50 dark:hover:bg-zinc-800/30 p-1.5 rounded">
+                                    <input type="checkbox" wire:model.live="selectedLabTests" value="{{ $test->id }}" class="rounded border-zinc-300 dark:border-zinc-700 text-indigo-600 focus:ring-indigo-500" />
+                                    <span>{{ $test->test_name }}</span>
+                                    <span class="text-xs text-zinc-500 font-mono">
+                                        (Rp {{ number_format($reg_cara_bayar === 'BPJS' ? $test->tarif_bpjs : $test->tarif_umum, 0, ',', '.') }})
+                                    </span>
+                                </label>
+                            @endforeach
+                        </div>
+                        @error('selectedLabTests')
+                            <span class="text-xs text-red-500 block">{{ $message }}</span>
+                        @enderror
+                    </div>
+                @else
+                    <flux:select wire:model="reg_dokter_id" label="Dokter Pemeriksa" required placeholder="Pilih Dokter">
+                        @foreach ($doctors as $doc)
+                        <flux:select.option value="{{ $doc->id }}">{{ $doc->nama_petugas }} (SIP: {{ $doc->nomor_sip ?? '-' }})</flux:select.option>
+                        @endforeach
+                    </flux:select>
+                @endif
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <flux:select wire:model="reg_cara_bayar" label="Cara Pembayaran" required>
+                    <flux:select wire:model.live="reg_cara_bayar" label="Cara Pembayaran" required>
                         <flux:select.option value="Umum">Umum</flux:select.option>
                         <flux:select.option value="BPJS">BPJS Kesehatan</flux:select.option>
                         <flux:select.option value="Dinas/Instansi">Dinas/Instansi</flux:select.option>
@@ -289,14 +346,7 @@
                     <flux:input type="date" wire:model="reg_tanggal_kunjungan" label="Tanggal Kunjungan" required />
                 </div>
 
-                @if ($reg_cara_bayar === 'BPJS')
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-indigo-50/20 p-4 rounded-lg border border-indigo-200/50">
-                    <flux:input wire:model="reg_no_sep" label="Nomor SEP (Surat Eligibilitas Peserta)" required placeholder="Contoh: 0134R001..." class="font-mono" />
-                    <flux:input wire:model="reg_no_rujukan" label="Nomor Rujukan" required placeholder="Contoh: 0134101..." class="font-mono" />
-                </div>
-                @endif
-
-                <flux:textarea wire:model="reg_keluhan_awal" label="Keluhan Utama / Alasan Kunjungan" required rows="3" />
+                <flux:textarea wire:model="reg_keluhan_awal" label="Keluhan Utama / Alasan Kunjungan" :required="!$this->isWalkInLab" placeholder="{{ $this->isWalkInLab ? 'Pemeriksaan Lab Mandiri (Opsional)' : 'Tulis keluhan pasien...' }}" rows="3" />
 
                 <div class="flex justify-end gap-2 border-t border-zinc-200 dark:border-zinc-800 pt-4 mt-4">
                     <flux:button type="button" variant="filled" wire:click="$set('showRegisterModal', false)">Batal</flux:button>

@@ -37,7 +37,7 @@
         </div>
     </div>
 
-    <div x-data="{ activeTab: localStorage.getItem('active_tab_{{ $record->id }}') || 'ttv' }" x-init="$watch('activeTab', val => localStorage.setItem('active_tab_{{ $record->id }}', val))" class="space-y-6">
+    <div x-data="{ activeTab: localStorage.getItem('active_tab_{{ $record->id }}') || '{{ $poliklinik === 'gigi' ? 'odontogram' : ($poliklinik === 'kia' ? 'anc' : 'ttv') }}' }" x-init="$watch('activeTab', val => localStorage.setItem('active_tab_{{ $record->id }}', val))" class="space-y-6">
         <!-- Tabs Menu Bar -->
         <div class="bg-zinc-100 dark:bg-zinc-800/50 p-1.5 rounded-2xl flex flex-wrap gap-1 border border-zinc-200/50 dark:border-zinc-800/40">
             <button type="button" @click="activeTab = 'ttv'" :class="activeTab === 'ttv' ? 'bg-emerald-600 text-white shadow-md dark:bg-emerald-500' : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200/50 dark:hover:bg-zinc-800/60 hover:text-zinc-900 dark:hover:text-zinc-200'" class="px-4 py-2 text-xs md:text-sm font-semibold rounded-xl transition-all duration-200 flex items-center gap-2">
@@ -64,6 +64,18 @@
                 <flux:icon.bookmark class="w-4 h-4" />
                 Dokumen & Surat
             </button>
+            @if ($poliklinik === 'gigi')
+            <button type="button" @click="activeTab = 'odontogram'" :class="activeTab === 'odontogram' ? 'bg-emerald-600 text-white shadow-md dark:bg-emerald-500' : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200/50 dark:hover:bg-zinc-800/60 hover:text-zinc-900 dark:hover:text-zinc-200'" class="px-4 py-2 text-xs md:text-sm font-semibold rounded-xl transition-all duration-200 flex items-center gap-2">
+                <flux:icon.sparkles class="w-4 h-4" />
+                Odontogram Chart
+            </button>
+            @endif
+            @if ($poliklinik === 'kia')
+            <button type="button" @click="activeTab = 'anc'" :class="activeTab === 'anc' ? 'bg-pink-600 text-white shadow-md dark:bg-pink-500' : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200/50 dark:hover:bg-zinc-800/60 hover:text-zinc-900 dark:hover:text-zinc-200'" class="px-4 py-2 text-xs md:text-sm font-semibold rounded-xl transition-all duration-200 flex items-center gap-2">
+                <flux:icon.sparkles class="w-4 h-4" />
+                Pemeriksaan ANC
+            </button>
+            @endif
         </div>
 
         <!-- Tab Content Pane: TTV & Fisik -->
@@ -573,6 +585,337 @@
             </form>
         </div>
     </div>
+    @endif
+
+
+    @if ($poliklinik === 'gigi')
+        <!-- Tab Content: Odontogram Chart -->
+        <div x-show="activeTab === 'odontogram'" class="space-y-6" x-transition>
+            <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6 shadow-sm">
+                <div class="flex items-center gap-2 mb-6 pb-3 border-b border-zinc-100 dark:border-zinc-800">
+                    <flux:icon.sparkles class="w-5 h-5 text-teal-500" />
+                    <flux:heading size="lg" class="font-bold">Pemeriksaan Odontogram</flux:heading>
+                    <flux:badge color="teal" size="sm">Poli Gigi</flux:badge>
+                </div>
+
+                {{-- Condition Legend --}}
+                <div class="flex flex-wrap gap-2 mb-5">
+                    @foreach (['SOU' => ['label' => 'Sound (Sehat)', 'color' => 'green'], 'CAR' => ['label' => 'Caries', 'color' => 'red'], 'MIS' => ['label' => 'Missing', 'color' => 'zinc'], 'FML' => ['label' => 'Filled', 'color' => 'blue'], 'FRA' => ['label' => 'Fracture', 'color' => 'orange'], 'CFR' => ['label' => 'Crown Fraktur', 'color' => 'yellow']] as $code => $info)
+                    <flux:badge color="{{ $info['color'] }}" size="sm" class="font-mono font-bold">{{ $code }} — {{ $info['label'] }}</flux:badge>
+                    @endforeach
+                </div>
+
+                @php
+                    $conditionBorderColors = [
+                        'SOU' => 'border-green-400 bg-green-50 dark:bg-green-950/30',
+                        'CAR' => 'border-red-400 bg-red-50 dark:bg-red-950/30',
+                        'MIS' => 'border-zinc-400 bg-zinc-100 dark:bg-zinc-800',
+                        'FML' => 'border-blue-400 bg-blue-50 dark:bg-blue-950/30',
+                        'FRA' => 'border-orange-400 bg-orange-50 dark:bg-orange-950/30',
+                        'CFR' => 'border-yellow-400 bg-yellow-50 dark:bg-yellow-950/30',
+                    ];
+                    $defaultToothClass = 'border-zinc-200 dark:border-zinc-700 hover:border-teal-400 bg-zinc-50 dark:bg-zinc-950';
+                    $adultUpperRight = [18, 17, 16, 15, 14, 13, 12, 11];
+                    $adultUpperLeft  = [21, 22, 23, 24, 25, 26, 27, 28];
+                    $adultLowerRight = [48, 47, 46, 45, 44, 43, 42, 41];
+                    $adultLowerLeft  = [31, 32, 33, 34, 35, 36, 37, 38];
+                    $childUpperRight = [55, 54, 53, 52, 51];
+                    $childUpperLeft  = [61, 62, 63, 64, 65];
+                    $childLowerRight = [85, 84, 83, 82, 81];
+                    $childLowerLeft  = [71, 72, 73, 74, 75];
+                @endphp
+
+                {{-- Dental Chart Grid --}}
+                <div class="space-y-1 select-none overflow-x-auto pb-2">
+                    <p class="text-center text-xs font-semibold text-zinc-400 uppercase tracking-widest mb-1">RAHANG ATAS (Maxilla)</p>
+
+                    {{-- Adult Upper Row --}}
+                    <div class="flex justify-center gap-0.5">
+                        <div class="flex gap-0.5">
+                            @foreach ($adultUpperRight as $tooth)
+                            @php $cond = $teethMap[$tooth] ?? null; $toothClass = $cond ? ($conditionBorderColors[$cond['condition_code']] ?? $defaultToothClass) : $defaultToothClass; @endphp
+                            <button type="button" wire:click="openTooth({{ $tooth }})"
+                                class="relative flex flex-col items-center justify-end w-9 h-14 rounded-t-lg border-2 transition-all {{ $toothClass }} {{ !$isEditable ? 'cursor-default' : '' }}"
+                                title="Gigi {{ $tooth }}{{ $cond ? ' — ' . $cond['condition_code'] : '' }}">
+                                @if ($cond)<span class="absolute top-0.5 text-[9px] font-bold font-mono text-zinc-700 dark:text-zinc-200">{{ $cond['condition_code'] }}</span>@endif
+                                <span class="text-[10px] font-bold font-mono pb-1 text-zinc-600 dark:text-zinc-400">{{ $tooth }}</span>
+                            </button>
+                            @endforeach
+                        </div>
+                        <div class="w-px bg-zinc-300 dark:bg-zinc-700 mx-1"></div>
+                        <div class="flex gap-0.5">
+                            @foreach ($adultUpperLeft as $tooth)
+                            @php $cond = $teethMap[$tooth] ?? null; $toothClass = $cond ? ($conditionBorderColors[$cond['condition_code']] ?? $defaultToothClass) : $defaultToothClass; @endphp
+                            <button type="button" wire:click="openTooth({{ $tooth }})"
+                                class="relative flex flex-col items-center justify-end w-9 h-14 rounded-t-lg border-2 transition-all {{ $toothClass }} {{ !$isEditable ? 'cursor-default' : '' }}"
+                                title="Gigi {{ $tooth }}{{ $cond ? ' — ' . $cond['condition_code'] : '' }}">
+                                @if ($cond)<span class="absolute top-0.5 text-[9px] font-bold font-mono text-zinc-700 dark:text-zinc-200">{{ $cond['condition_code'] }}</span>@endif
+                                <span class="text-[10px] font-bold font-mono pb-1 text-zinc-600 dark:text-zinc-400">{{ $tooth }}</span>
+                            </button>
+                            @endforeach
+                        </div>
+                    </div>
+
+                    {{-- Child Upper Row (dashed) --}}
+                    <div class="flex justify-center gap-0.5 mt-0.5">
+                        <div class="flex gap-0.5">
+                            @foreach ($childUpperRight as $tooth)
+                            @php $cond = $teethMap[$tooth] ?? null; $toothClass = $cond ? ($conditionBorderColors[$cond['condition_code']] ?? $defaultToothClass) : $defaultToothClass; @endphp
+                            <button type="button" wire:click="openTooth({{ $tooth }})"
+                                class="relative flex flex-col items-center justify-end w-9 h-10 border-2 border-dashed transition-all {{ $toothClass }} {{ !$isEditable ? 'cursor-default' : '' }}"
+                                title="Gigi Susu {{ $tooth }}">
+                                @if ($cond)<span class="absolute top-0.5 text-[9px] font-bold font-mono text-zinc-700 dark:text-zinc-200">{{ $cond['condition_code'] }}</span>@endif
+                                <span class="text-[9px] font-mono pb-0.5 text-zinc-500">{{ $tooth }}</span>
+                            </button>
+                            @endforeach
+                        </div>
+                        <div class="w-px bg-zinc-300 dark:bg-zinc-700 mx-1"></div>
+                        <div class="flex gap-0.5">
+                            @foreach ($childUpperLeft as $tooth)
+                            @php $cond = $teethMap[$tooth] ?? null; $toothClass = $cond ? ($conditionBorderColors[$cond['condition_code']] ?? $defaultToothClass) : $defaultToothClass; @endphp
+                            <button type="button" wire:click="openTooth({{ $tooth }})"
+                                class="relative flex flex-col items-center justify-end w-9 h-10 border-2 border-dashed transition-all {{ $toothClass }} {{ !$isEditable ? 'cursor-default' : '' }}"
+                                title="Gigi Susu {{ $tooth }}">
+                                @if ($cond)<span class="absolute top-0.5 text-[9px] font-bold font-mono text-zinc-700 dark:text-zinc-200">{{ $cond['condition_code'] }}</span>@endif
+                                <span class="text-[9px] font-mono pb-0.5 text-zinc-500">{{ $tooth }}</span>
+                            </button>
+                            @endforeach
+                        </div>
+                    </div>
+
+                    {{-- Center Divider --}}
+                    <div class="relative my-2 mx-4">
+                        <div class="border-t-2 border-dashed border-zinc-300 dark:border-zinc-700"></div>
+                        <span class="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-white dark:bg-zinc-900 px-2 text-[10px] text-zinc-400 font-semibold tracking-wider">━ GARIS MEDIAN ━</span>
+                    </div>
+
+                    {{-- Child Lower Row (dashed) --}}
+                    <div class="flex justify-center gap-0.5 mt-1">
+                        <div class="flex gap-0.5">
+                            @foreach ($childLowerRight as $tooth)
+                            @php $cond = $teethMap[$tooth] ?? null; $toothClass = $cond ? ($conditionBorderColors[$cond['condition_code']] ?? $defaultToothClass) : $defaultToothClass; @endphp
+                            <button type="button" wire:click="openTooth({{ $tooth }})"
+                                class="relative flex flex-col items-center justify-start w-9 h-10 border-2 border-dashed transition-all {{ $toothClass }} {{ !$isEditable ? 'cursor-default' : '' }}"
+                                title="Gigi Susu {{ $tooth }}">
+                                <span class="text-[9px] font-mono pt-0.5 text-zinc-500">{{ $tooth }}</span>
+                                @if ($cond)<span class="absolute bottom-0.5 text-[9px] font-bold font-mono text-zinc-700 dark:text-zinc-200">{{ $cond['condition_code'] }}</span>@endif
+                            </button>
+                            @endforeach
+                        </div>
+                        <div class="w-px bg-zinc-300 dark:bg-zinc-700 mx-1"></div>
+                        <div class="flex gap-0.5">
+                            @foreach ($childLowerLeft as $tooth)
+                            @php $cond = $teethMap[$tooth] ?? null; $toothClass = $cond ? ($conditionBorderColors[$cond['condition_code']] ?? $defaultToothClass) : $defaultToothClass; @endphp
+                            <button type="button" wire:click="openTooth({{ $tooth }})"
+                                class="relative flex flex-col items-center justify-start w-9 h-10 border-2 border-dashed transition-all {{ $toothClass }} {{ !$isEditable ? 'cursor-default' : '' }}"
+                                title="Gigi Susu {{ $tooth }}">
+                                <span class="text-[9px] font-mono pt-0.5 text-zinc-500">{{ $tooth }}</span>
+                                @if ($cond)<span class="absolute bottom-0.5 text-[9px] font-bold font-mono text-zinc-700 dark:text-zinc-200">{{ $cond['condition_code'] }}</span>@endif
+                            </button>
+                            @endforeach
+                        </div>
+                    </div>
+
+                    {{-- Adult Lower Row --}}
+                    <div class="flex justify-center gap-0.5 mt-0.5">
+                        <div class="flex gap-0.5">
+                            @foreach ($adultLowerRight as $tooth)
+                            @php $cond = $teethMap[$tooth] ?? null; $toothClass = $cond ? ($conditionBorderColors[$cond['condition_code']] ?? $defaultToothClass) : $defaultToothClass; @endphp
+                            <button type="button" wire:click="openTooth({{ $tooth }})"
+                                class="relative flex flex-col items-center justify-start w-9 h-14 rounded-b-lg border-2 transition-all {{ $toothClass }} {{ !$isEditable ? 'cursor-default' : '' }}"
+                                title="Gigi {{ $tooth }}{{ $cond ? ' — ' . $cond['condition_code'] : '' }}">
+                                <span class="text-[10px] font-bold font-mono pt-1 text-zinc-600 dark:text-zinc-400">{{ $tooth }}</span>
+                                @if ($cond)<span class="absolute bottom-0.5 text-[9px] font-bold font-mono text-zinc-700 dark:text-zinc-200">{{ $cond['condition_code'] }}</span>@endif
+                            </button>
+                            @endforeach
+                        </div>
+                        <div class="w-px bg-zinc-300 dark:bg-zinc-700 mx-1"></div>
+                        <div class="flex gap-0.5">
+                            @foreach ($adultLowerLeft as $tooth)
+                            @php $cond = $teethMap[$tooth] ?? null; $toothClass = $cond ? ($conditionBorderColors[$cond['condition_code']] ?? $defaultToothClass) : $defaultToothClass; @endphp
+                            <button type="button" wire:click="openTooth({{ $tooth }})"
+                                class="relative flex flex-col items-center justify-start w-9 h-14 rounded-b-lg border-2 transition-all {{ $toothClass }} {{ !$isEditable ? 'cursor-default' : '' }}"
+                                title="Gigi {{ $tooth }}{{ $cond ? ' — ' . $cond['condition_code'] : '' }}">
+                                <span class="text-[10px] font-bold font-mono pt-1 text-zinc-600 dark:text-zinc-400">{{ $tooth }}</span>
+                                @if ($cond)<span class="absolute bottom-0.5 text-[9px] font-bold font-mono text-zinc-700 dark:text-zinc-200">{{ $cond['condition_code'] }}</span>@endif
+                            </button>
+                            @endforeach
+                        </div>
+                    </div>
+                    <p class="text-center text-xs font-semibold text-zinc-400 uppercase tracking-widest mt-1">RAHANG BAWAH (Mandibula)</p>
+                </div>
+
+                {{-- Tooth Summary Table --}}
+                @if (count($teethMap) > 0)
+                <div class="mt-6 border border-zinc-200 dark:border-zinc-800 rounded-lg overflow-hidden">
+                    <flux:table>
+                        <flux:table.columns>
+                            <flux:table.column>No. Gigi</flux:table.column>
+                            <flux:table.column>Kondisi</flux:table.column>
+                            <flux:table.column>Catatan</flux:table.column>
+                            @if ($isEditable)<flux:table.column>Aksi</flux:table.column>@endif
+                        </flux:table.columns>
+                        <flux:table.rows>
+                            @foreach ($teethMap as $toothNum => $data)
+                            <flux:table.row wire:key="tooth-row-{{ $toothNum }}">
+                                <flux:table.cell class="font-mono font-bold text-teal-700 dark:text-teal-400">{{ $toothNum }}</flux:table.cell>
+                                <flux:table.cell>
+                                    @php $badgeColor = ['SOU' => 'green', 'CAR' => 'red', 'MIS' => 'zinc', 'FML' => 'blue', 'FRA' => 'orange', 'CFR' => 'yellow'][$data['condition_code']] ?? 'zinc'; @endphp
+                                    <flux:badge color="{{ $badgeColor }}" size="sm" class="font-mono font-bold">{{ $data['condition_code'] }}</flux:badge>
+                                </flux:table.cell>
+                                <flux:table.cell class="text-xs text-zinc-600 dark:text-zinc-300">{{ $data['notes'] ?: '-' }}</flux:table.cell>
+                                @if ($isEditable)
+                                <flux:table.cell>
+                                    <div class="flex gap-1">
+                                        <flux:button variant="ghost" size="sm" icon="pencil" wire:click="openTooth({{ $toothNum }})" />
+                                        <flux:button variant="ghost" size="sm" icon="trash" class="text-red-500" wire:click="clearTooth({{ $toothNum }})" />
+                                    </div>
+                                </flux:table.cell>
+                                @endif
+                            </flux:table.row>
+                            @endforeach
+                        </flux:table.rows>
+                    </flux:table>
+                </div>
+                @else
+                <div class="mt-4 text-center py-6 text-xs text-zinc-400 italic border border-dashed border-zinc-200 dark:border-zinc-800 rounded-lg">
+                    Klik pada gigi di diagram untuk mencatat kondisi klinis.
+                </div>
+                @endif
+
+                {{-- Tooth Condition Modal --}}
+                @if ($showToothModal && $activeTooth)
+                <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
+                    <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-xl w-full max-w-sm overflow-hidden">
+                        <div class="p-5 border-b border-zinc-200 dark:border-zinc-800 flex justify-between items-center">
+                            <div>
+                                <flux:heading size="lg">Kondisi Gigi #{{ $activeTooth }}</flux:heading>
+                                <p class="text-sm text-zinc-500 mt-0.5">Pilih kondisi dan tambahkan catatan klinis</p>
+                            </div>
+                            <button type="button" wire:click="closeToothModal" class="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300">
+                                <flux:icon.x-mark class="w-5 h-5" />
+                            </button>
+                        </div>
+                        <div class="p-5 space-y-4">
+                            <div class="grid grid-cols-3 gap-2">
+                                @foreach (['SOU' => ['label' => 'Sound', 'bg' => 'bg-green-500 hover:bg-green-600'], 'CAR' => ['label' => 'Caries', 'bg' => 'bg-red-500 hover:bg-red-600'], 'MIS' => ['label' => 'Missing', 'bg' => 'bg-zinc-500 hover:bg-zinc-600'], 'FML' => ['label' => 'Filled', 'bg' => 'bg-blue-500 hover:bg-blue-600'], 'FRA' => ['label' => 'Fracture', 'bg' => 'bg-orange-500 hover:bg-orange-600'], 'CFR' => ['label' => 'Crown Fr.', 'bg' => 'bg-yellow-500 hover:bg-yellow-600']] as $code => $info)
+                                <button type="button"
+                                    wire:click="$set('activeToothCondition', '{{ $code }}')"
+                                    class="rounded-lg p-2.5 text-xs font-bold text-white transition-all {{ $info['bg'] }} {{ $activeToothCondition === $code ? 'ring-2 ring-offset-2 ring-white shadow-lg scale-105' : 'opacity-70 hover:opacity-100' }}">
+                                    {{ $code }}<br><span class="font-normal text-[10px] opacity-90">{{ $info['label'] }}</span>
+                                </button>
+                                @endforeach
+                            </div>
+                            <flux:textarea wire:model="activeToothNotes" label="Catatan Klinis (Opsional)" placeholder="Contoh: Karies profunda mesial, abses periapikal..." rows="2" />
+                        </div>
+                        <div class="flex justify-end gap-2 px-5 pb-5">
+                            <flux:button variant="filled" wire:click="closeToothModal">Batal</flux:button>
+                            <flux:button variant="primary" wire:click="saveToothCondition">Simpan Kondisi</flux:button>
+                        </div>
+                    </div>
+                </div>
+                @endif
+
+                <div class="flex justify-end mt-4 pt-4 border-t border-zinc-100 dark:border-zinc-800">
+                    @if ($isEditable)
+                        <flux:button size="sm" variant="filled" color="teal" icon="document-check" wire:click="saveOdontogram">Simpan Odontogram</flux:button>
+                    @endif
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab Content: Diagnosis -->
+
+    @endif
+
+    @if ($poliklinik === 'kia')
+        <div x-show="activeTab === 'anc'" class="space-y-6" x-transition>
+            <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6 shadow-sm">
+                <div class="flex items-center gap-2 mb-6 pb-3 border-b border-zinc-100 dark:border-zinc-800">
+                    <flux:icon.heart class="w-5 h-5 text-pink-500" />
+                    <flux:heading size="lg" class="font-bold">Pemeriksaan ANC (Antenatal Care)</flux:heading>
+                    <flux:badge color="pink" size="sm">KIA / Kebidanan</flux:badge>
+                </div>
+
+                {{-- HPHT + TP with Naegele auto-calc --}}
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 p-4 bg-pink-50/50 dark:bg-pink-950/10 rounded-xl border border-pink-100 dark:border-pink-900/30">
+                    <flux:input wire:model.live="anc_hpht" type="date" label="HPHT (Hari Pertama Haid Terakhir)" :disabled="!$isEditable" />
+                    <flux:input wire:model="anc_tp" type="date" label="Taksiran Persalinan (Naegele)" :disabled="!$isEditable" description="Otomatis dari HPHT" />
+                    <div>
+                        <flux:label class="text-xs">Usia Kehamilan</flux:label>
+                        <div class="flex items-center h-10 px-3 border border-zinc-200 dark:border-zinc-800 rounded-lg bg-zinc-50 dark:bg-zinc-950 font-semibold font-mono text-sm mt-1">
+                            @if ($anc_uk_minggu !== null)
+                                <span class="text-pink-600 dark:text-pink-400 font-bold">{{ $anc_uk_minggu }} minggu</span>
+                            @else
+                                <span class="text-zinc-400 italic">—</span>
+                            @endif
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1">Presentasi Janin</label>
+                        <select wire:model="anc_presentasi" class="block w-full rounded-lg border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3 py-2 text-sm text-zinc-900 dark:text-white focus:border-indigo-500 focus:ring-indigo-500 shadow-sm mt-1" {{ !$isEditable ? 'disabled' : '' }}>
+                            <option value="">Pilih...</option>
+                            <option value="Kepala">Kepala (Cephalic)</option>
+                            <option value="Bokong">Bokong (Breech)</option>
+                            <option value="Lintang">Lintang (Transverse)</option>
+                            <option value="Oblique">Oblique</option>
+                        </select>
+                    </div>
+                </div>
+
+                {{-- Vital Measurements --}}
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <flux:input wire:model="anc_tfu" type="number" step="0.1" label="TFU (Tinggi Fundus Uteri)" suffix="cm" placeholder="28.0" :disabled="!$isEditable" />
+                    <flux:input wire:model="anc_djj" type="number" label="DJJ (Denyut Jantung Janin)" suffix="bpm" placeholder="145" :disabled="!$isEditable" />
+                    <div>
+                        <label class="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1">Golongan Darah</label>
+                        <select wire:model="anc_golongan_darah" class="block w-full rounded-lg border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3 py-2 text-sm text-zinc-900 dark:text-white focus:border-indigo-500 focus:ring-indigo-500 shadow-sm mt-1" {{ !$isEditable ? 'disabled' : '' }}>
+                            <option value="">Tidak Diketahui</option>
+                            <option value="A">A</option>
+                            <option value="B">B</option>
+                            <option value="AB">AB</option>
+                            <option value="O">O</option>
+                        </select>
+                    </div>
+                </div>
+
+                {{-- Leopold Palpation --}}
+                <div class="bg-zinc-50 dark:bg-zinc-950/40 p-5 rounded-xl border border-zinc-200/60 dark:border-zinc-800/80 space-y-4 mb-6">
+                    <flux:heading size="md" class="font-bold">Pemeriksaan Leopold (Palpasi Abdomen)</flux:heading>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <flux:textarea wire:model="anc_leopold_1" label="Leopold I — Fundus" placeholder="Deskripsi bagian teratas uterus (kepala/bokong)..." rows="2" :disabled="!$isEditable" />
+                        <flux:textarea wire:model="anc_leopold_2" label="Leopold II — Samping" placeholder="Posisi punggung dan bagian kecil janin..." rows="2" :disabled="!$isEditable" />
+                        <flux:textarea wire:model="anc_leopold_3" label="Leopold III — Terbawah" placeholder="Bagian terbawah janin (presentasi)..." rows="2" :disabled="!$isEditable" />
+                        <flux:textarea wire:model="anc_leopold_4" label="Leopold IV — Masuk PAP" placeholder="Penurunan bagian terbawah / konvergen-divergen..." rows="2" :disabled="!$isEditable" />
+                    </div>
+                </div>
+
+                {{-- Additional ANC Info --}}
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="flex flex-col justify-between">
+                        <div class="flex flex-col gap-2">
+                            <label class="text-sm font-semibold text-zinc-700 dark:text-zinc-300">Riwayat Sectio Caesarea (SC)</label>
+                            <div class="flex items-center h-10">
+                                <label class="flex items-center gap-2.5 text-sm text-zinc-700 dark:text-zinc-300 cursor-pointer">
+                                    <input type="checkbox" wire:model="anc_riwayat_sc" class="rounded border-zinc-300 text-pink-600 focus:ring-pink-500 w-4 h-4" {{ !$isEditable ? 'disabled' : '' }}>
+                                    <span class="font-medium">Pernah menjalani SC sebelumnya</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <flux:textarea wire:model="anc_catatan_bidan" label="Catatan Bidan / Advice" placeholder="Saran atau rencana follow-up bidan..." rows="2" :disabled="!$isEditable" />
+                </div>
+
+                <div class="flex justify-end mt-6 pt-4 border-t border-zinc-150 dark:border-zinc-800">
+                    @if ($isEditable)
+                        <flux:button size="sm" variant="filled" color="pink" icon="document-check" wire:click="saveAnc">Simpan ANC</flux:button>
+                    @endif
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab Content: Imunisasi & Suplemen -->
+
     @endif
 
     <script>

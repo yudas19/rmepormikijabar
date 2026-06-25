@@ -2,6 +2,7 @@
 
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
+use App\Models\KabupatenKota;
 use App\Models\LabOrder;
 use App\Models\MasterObat;
 use App\Models\MasterTindakan;
@@ -198,4 +199,80 @@ test('billing aggregation engine correctly sums and processes invoice', function
     // Assert pendaftaran status_antrean update to selesai
     $pendaftaran->refresh();
     expect($pendaftaran->status_antrean)->toBe('selesai');
+});
+
+test('cashier can override item-level cara_bayar_item to update out of pocket total', function () {
+    $user = User::first();
+    $this->actingAs($user);
+
+    // 1. Create Patient & Pendaftaran (BPJS) & MedicalRecord
+    $kab = KabupatenKota::create(['kode_kabupaten_kota' => '3202', 'nama_kabupaten_kota' => 'Kota Bandung']);
+
+    $pasien = Pasien::create([
+        'no_rekam_medis' => 'RM-20261102-9903',
+        'nama_pasien' => 'BPJS Patient',
+        'nik' => '1234567890123497',
+        'tempat_lahir_kabupaten_id' => $kab->id,
+        'tanggal_lahir' => '1992-02-02',
+        'jenis_kelamin' => 'L',
+        'alamat' => 'Jl. BPJS 99',
+        'status_pasien' => 'aktif',
+    ]);
+
+    $pendaftaran = Pendaftaran::create([
+        'no_registrasi' => 'REG-9903',
+        'pasien_id' => $pasien->id,
+        'poli_id' => Poli::first()->id,
+        'dokter_id' => 1,
+        'no_antrean' => 'A-03',
+        'angka_antrean' => 3,
+        'status_antrean' => 'selesai',
+        'cara_bayar' => 'BPJS',
+        'jenis_kunjungan' => 'Baru',
+    ]);
+
+    $record = MedicalRecord::create([
+        'encounter_id' => 'ENC-9903',
+        'patient_id' => $pasien->id,
+        'pendaftaran_id' => $pendaftaran->id,
+        'poli_id' => Poli::first()->id,
+        'status' => 'completed',
+        'nomor_antrean' => 'A-03',
+    ]);
+
+    // Add Polyclinic Procedure
+    $tindakan = MasterTindakan::where('nama_tindakan', 'Konsultasi Dokter Umum')->first();
+    $record->tindakans()->attach($tindakan->id, [
+        'qty' => 1,
+        'subtotal' => $tindakan->tarif,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+
+    // Since the patient is registered under BPJS, all items default to 'bpjs' on selectRecord.
+    // That means the out-of-pocket subtotal should be 0.
+    $component = Livewire::test('layanan.kasir')
+        ->call('selectRecord', $record->id)
+        ->assertSet('adminFeeCaraBayar', 'bpjs')
+        ->assertSet('subtotal', 0.0) // Covered by BPJS
+        ->assertSet('originalSubtotal', (float) (15000 + $tindakan->tarif));
+
+    // Now, let's override the tindakan to 'umum' (out-of-pocket)
+    $component->call('updateTindakanCaraBayar', $tindakan->id, 'umum')
+        ->assertSet('subtotal', (float) $tindakan->tarif) // Now patient must pay for the procedure
+        ->set('paymentMethod', 'tunai')
+        ->set('amountTendered', $tindakan->tarif)
+        ->call('submitPayment')
+        ->assertHasNoErrors();
+
+    // Verify invoice items cara_bayar_item snapshotting
+    $invoice = Invoice::where('medical_record_id', $record->id)->first();
+    expect($invoice)->not->toBeNull();
+    expect((float) $invoice->subtotal)->toBe((float) $tindakan->tarif);
+
+    $adminItem = InvoiceItem::where('invoice_id', $invoice->id)->where('item_type', 'admin')->first();
+    expect($adminItem->cara_bayar_item)->toBe('bpjs');
+
+    $tindakanItem = InvoiceItem::where('invoice_id', $invoice->id)->where('item_type', 'tindakan')->first();
+    expect($tindakanItem->cara_bayar_item)->toBe('umum');
 });

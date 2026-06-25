@@ -121,6 +121,14 @@ class DatabaseSeeder extends Seeder
                 'satu_sehat_location_id' => 'LOC-KIA-03',
                 'is_active' => true,
             ],
+            [
+                'kode_poli' => 'LAB',
+                'nama_poli' => 'Laboratorium (Walk-In)',
+                'kode_poli_bpjs' => '004',
+                'satu_sehat_location_id' => 'LOC-LAB-04',
+                'is_active' => true,
+                'jenis_unit' => 'penunjang',
+            ],
         ];
 
         foreach ($polis as $poli) {
@@ -198,5 +206,9 @@ class DatabaseSeeder extends Seeder
 
         // 10. Permissions
         $this->call(PermissionsSeeder::class);
+
+        // 11. Master Agama & BPJS Spesialis
+        $this->call(MasterAgamaSeeder::class);
+        $this->call(MasterSpesialisBpjsSeeder::class);
     }
 }

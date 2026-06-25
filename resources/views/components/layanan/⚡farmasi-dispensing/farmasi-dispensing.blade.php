@@ -45,17 +45,35 @@
                 <div class="flex justify-between"><span class="text-zinc-500 font-semibold">Asal Poli</span><flux:badge color="zinc" size="sm">{{ $poli?->nama_poli ?? '-' }}</flux:badge></div>
                 <div class="flex justify-between"><span class="text-zinc-500 font-semibold">Dokter Penulis Resep</span><span>{{ $dokter?->nama_petugas ?? '-' }}</span></div>
                 <div class="flex justify-between"><span class="text-zinc-500 font-semibold">Tipe Resep</span>
-                    <flux:badge color="{{ $prescription->type === 'racikan' ? 'purple' : 'zinc' }}" size="sm">{{ $prescription->type === 'racikan' ? 'Racikan' : 'Non-Racikan' }}</flux:badge>
+                    <div class="space-y-1 text-right">
+                        @foreach ($prescription->medicalRecord->prescriptions->pluck('type')->unique() as $t)
+                            <flux:badge color="{{ $t === 'racikan' ? 'purple' : 'zinc' }}" size="sm">{{ $t === 'racikan' ? 'Racikan' : 'Non-Racikan' }}</flux:badge>
+                        @endforeach
+                    </div>
                 </div>
-                @if ($prescription->type === 'racikan')
-                <div class="flex justify-between"><span class="text-zinc-500 font-semibold">Nama Racikan</span><span class="font-bold">{{ $prescription->nama_racikan }}</span></div>
-                <div class="flex justify-between"><span class="text-zinc-500 font-semibold">Metode</span><span>{{ $prescription->metodeRacik?->nama_metode_racik ?? '-' }} ({{ $prescription->jumlah_kemasan }} bks)</span></div>
-                @endif
-                <div class="flex justify-between"><span class="text-zinc-500 font-semibold">Aturan Pakai (Dokter)</span><span class="font-mono font-bold text-blue-700 dark:text-blue-400">{{ $prescription->aturan_pakai }}</span></div>
-                @if ($prescription->catatan)
+                @foreach ($prescription->medicalRecord->prescriptions as $presc)
+                    @if ($presc->type === 'racikan')
+                        <div class="flex justify-between"><span class="text-zinc-500 font-semibold">Nama Racikan</span><span class="font-bold text-zinc-900 dark:text-white">{{ $presc->nama_racikan }}</span></div>
+                        <div class="flex justify-between"><span class="text-zinc-500 font-semibold">Metode</span><span class="text-zinc-900 dark:text-white">{{ $presc->metodeRacik?->nama_metode_racik ?? '-' }} ({{ $presc->jumlah_kemasan }} bks)</span></div>
+                    @endif
+                @endforeach
+                <div class="flex justify-between"><span class="text-zinc-500 font-semibold">Aturan Pakai (Dokter)</span>
+                    <div class="space-y-1 text-right font-mono font-bold text-blue-700 dark:text-blue-400">
+                        @foreach ($prescription->medicalRecord->prescriptions as $presc)
+                            <div>{{ $presc->aturan_pakai ?: '-' }}</div>
+                        @endforeach
+                    </div>
+                </div>
+                @if ($prescription->medicalRecord->prescriptions->pluck('catatan')->filter()->isNotEmpty())
                 <div class="pt-2 border-t border-zinc-100 dark:border-zinc-800">
                     <span class="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Catatan Dokter</span>
-                    <p class="mt-1 text-sm text-zinc-700 dark:text-zinc-300 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/40 rounded-lg p-3">{{ $prescription->catatan }}</p>
+                    <div class="space-y-2 mt-1">
+                        @foreach ($prescription->medicalRecord->prescriptions as $presc)
+                            @if ($presc->catatan)
+                                <p class="text-sm text-zinc-700 dark:text-zinc-300 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/40 rounded-lg p-3 font-medium">{{ $presc->catatan }}</p>
+                            @endif
+                        @endforeach
+                    </div>
                 </div>
                 @endif
             </div>
@@ -125,7 +143,12 @@
                     @foreach ($dispensingRows as $idx => $row)
                     <tr wire:key="disp-{{ $idx }}">
                         {{-- Doctor Request (Read-Only) --}}
-                        <td class="px-4 py-3 font-semibold text-blue-800 dark:text-blue-300 bg-blue-50/20 dark:bg-blue-950/5">{{ $row['requested_obat_name'] }}</td>
+                        <td class="px-4 py-3 font-semibold text-blue-800 dark:text-blue-300 bg-blue-50/20 dark:bg-blue-950/5">
+                            <div>{{ $row['requested_obat_name'] }}</div>
+                            @if ($row['prescription_type'] === 'racikan')
+                                <div class="text-[10px] text-purple-700 dark:text-purple-400 font-bold">Racikan: {{ $row['prescription_nama_racikan'] }}</div>
+                            @endif
+                        </td>
                         <td class="px-4 py-3 font-mono text-blue-700 dark:text-blue-400 bg-blue-50/20 dark:bg-blue-950/5">{{ $row['requested_qty'] }}</td>
                         <td class="px-4 py-3 text-zinc-500 bg-blue-50/20 dark:bg-blue-950/5 border-r border-zinc-200 dark:border-zinc-700">{{ $row['requested_satuan'] }}</td>
 

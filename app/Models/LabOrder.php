@@ -21,6 +21,11 @@ class LabOrder extends Model
         return $this->belongsTo(MedicalRecord::class, 'medical_record_id');
     }
 
+    public function pendaftaran(): BelongsTo
+    {
+        return $this->belongsTo(Pendaftaran::class, 'pendaftaran_id');
+    }
+
     public function requester(): BelongsTo
     {
         return $this->belongsTo(MasterPetugas::class, 'requested_by_id');

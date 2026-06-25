@@ -28,7 +28,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 ->where('status_antrean', '!=', 'batal');
         }])->get();
 
-        $jobStats = Pasien::selectRaw('COALESCE(NULLIF(pekerjaan, ""), "Tidak Mengisi") as pekerjaan, count(*) as count')
+        $jobStats = Pasien::leftJoin('master_pekerjaans', 'pasiens.master_pekerjaan_id', '=', 'master_pekerjaans.id')
+            ->selectRaw('COALESCE(master_pekerjaans.nama_pekerjaan, "Tidak Mengisi") as pekerjaan, count(*) as count')
             ->groupBy('pekerjaan')
             ->orderByDesc('count')
             ->take(8)
@@ -46,6 +47,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::livewire('/master/cara-pakai-obat', 'master.cara-pakai-obat')->name('master.cara-pakai-obat');
     Route::livewire('/master/pekerjaan', 'master.pekerjaan')->name('master.pekerjaan');
     Route::livewire('/master/pendidikan', 'master.pendidikan')->name('master.pendidikan');
+    Route::livewire('/master/agama', 'master.agama')->name('master.agama');
     Route::livewire('/master/satusehat', 'master.satusehat')->name('master.satusehat');
     Route::livewire('/master/tindakan', 'master.tindakan')->name('master.tindakan');
     Route::livewire('/master/provinsi', 'master.provinsi')->name('master.provinsi');
@@ -91,7 +93,7 @@ Route::get('/verify-document/{encrypted_id}', [VerificationController::class, 'v
 
 Route::middleware(['auth', 'verified'])->group(function () {
     // Poliklinik (dynamic permissions checked inside component mount)
-    Route::livewire('/poli/{poliklinik}', 'poliklinik-queue')->name('poli.queue');
+    Route::livewire('/poli/{poliklinik?}', 'poliklinik-queue')->name('poli.queue');
 
     // Rekam Medis (Examine workspace)
     Route::get('/poli/{poliklinik}/examine/{encounter_id}', [MedicalRecordController::class, 'examine'])

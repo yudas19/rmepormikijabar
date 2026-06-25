@@ -28,6 +28,7 @@ class MedicalRecord extends Model
         'gcs_motor' => 'integer',
         'gcs_score' => 'integer',
         'tanggal_kunjungan' => 'date',
+        'bpjs_retry_count' => 'integer',
     ];
 
     public function pasien(): BelongsTo
@@ -115,7 +116,7 @@ class MedicalRecord extends Model
     public function tindakans(): BelongsToMany
     {
         return $this->belongsToMany(MasterTindakan::class, 'medical_record_tindakans', 'medical_record_id', 'master_tindakan_id')
-            ->withPivot(['qty', 'subtotal'])
+            ->withPivot(['qty', 'subtotal', 'cara_bayar_item'])
             ->withTimestamps();
     }
 

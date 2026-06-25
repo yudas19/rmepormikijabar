@@ -38,35 +38,18 @@
 
         <flux:sidebar.nav>
             <flux:sidebar.group :heading="__('Poliklinik & Layanan')" class="grid">
-                @can('akses_poli_umum')
-                <flux:sidebar.item icon="building-office-2" href="{{ route('poli.queue', ['poliklinik' => 'umum']) }}" :current="request()->is('poli/umum*')" wire:navigate
-                    :badge="($waitingCounts['umum'] ?? 0) > 0 ? $waitingCounts['umum'] : null"
+                @if (auth()->user()->can('akses_poli_umum') || auth()->user()->can('akses_poli_gigi') || auth()->user()->can('akses_poli_kia'))
+                @php
+                    $totalWaiting = ($waitingCounts['umum'] ?? 0) + ($waitingCounts['gigi'] ?? 0) + ($waitingCounts['kia'] ?? 0);
+                @endphp
+                <flux:sidebar.item icon="building-office-2" href="{{ route('poli.queue') }}" :current="request()->is('poli*') && !request()->is('poli/*/examine/*')" wire:navigate
+                    :badge="$totalWaiting > 0 ? $totalWaiting : null"
                     badge-color="red"
                     badge:variant="solid"
                     badge:class="rounded-full">
-                    {{ __('Poli Umum') }}
+                    {{ __('Pemeriksaan Medis') }}
                 </flux:sidebar.item>
-                @endcan
-
-                @can('akses_poli_gigi')
-                <flux:sidebar.item icon="building-office-2" href="{{ route('poli.queue', ['poliklinik' => 'gigi']) }}" :current="request()->is('poli/gigi*')" wire:navigate
-                    :badge="($waitingCounts['gigi'] ?? 0) > 0 ? $waitingCounts['gigi'] : null"
-                    badge-color="red"
-                    badge:variant="solid"
-                    badge:class="rounded-full">
-                    {{ __('Poli Gigi') }}
-                </flux:sidebar.item>
-                @endcan
-
-                @can('akses_poli_kia')
-                <flux:sidebar.item icon="building-office-2" href="{{ route('poli.queue', ['poliklinik' => 'kia']) }}" :current="request()->is('poli/kia*')" wire:navigate
-                    :badge="($waitingCounts['kia'] ?? 0) > 0 ? $waitingCounts['kia'] : null"
-                    badge-color="red"
-                    badge:variant="solid"
-                    badge:class="rounded-full">
-                    {{ __('Klinik KIA') }}
-                </flux:sidebar.item>
-                @endcan
+                @endif
 
                 @can('akses_laboratorium')
                 <flux:sidebar.item icon="beaker" href="{{ route('layanan.laboratorium') }}" :current="request()->routeIs('layanan.laboratorium')" wire:navigate>

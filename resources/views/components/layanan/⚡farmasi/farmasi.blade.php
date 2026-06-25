@@ -41,8 +41,8 @@
             <flux:table.rows>
                 @forelse ($prescriptions as $p)
                 @php
-                    $pasien = $p->medicalRecord?->pendaftaran?->pasien;
-                    $poli = $p->medicalRecord?->pendaftaran?->poli;
+                    $pasien = $p->pendaftaran?->pasien;
+                    $poli = $p->pendaftaran?->poli;
                 @endphp
                 <flux:table.row wire:key="rx-{{ $p->id }}">
                     <flux:table.cell class="font-mono text-xs text-zinc-500">{{ $p->created_at->format('d-m-Y H:i') }}</flux:table.cell>
@@ -53,25 +53,41 @@
                     <flux:table.cell>
                         <flux:badge color="zinc" size="sm">{{ $poli?->nama_poli ?? '-' }}</flux:badge>
                     </flux:table.cell>
-                    <flux:table.cell>
-                        <flux:badge color="{{ $p->type === 'racikan' ? 'purple' : 'zinc' }}" size="sm">
-                            {{ $p->type === 'racikan' ? 'Racikan' : 'Non-Racikan' }}
-                        </flux:badge>
+                    <flux:table.cell class="space-y-1">
+                        @foreach ($p->medicalRecord->prescriptions->pluck('type')->unique() as $t)
+                            <flux:badge color="{{ $t === 'racikan' ? 'purple' : 'zinc' }}" size="sm" class="block w-max">
+                                {{ $t === 'racikan' ? 'Racikan' : 'Non-Racikan' }}
+                            </flux:badge>
+                        @endforeach
                     </flux:table.cell>
                     <flux:table.cell class="text-xs max-w-xs">
-                        @if ($p->type === 'racikan')
-                        <div class="font-semibold text-zinc-800 dark:text-zinc-200">{{ $p->nama_racikan }} ({{ $p->metodeRacik?->nama_metode_racik ?? '-' }} - {{ $p->jumlah_kemasan }} Bks)</div>
-                        <ul class="list-disc pl-4 mt-1 space-y-0.5 text-zinc-500">
-                            @foreach ($p->items as $item)
-                            <li>{{ $item->requestedObat?->nama_obat ?? '-' }} <span class="text-[10px] font-mono">({{ $item->requested_qty }} {{ $item->satuan }})</span></li>
+                        <div class="space-y-2">
+                            @foreach ($p->medicalRecord->prescriptions as $presc)
+                                @if ($presc->type === 'racikan')
+                                    <div>
+                                        <div class="font-semibold text-zinc-800 dark:text-zinc-200">Racikan: {{ $presc->nama_racikan }} ({{ $presc->metodeRacik?->nama_metode_racik ?? '-' }} - {{ $presc->jumlah_kemasan }} Bks)</div>
+                                        <ul class="list-disc pl-4 mt-0.5 space-y-0.5 text-zinc-500">
+                                            @foreach ($presc->items as $item)
+                                                <li>{{ $item->requestedObat?->nama_obat ?? '-' }} <span class="text-[10px] font-mono">({{ $item->requested_qty }} {{ $item->satuan }})</span></li>
+                                            @endforeach
+                                        </ul>
+                                    </div>
+                                @else
+                                    <div>
+                                        <div class="font-semibold text-zinc-800 dark:text-zinc-200">{{ $presc->items->first()?->requestedObat?->nama_obat ?? '-' }}</div>
+                                        <div class="text-[10px] text-zinc-500 font-mono">Jumlah: {{ $presc->items->first()?->requested_qty ?? 0 }} {{ $presc->items->first()?->satuan ?? '' }}</div>
+                                    </div>
+                                @endif
                             @endforeach
-                        </ul>
-                        @else
-                        <div class="font-semibold text-zinc-800 dark:text-zinc-200">{{ $p->items->first()?->requestedObat?->nama_obat ?? '-' }}</div>
-                        <div class="text-[10px] text-zinc-500 font-mono mt-0.5">Jumlah: {{ $p->items->first()?->requested_qty ?? 0 }} {{ $p->items->first()?->satuan ?? '' }}</div>
-                        @endif
+                        </div>
                     </flux:table.cell>
-                    <flux:table.cell class="font-medium font-mono text-xs text-zinc-800 dark:text-zinc-200">{{ $p->aturan_pakai }}</flux:table.cell>
+                    <flux:table.cell class="text-xs max-w-xs font-mono text-zinc-800 dark:text-zinc-200">
+                        <div class="space-y-2">
+                            @foreach ($p->medicalRecord->prescriptions as $presc)
+                                <div class="py-0.5">{{ $presc->aturan_pakai ?: '-' }}</div>
+                            @endforeach
+                        </div>
+                    </flux:table.cell>
                     <flux:table.cell>
                         <flux:badge color="{{ $p->dispensing_status_color }}" size="sm" class="font-semibold">
                             {{ $p->dispensing_status_label }}

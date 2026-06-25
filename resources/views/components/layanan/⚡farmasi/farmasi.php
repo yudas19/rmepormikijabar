@@ -25,13 +25,18 @@ new class extends Component
     public function render()
     {
         $prescriptions = MedicalRecordPrescription::with([
-            'medicalRecord.pendaftaran.pasien',
-            'medicalRecord.pendaftaran.poli',
-            'medicalRecord.pendaftaran.dokter',
-            'items.requestedObat',
+            'pendaftaran.pasien',
+            'pendaftaran.poli',
+            'pendaftaran.dokter',
+            'medicalRecord.prescriptions.items.requestedObat',
             'metodeRacik',
             'apoteker',
         ])
+            ->whereIn('id', function ($query) {
+                $query->select(\Illuminate\Support\Facades\DB::raw('MAX(id)'))
+                    ->from('medical_record_prescriptions')
+                    ->groupBy('medical_record_id');
+            })
             ->whereHas('medicalRecord', function ($q) {
                 $q->whereDate('tanggal_kunjungan', '>=', $this->filterStartDate)
                   ->whereDate('tanggal_kunjungan', '<=', $this->filterEndDate)
@@ -39,7 +44,7 @@ new class extends Component
             })
             ->when($this->statusFilter, fn ($q) => $q->where('dispensing_status', $this->statusFilter))
             ->when($this->searchQuery, function ($q) {
-                $q->whereHas('medicalRecord.pendaftaran.pasien', function ($sub) {
+                $q->whereHas('pendaftaran.pasien', function ($sub) {
                     $sub->where('nama_pasien', 'like', '%'.$this->searchQuery.'%')
                         ->orWhere('no_rekam_medis', 'like', '%'.$this->searchQuery.'%');
                 });

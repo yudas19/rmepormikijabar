@@ -28,6 +28,8 @@ use Livewire\Component;
 
 new class extends Component
 {
+    use \App\Concerns\WithBpjsPcareReferral;
+
     public $recordId;
 
     public $record;
@@ -406,6 +408,8 @@ new class extends Component
             }
             $this->recalcLabTotal();
         }
+
+        $this->initializeWithBpjsPcareReferral();
     }
 
     public function updatedWeight()

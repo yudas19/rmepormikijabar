@@ -14,6 +14,7 @@ class Poli extends Model
         'kode_poli_bpjs',
         'satu_sehat_location_id',
         'is_active',
+        'jenis_unit',
     ];
 
     protected $casts = [

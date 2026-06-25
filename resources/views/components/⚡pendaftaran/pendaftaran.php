@@ -1,6 +1,8 @@
 <?php
 
+use App\Models\MasterAgama;
 use App\Models\MasterPekerjaan;
+use App\Models\MasterPendidikan;
 use App\Models\MasterPetugas;
 use App\Models\MedicalRecord;
 use App\Models\Pasien;
@@ -17,6 +19,8 @@ use Livewire\WithPagination;
 new class extends Component
 {
     use WithPagination;
+
+    public float $adminFee = 15000.00;
 
     public $search = '';
 
@@ -63,6 +67,26 @@ new class extends Component
         $this->reg_tanggal_kunjungan = date('Y-m-d');
     }
 
+    public function updatedTempatLahirQuery()
+    {
+        if (strlen($this->tempatLahirQuery) < 2) {
+            $this->tempatLahirResults = [];
+            return;
+        }
+
+        $this->tempatLahirResults = \App\Models\KabupatenKota::where('nama_kabupaten_kota', 'like', '%'.$this->tempatLahirQuery.'%')
+            ->limit(10)
+            ->get()
+            ->toArray();
+    }
+
+    public function selectTempatLahir($id, $nama)
+    {
+        $this->tempat_lahir_kabupaten_id = $id;
+        $this->tempatLahirQuery = $nama;
+        $this->tempatLahirResults = [];
+    }
+
     // --- FORM PATIENT FIELDS ---
     public $pasien_id = null;
 
@@ -81,6 +105,18 @@ new class extends Component
     public $gelar = '';
 
     public $tempat_lahir = '';
+
+    public $tempatLahirQuery = '';
+
+    public $tempatLahirResults = [];
+
+    public $tempat_lahir_kabupaten_id = null;
+
+    public $master_agama_id = null;
+
+    public $master_pendidikan_id = null;
+
+    public $master_pekerjaan_id = null;
 
     public $tanggal_lahir = '';
 
@@ -128,11 +164,24 @@ new class extends Component
 
     public $reg_dokter_id = '';
 
+    public $selectedLabTests = [];
+
+    public function updatedRegPoliId()
+    {
+        $this->reg_dokter_id = '';
+        $this->selectedLabTests = [];
+    }
+
+    public function getIsWalkInLabProperty()
+    {
+        if (! $this->reg_poli_id) {
+            return false;
+        }
+        $poli = Poli::find($this->reg_poli_id);
+        return $poli && $poli->jenis_unit === 'penunjang' && stripos($poli->nama_poli, 'laboratorium') !== false;
+    }
+
     public $reg_cara_bayar = 'Umum';
-
-    public $reg_no_sep = '';
-
-    public $reg_no_rujukan = '';
 
     public $reg_jenis_kunjungan = 'Baru';
 
@@ -268,6 +317,8 @@ new class extends Component
         $this->ihs_number = $record->ihs_number;
         $this->gelar = $record->gelar;
         $this->tempat_lahir = $record->tempat_lahir;
+        $this->tempat_lahir_kabupaten_id = $record->tempat_lahir_kabupaten_id;
+        $this->tempatLahirQuery = $record->tempatLahirKabupaten?->nama_kabupaten_kota ?? '';
         $this->tanggal_lahir = $record->tanggal_lahir ? $record->tanggal_lahir->format('Y-m-d') : '';
         $this->jenis_kelamin = $record->jenis_kelamin;
         $this->golongan_darah = $record->golongan_darah;
@@ -278,8 +329,11 @@ new class extends Component
         $this->status_perkawinan = $record->status_perkawinan;
         $this->suku = $record->suku;
         $this->agama = $record->agama;
+        $this->master_agama_id = $record->master_agama_id;
         $this->pendidikan = $record->pendidikan;
+        $this->master_pendidikan_id = $record->master_pendidikan_id;
         $this->pekerjaan = $record->pekerjaan;
+        $this->master_pekerjaan_id = $record->master_pekerjaan_id;
         $this->kewarganegaraan = $record->kewarganegaraan;
         $this->bahasa = $record->bahasa;
         $this->no_whatsapp = $record->no_whatsapp;
@@ -302,10 +356,13 @@ new class extends Component
             'no_bpjs' => 'nullable|string|size:13|unique:pasiens,no_bpjs,'.($this->pasien_id ?? 'NULL').',id',
             'ihs_number' => 'nullable|string|unique:pasiens,ihs_number,'.($this->pasien_id ?? 'NULL').',id',
             'gelar' => 'nullable|string|max:20',
-            'tempat_lahir' => 'required|string|max:100',
+            'tempat_lahir_kabupaten_id' => 'required|exists:master_kabupaten_kotas,id',
             'tanggal_lahir' => 'required|date',
             'jenis_kelamin' => 'required|in:L,P',
             'golongan_darah' => 'required|in:A,B,AB,O,Tidak Tahu',
+            'master_agama_id' => 'nullable|exists:master_agamas,id',
+            'master_pendidikan_id' => 'nullable|exists:master_pendidikans,id',
+            'master_pekerjaan_id' => 'nullable|exists:master_pekerjaans,id',
             'alamat' => 'required|string',
             'no_whatsapp' => 'nullable|string|max:15',
             'email' => 'nullable|email|max:100',
@@ -339,6 +396,9 @@ new class extends Component
         $this->ihs_number = '';
         $this->gelar = '';
         $this->tempat_lahir = '';
+        $this->tempat_lahir_kabupaten_id = null;
+        $this->tempatLahirQuery = '';
+        $this->tempatLahirResults = [];
         $this->tanggal_lahir = '';
         $this->jenis_kelamin = '';
         $this->golongan_darah = 'Tidak Tahu';
@@ -349,8 +409,11 @@ new class extends Component
         $this->status_perkawinan = '';
         $this->suku = '';
         $this->agama = '';
+        $this->master_agama_id = null;
         $this->pendidikan = '';
+        $this->master_pendidikan_id = null;
         $this->pekerjaan = '';
+        $this->master_pekerjaan_id = null;
         $this->kewarganegaraan = 'WNI';
         $this->bahasa = 'Indonesia';
         $this->no_whatsapp = '';
@@ -370,8 +433,6 @@ new class extends Component
         $this->reg_poli_id = '';
         $this->reg_dokter_id = '';
         $this->reg_cara_bayar = 'Umum';
-        $this->reg_no_sep = '';
-        $this->reg_no_rujukan = '';
         $this->reg_jenis_kunjungan = 'Baru';
         $this->reg_keluhan_awal = '';
         $this->reg_tanggal_kunjungan = date('Y-m-d');
@@ -380,81 +441,204 @@ new class extends Component
 
     public function saveOutpatientRegistration()
     {
+        $isWalkInLab = $this->isWalkInLab;
+
         $rules = [
             'reg_poli_id' => 'required|exists:master_polis,id',
-            'reg_dokter_id' => 'required|exists:master_petugass,id',
+            'reg_dokter_id' => $isWalkInLab ? 'nullable' : 'required|exists:master_petugass,id',
             'reg_cara_bayar' => 'required|in:Umum,BPJS,Dinas/Instansi',
-            'reg_no_sep' => 'required_if:reg_cara_bayar,BPJS|nullable|string|max:30',
-            'reg_no_rujukan' => 'required_if:reg_cara_bayar,BPJS|nullable|string|max:30',
             'reg_jenis_kunjungan' => 'required|in:Baru,Lama,Kontrol',
-            'reg_keluhan_awal' => 'required|string',
+            'reg_keluhan_awal' => $isWalkInLab ? 'nullable|string' : 'required|string',
             'reg_tanggal_kunjungan' => 'required|date',
         ];
+
+        if ($isWalkInLab) {
+            $rules['selectedLabTests'] = 'required|array|min:1';
+        }
 
         $this->validate($rules);
 
         $poli = Poli::findOrFail($this->reg_poli_id);
+        $visitDate = $this->reg_tanggal_kunjungan;
 
-        // Map Poliklinik target to standard types & prefixes
-        $poliklinik_type = 'umum';
-        $prefix = 'A';
-        if (stripos($poli->nama_poli, 'gigi') !== false) {
-            $poliklinik_type = 'gigi';
-            $prefix = 'B';
-        } elseif (stripos($poli->nama_poli, 'kia') !== false || stripos($poli->nama_poli, 'anak') !== false || stripos($poli->nama_poli, 'ibu') !== false) {
-            $poliklinik_type = 'kia';
-            $prefix = 'C';
+        // 1. Verify scheduled doctor if NOT walk-in lab
+        if (! $isWalkInLab) {
+            $dayMap = [
+                0 => 'Minggu',
+                1 => 'Senin',
+                2 => 'Selasa',
+                3 => 'Rabu',
+                4 => 'Kamis',
+                5 => 'Jumat',
+                6 => 'Sabtu',
+            ];
+            $currentDay = $dayMap[Carbon::parse($visitDate)->dayOfWeek];
+            $isScheduled = DB::table('master_jadwal_dokters')
+                ->where('petugas_id', $this->reg_dokter_id)
+                ->where('poli_id', $this->reg_poli_id)
+                ->where('hari', $currentDay)
+                ->exists();
+
+            if (! $isScheduled) {
+                $this->addError('reg_dokter_id', 'Dokter tersebut tidak memiliki jadwal pada hari ' . $currentDay . '.');
+                return;
+            }
         }
 
-        // Daily resetting queue calculation for medical_records based on specific visit date
-        $visitDate = $this->reg_tanggal_kunjungan;
-        $mrCountToday = MedicalRecord::where('poli_id', $this->reg_poli_id)
-            ->whereDate('tanggal_kunjungan', $visitDate)
-            ->count();
-        $mrSeq = $mrCountToday + 1;
-        $nomor_antrean = $prefix.'-'.sprintf('%02d', $mrSeq);
+        if ($isWalkInLab) {
+            // Lab Walk-In flow
+            DB::transaction(function () use ($visitDate, $poli) {
+                $no_registrasi = 'REG-'.date('Ymd').'-'.sprintf('%04d', rand(1, 9999));
+                
+                $pendaftaran = Pendaftaran::create([
+                    'no_registrasi' => $no_registrasi,
+                    'pasien_id' => $this->selectedPasienId,
+                    'poli_id' => $this->reg_poli_id,
+                    'dokter_id' => null,
+                    'no_antrean' => 'L-WLK',
+                    'angka_antrean' => 0,
+                    'status_antrean' => 'menunggu kasir',
+                    'cara_bayar' => $this->reg_cara_bayar,
+                    'jenis_kunjungan' => $this->reg_jenis_kunjungan,
+                    'keluhan_awal' => $this->reg_keluhan_awal ?: 'Pemeriksaan Lab Mandiri',
+                    'created_by' => auth()->id(),
+                    'created_at' => Carbon::parse($visitDate.' '.date('H:i:s')),
+                ]);
 
-        $no_registrasi = 'REG-'.date('Ymd').'-'.sprintf('%04d', rand(1, 9999));
+                // Calculate Lab Total Tariff
+                $totalTariff = 0;
+                $tests = \App\Models\MasterLabTest::whereIn('id', $this->selectedLabTests)->get();
+                $isBpjs = $this->reg_cara_bayar === 'BPJS';
 
-        $pendaftaran = Pendaftaran::create([
-            'no_registrasi' => $no_registrasi,
-            'pasien_id' => $this->selectedPasienId,
-            'poli_id' => $this->reg_poli_id,
-            'dokter_id' => $this->reg_dokter_id,
-            'no_antrean' => $nomor_antrean,
-            'angka_antrean' => $mrSeq,
-            'status_antrean' => 'menunggu',
-            'cara_bayar' => $this->reg_cara_bayar,
-            'no_sep' => $this->reg_no_sep ?: null,
-            'no_rujukan' => $this->reg_no_rujukan ?: null,
-            'jenis_kunjungan' => $this->reg_jenis_kunjungan,
-            'keluhan_awal' => $this->reg_keluhan_awal,
-            'created_by' => auth()->id(),
-            'created_at' => Carbon::parse($visitDate.' '.date('H:i:s')),
-        ]);
+                foreach ($tests as $t) {
+                    $totalTariff += $isBpjs ? $t->tarif_bpjs : $t->tarif_umum;
+                }
 
-        // Create MedicalRecord representing the Clinical Workspace encounter
-        $encounter_id = 'ENC-'.date('Ymd').'-'.sprintf('%04d', rand(1, 9999));
-        $medicalRecord = MedicalRecord::create([
-            'encounter_id' => $encounter_id,
-            'patient_id' => $this->selectedPasienId,
-            'pendaftaran_id' => $pendaftaran->id,
-            'poli_id' => $this->reg_poli_id,
-            'status' => 'waiting',
-            'nomor_antrean' => $nomor_antrean,
-            'dokter_id' => $this->reg_dokter_id,
-            'keluhan_utama' => $this->reg_keluhan_awal,
-            'created_by' => auth()->id(),
-            'tanggal_kunjungan' => $visitDate,
-            'created_at' => Carbon::parse($visitDate.' '.date('H:i:s')),
-        ]);
+                $grandTotal = $totalTariff + $this->adminFee;
 
-        $this->showRegisterModal = false;
-        Flux::toast(variant: 'success', text: 'Kunjungan rawat jalan berhasil didaftarkan! No Antrean: '.$nomor_antrean);
+                $today = now()->format('Ymd');
+                $countToday = DB::table('invoices')->whereDate('created_at', now()->toDateString())->count();
+                $invoiceNumber = 'INV-'.$today.'-'.str_pad($countToday + 1, 4, '0', STR_PAD_LEFT);
 
-        $this->successPrintUrl = route('print.queue-ticket', ['id' => $medicalRecord->id]);
-        $this->successPrintMessage = 'Pendaftaran rawat jalan berhasil didaftarkan! No Antrean: '.$nomor_antrean.'.';
-        $this->showSuccessPrintModal = true;
+                // Upfront unpaid invoice
+                $invoice = Invoice::create([
+                    'pendaftaran_id' => $pendaftaran->id,
+                    'medical_record_id' => null,
+                    'invoice_number' => $invoiceNumber,
+                    'subtotal' => $grandTotal,
+                    'discount' => 0,
+                    'grand_total' => $grandTotal,
+                    'status' => 'unpaid',
+                ]);
+
+                // Snapshot Admin Fee
+                if ($this->adminFee > 0) {
+                    InvoiceItem::create([
+                        'invoice_id' => $invoice->id,
+                        'item_type' => 'admin',
+                        'description' => 'Biaya Administrasi Pendaftaran',
+                        'qty' => 1,
+                        'unit_price' => $this->adminFee,
+                        'subtotal' => $this->adminFee,
+                        'cara_bayar_item' => $isBpjs ? 'bpjs' : 'umum',
+                    ]);
+                }
+
+                // Snapshot Lab Items
+                foreach ($tests as $t) {
+                    $price = $isBpjs ? $t->tarif_bpjs : $t->tarif_umum;
+                    InvoiceItem::create([
+                        'invoice_id' => $invoice->id,
+                        'item_type' => 'lab',
+                        'description' => 'Tes Lab: '.$t->test_name,
+                        'qty' => 1,
+                        'unit_price' => $price,
+                        'subtotal' => $price,
+                        'cara_bayar_item' => $isBpjs ? 'bpjs' : 'umum',
+                    ]);
+                }
+
+                // Create Lab Order in pending status
+                $labOrder = LabOrder::create([
+                    'pendaftaran_id' => $pendaftaran->id,
+                    'medical_record_id' => null,
+                    'status' => 'pending',
+                    'total_tariff' => $totalTariff,
+                    'clinical_notes' => 'Direct Lab Walk-In',
+                ]);
+
+                foreach ($tests as $t) {
+                    $price = $isBpjs ? $t->tarif_bpjs : $t->tarif_umum;
+                    \App\Models\LabOrderResult::create([
+                        'lab_order_id' => $labOrder->id,
+                        'master_lab_test_id' => $t->id,
+                        'test_name_snapshot' => $t->test_name,
+                        'tariff_snapshot' => $price,
+                        'normal_range_snapshot' => $t->default_normal_range,
+                        'unit_snapshot' => $t->default_unit,
+                    ]);
+                }
+            });
+
+            $this->showRegisterModal = false;
+            Flux::toast(variant: 'success', text: 'Pendaftaran Lab Walk-In berhasil! Tagihan dibuat di kasir.');
+            $this->successPrintUrl = '';
+            $this->successPrintMessage = 'Pendaftaran Lab Walk-In berhasil! Silakan lakukan pembayaran di kasir.';
+            $this->showSuccessPrintModal = true;
+        } else {
+            // Outpatient Flow (Poliklinik Medis)
+            $prefix = 'A';
+            if (stripos($poli->nama_poli, 'gigi') !== false) {
+                $prefix = 'B';
+            } elseif (stripos($poli->nama_poli, 'kia') !== false || stripos($poli->nama_poli, 'anak') !== false || stripos($poli->nama_poli, 'ibu') !== false) {
+                $prefix = 'C';
+            }
+
+            $mrCountToday = MedicalRecord::where('poli_id', $this->reg_poli_id)
+                ->whereDate('tanggal_kunjungan', $visitDate)
+                ->count();
+            $mrSeq = $mrCountToday + 1;
+            $nomor_antrean = $prefix.'-'.sprintf('%02d', $mrSeq);
+
+            $no_registrasi = 'REG-'.date('Ymd').'-'.sprintf('%04d', rand(1, 9999));
+
+            $pendaftaran = Pendaftaran::create([
+                'no_registrasi' => $no_registrasi,
+                'pasien_id' => $this->selectedPasienId,
+                'poli_id' => $this->reg_poli_id,
+                'dokter_id' => $this->reg_dokter_id,
+                'no_antrean' => $nomor_antrean,
+                'angka_antrean' => $mrSeq,
+                'status_antrean' => 'menunggu',
+                'cara_bayar' => $this->reg_cara_bayar,
+                'jenis_kunjungan' => $this->reg_jenis_kunjungan,
+                'keluhan_awal' => $this->reg_keluhan_awal,
+                'created_by' => auth()->id(),
+                'created_at' => Carbon::parse($visitDate.' '.date('H:i:s')),
+            ]);
+
+            $encounter_id = 'ENC-'.date('Ymd').'-'.sprintf('%04d', rand(1, 9999));
+            $medicalRecord = MedicalRecord::create([
+                'encounter_id' => $encounter_id,
+                'patient_id' => $this->selectedPasienId,
+                'pendaftaran_id' => $pendaftaran->id,
+                'poli_id' => $this->reg_poli_id,
+                'status' => 'waiting',
+                'nomor_antrean' => $nomor_antrean,
+                'dokter_id' => $this->reg_dokter_id,
+                'keluhan_utama' => $this->reg_keluhan_awal,
+                'created_by' => auth()->id(),
+                'tanggal_kunjungan' => $visitDate,
+                'created_at' => Carbon::parse($visitDate.' '.date('H:i:s')),
+            ]);
+
+            $this->showRegisterModal = false;
+            Flux::toast(variant: 'success', text: 'Kunjungan rawat jalan berhasil didaftarkan! No Antrean: '.$nomor_antrean);
+
+            $this->successPrintUrl = route('print.queue-ticket', ['id' => $medicalRecord->id]);
+            $this->successPrintMessage = 'Pendaftaran rawat jalan berhasil didaftarkan! No Antrean: '.$nomor_antrean.'.';
+            $this->showSuccessPrintModal = true;
+        }
     }
 
     // --- CONSENT & LETTERS ACTIONS ---
@@ -706,12 +890,29 @@ new class extends Component
             ->orderBy('id', 'desc')
             ->get();
 
+        $clinicId = \App\Models\FaskesProfile::first()->id ?? null;
+
+        $agamas = MasterAgama::where(function ($q) use ($clinicId) {
+            $q->whereNull('clinic_id')->orWhere('clinic_id', $clinicId);
+        })->where('is_active', true)->get();
+
+        $pendidikans = MasterPendidikan::where(function ($q) use ($clinicId) {
+            $q->whereNull('clinic_id')->orWhere('clinic_id', $clinicId);
+        })->get();
+
+        $pekerjaans = MasterPekerjaan::where(function ($q) use ($clinicId) {
+            $q->whereNull('clinic_id')->orWhere('clinic_id', $clinicId);
+        })->get();
+
         return view('components.⚡pendaftaran.pendaftaran', [
             'pasiens' => $data,
             'polis' => Poli::where('is_active', true)->get(),
             'doctors' => MasterPetugas::where('jenis_petugas', 'Dokter')->where('is_aktif', true)->get(),
             'petugass' => MasterPetugas::where('is_aktif', true)->get(),
-            'pekerjaans' => MasterPekerjaan::all(),
+            'agamas' => $agamas,
+            'pendidikans' => $pendidikans,
+            'pekerjaans' => $pekerjaans,
+            'labTests' => \App\Models\MasterLabTest::where('is_aktif', true)->get(),
             'todayQueues' => $todayQueues,
         ]);
     }

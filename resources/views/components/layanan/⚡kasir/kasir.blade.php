@@ -133,9 +133,23 @@
                             <span class="text-xs font-extrabold uppercase tracking-wider text-zinc-500">1. Administrasi & Registrasi</span>
                             <flux:badge color="zinc" size="sm">Sistem</flux:badge>
                         </div>
-                        <div class="p-4 flex justify-between items-center text-sm font-medium">
-                            <span class="text-zinc-800 dark:text-zinc-200">Biaya Administrasi & Pendaftaran Pasien</span>
-                            <span class="font-mono font-bold text-zinc-900 dark:text-white">Rp {{ number_format($adminFee, 0, ',', '.') }}</span>
+                        <div class="p-4 flex justify-between items-center text-sm font-medium gap-4">
+                            <div class="flex-1">
+                                <span class="text-zinc-800 dark:text-zinc-200">Biaya Administrasi & Pendaftaran Pasien</span>
+                            </div>
+                            <div class="flex items-center gap-4">
+                                <select wire:model.live="adminFeeCaraBayar" class="text-xs rounded border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white focus:ring-indigo-500 focus:border-indigo-500 py-1 px-2">
+                                    <option value="umum">Umum</option>
+                                    <option value="bpjs">BPJS</option>
+                                </select>
+                                <span class="font-mono font-bold text-zinc-900 dark:text-white min-w-32 text-right">
+                                    @if ($adminFeeCaraBayar === 'bpjs')
+                                        <span class="text-[10px] text-emerald-600 dark:text-emerald-450 font-sans font-bold">[BPJS]</span> Rp 0
+                                    @else
+                                        Rp {{ number_format($adminFee, 0, ',', '.') }}
+                                    @endif
+                                </span>
+                            </div>
                         </div>
                     </div>
 
@@ -175,6 +189,7 @@
                                     <tr class="border-b border-zinc-100 dark:border-zinc-800 font-semibold text-zinc-500">
                                         <th class="text-left py-2">Nama Tindakan</th>
                                         <th class="text-center py-2">Qty</th>
+                                        <th class="text-center py-2">Cara Bayar</th>
                                         <th class="text-right py-2">Harga Satuan</th>
                                         <th class="text-right py-2">Subtotal</th>
                                         <th class="text-center py-2">Aksi</th>
@@ -182,11 +197,23 @@
                                 </thead>
                                 <tbody class="divide-y divide-zinc-100 dark:divide-zinc-850">
                                     @forelse ($selectedRecord->tindakans as $t)
-                                        <tr>
+                                        <tr wire:key="tindakan-{{ $t->id }}">
                                             <td class="py-2 text-zinc-800 dark:text-zinc-200 font-medium">{{ $t->nama_tindakan }}</td>
                                             <td class="text-center py-2 font-mono font-bold">{{ $t->pivot->qty }}</td>
+                                            <td class="text-center py-2">
+                                                <select wire:change="updateTindakanCaraBayar({{ $t->id }}, $event.target.value)" class="text-[10px] rounded border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white focus:ring-indigo-500 focus:border-indigo-500 py-0.5 px-1.5">
+                                                    <option value="umum" {{ ($t->pivot->cara_bayar_item ?? 'umum') === 'umum' ? 'selected' : '' }}>Umum</option>
+                                                    <option value="bpjs" {{ ($t->pivot->cara_bayar_item ?? 'umum') === 'bpjs' ? 'selected' : '' }}>BPJS</option>
+                                                </select>
+                                            </td>
                                             <td class="text-right py-2 font-mono">Rp {{ number_format($t->tarif, 0, ',', '.') }}</td>
-                                            <td class="text-right py-2 font-mono font-bold">Rp {{ number_format($t->pivot->subtotal, 0, ',', '.') }}</td>
+                                            <td class="text-right py-2 font-mono font-bold">
+                                                @if (($t->pivot->cara_bayar_item ?? 'umum') === 'bpjs')
+                                                    <span class="text-[10px] text-emerald-600 dark:text-emerald-450 font-sans font-bold">[BPJS]</span> Rp 0
+                                                @else
+                                                    Rp {{ number_format($t->pivot->subtotal, 0, ',', '.') }}
+                                                @endif
+                                            </td>
                                             <td class="text-center py-2">
                                                 <flux:button variant="ghost" icon="trash" size="xs" class="text-red-500" wire:click="removeTindakan({{ $t->id }})" />
                                             </td>
@@ -212,14 +239,27 @@
                                 <thead>
                                     <tr class="border-b border-zinc-100 dark:border-zinc-800 font-semibold text-zinc-500">
                                         <th class="text-left py-2">Nama Tes</th>
+                                        <th class="text-center py-2">Cara Bayar</th>
                                         <th class="text-right py-2">Biaya</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-zinc-100 dark:divide-zinc-850">
                                     @forelse ($labTests as $lt)
-                                        <tr>
+                                        <tr wire:key="lab-test-{{ $lt->id }}">
                                             <td class="py-2 text-zinc-800 dark:text-zinc-200 font-medium">{{ $lt->test_name }}</td>
-                                            <td class="text-right py-2 font-mono font-bold">Rp {{ number_format($lt->price, 0, ',', '.') }}</td>
+                                            <td class="text-center py-2">
+                                                <select wire:change="updateLabTestCaraBayar({{ $lt->id }}, $event.target.value)" class="text-[10px] rounded border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white focus:ring-indigo-500 focus:border-indigo-500 py-0.5 px-1.5">
+                                                    <option value="umum" {{ ($lt->cara_bayar_item ?? 'umum') === 'umum' ? 'selected' : '' }}>Umum</option>
+                                                    <option value="bpjs" {{ ($lt->cara_bayar_item ?? 'umum') === 'bpjs' ? 'selected' : '' }}>BPJS</option>
+                                                </select>
+                                            </td>
+                                            <td class="text-right py-2 font-mono font-bold">
+                                                @if (($lt->cara_bayar_item ?? 'umum') === 'bpjs')
+                                                    <span class="text-[10px] text-emerald-600 dark:text-emerald-450 font-sans font-bold">[BPJS]</span> Rp 0
+                                                @else
+                                                    Rp {{ number_format($lt->price, 0, ',', '.') }}
+                                                @endif
+                                            </td>
                                         </tr>
                                     @empty
                                         <tr>
@@ -243,17 +283,30 @@
                                     <tr class="border-b border-zinc-100 dark:border-zinc-800 font-semibold text-zinc-500">
                                         <th class="text-left py-2">Nama Obat</th>
                                         <th class="text-center py-2">Qty Dispensed</th>
+                                        <th class="text-center py-2">Cara Bayar</th>
                                         <th class="text-right py-2">Harga Jual</th>
                                         <th class="text-right py-2">Subtotal</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-zinc-100 dark:divide-zinc-850">
                                     @forelse ($medicines as $m)
-                                        <tr>
+                                        <tr wire:key="medicine-{{ $m->id }}">
                                             <td class="py-2 text-zinc-800 dark:text-zinc-200 font-medium">{{ $m->nama_obat }}</td>
                                             <td class="text-center py-2 font-mono font-bold">{{ (int) $m->dispensed_qty }}</td>
+                                            <td class="text-center py-2">
+                                                <select wire:change="updateMedicineCaraBayar({{ $m->id }}, $event.target.value)" class="text-[10px] rounded border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white focus:ring-indigo-500 focus:border-indigo-500 py-0.5 px-1.5">
+                                                    <option value="umum" {{ ($m->cara_bayar_item ?? 'umum') === 'umum' ? 'selected' : '' }}>Umum</option>
+                                                    <option value="bpjs" {{ ($m->cara_bayar_item ?? 'umum') === 'bpjs' ? 'selected' : '' }}>BPJS</option>
+                                                </select>
+                                            </td>
                                             <td class="text-right py-2 font-mono">Rp {{ number_format($m->harga_jual, 0, ',', '.') }}</td>
-                                            <td class="text-right py-2 font-mono font-bold">Rp {{ number_format($m->subtotal_price, 0, ',', '.') }}</td>
+                                            <td class="text-right py-2 font-mono font-bold">
+                                                @if (($m->cara_bayar_item ?? 'umum') === 'bpjs')
+                                                    <span class="text-[10px] text-emerald-650 dark:text-emerald-400 font-sans font-bold">[BPJS]</span> Rp 0
+                                                @else
+                                                    Rp {{ number_format($m->subtotal_price, 0, ',', '.') }}
+                                                @endif
+                                            </td>
                                         </tr>
                                     @empty
                                         <tr>
@@ -278,7 +331,11 @@
                     {{-- Totals Summary --}}
                     <div class="bg-zinc-50 dark:bg-zinc-950/30 p-4 border border-zinc-150 dark:border-zinc-850 rounded-lg space-y-3">
                         <div class="flex justify-between text-xs text-zinc-500 font-semibold">
-                            <span>Subtotal Tagihan:</span>
+                            <span>Total Bruto (Gross):</span>
+                            <span class="font-mono text-zinc-400 line-through">Rp {{ number_format($originalSubtotal, 0, ',', '.') }}</span>
+                        </div>
+                        <div class="flex justify-between text-xs text-zinc-500 font-semibold">
+                            <span>Out-of-Pocket Subtotal:</span>
                             <span class="font-mono">Rp {{ number_format($subtotal, 0, ',', '.') }}</span>
                         </div>
 
