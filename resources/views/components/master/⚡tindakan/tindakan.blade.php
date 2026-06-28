@@ -23,7 +23,7 @@
                 <flux:table>
                     <flux:table.columns>
                         <flux:table.column sortable :sorted="$sortField === 'nama_tindakan'" :direction="$sortDirection" wire:click="sortBy('nama_tindakan')">Nama Tindakan</flux:table.column>
-                        <flux:table.column sortable :sorted="$sortField === 'tarif'" :direction="$sortDirection" wire:click="sortBy('tarif')">Tarif</flux:table.column>
+                        <flux:table.column sortable :sorted="$sortField === 'tarif_umum'" :direction="$sortDirection" wire:click="sortBy('tarif_umum')">Tarif</flux:table.column>
                         <flux:table.column sortable :sorted="$sortField === 'kode_icd9'" :direction="$sortDirection" wire:click="sortBy('kode_icd9')">Kode ICD-9</flux:table.column>
                         <flux:table.column sortable :sorted="$sortField === 'nama_icd9'" :direction="$sortDirection" wire:click="sortBy('nama_icd9')">Nama ICD-9</flux:table.column>
                         <flux:table.column sortable :sorted="$sortField === 'is_aktif'" :direction="$sortDirection" wire:click="sortBy('is_aktif')">Status</flux:table.column>
@@ -34,7 +34,7 @@
                         @forelse ($tindakans as $tindakan)
                             <flux:table.row :key="$tindakan->id">
                                 <flux:table.cell class="font-medium text-zinc-950 dark:text-white">{{ $tindakan->nama_tindakan }}</flux:table.cell>
-                                <flux:table.cell>Rp {{ number_format($tindakan->tarif, 0, ',', '.') }}</flux:table.cell>
+                                <flux:table.cell>Rp {{ number_format($tindakan->tarif_umum, 0, ',', '.') }}</flux:table.cell>
                                 <flux:table.cell class="font-mono text-xs">{{ $tindakan->kode_icd9 ?? '-' }}</flux:table.cell>
                                 <flux:table.cell>{{ $tindakan->nama_icd9 ?? '-' }}</flux:table.cell>
                                 <flux:table.cell>

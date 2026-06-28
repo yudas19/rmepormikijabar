@@ -20,6 +20,7 @@ new class extends Component
     {
         return [
             'Nama Pekerjaan' => 'nama_pekerjaan',
+            'Status Aktif' => 'is_active',
         ];
     }
 
@@ -38,6 +39,8 @@ new class extends Component
     public $selectedId = null;
 
     public $nama_pekerjaan = '';
+
+    public $is_active = true;
 
     public function updatingSearch()
     {
@@ -60,12 +63,14 @@ new class extends Component
         $this->selectedId = $id;
         $record = MasterPekerjaan::findOrFail($id);
         $this->nama_pekerjaan = $record->nama_pekerjaan;
+        $this->is_active = (bool) $record->is_active;
     }
 
     public function resetForm()
     {
         $this->selectedId = null;
         $this->nama_pekerjaan = '';
+        $this->is_active = true;
         $this->resetErrorBag();
     }
 
@@ -73,15 +78,19 @@ new class extends Component
     {
         $rules = [
             'nama_pekerjaan' => 'required|string|max:100',
+            'is_active' => 'required|boolean',
         ];
 
         $validated = $this->validate($rules);
+
+        $clinicId = \App\Models\FaskesProfile::first()->id ?? null;
 
         if ($this->selectedId) {
             $record = MasterPekerjaan::findOrFail($this->selectedId);
             $record->update($validated);
             $message = 'Data pekerjaan berhasil diperbarui.';
         } else {
+            $validated['clinic_id'] = $clinicId;
             MasterPekerjaan::create($validated);
             $message = 'Data pekerjaan berhasil ditambahkan.';
         }
@@ -102,7 +111,12 @@ new class extends Component
 
     public function render()
     {
+        $clinicId = \App\Models\FaskesProfile::first()->id ?? null;
         $data = MasterPekerjaan::query()
+            ->where(function ($q) use ($clinicId) {
+                $q->whereNull('clinic_id')
+                  ->orWhere('clinic_id', $clinicId);
+            })
             ->when($this->search, function ($query) {
                 $query->where('nama_pekerjaan', 'like', '%'.$this->search.'%');
             })

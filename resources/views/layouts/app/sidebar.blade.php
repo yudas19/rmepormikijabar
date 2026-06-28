@@ -5,9 +5,9 @@
     @include('partials.head')
 </head>
 
-<body class="min-h-screen bg-white dark:bg-zinc-800">
-    <flux:sidebar sticky collapsible class="border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
-        <flux:sidebar.header>
+<body class="min-h-screen bg-slate-50 dark:bg-slate-950">
+    <flux:sidebar sticky collapsible class="border-e border-slate-200/80 bg-slate-900 text-slate-200 dark:border-slate-800 dark:bg-slate-950">
+        <flux:sidebar.header class="border-b border-slate-800/50 pb-4">
             <x-app-logo :sidebar="true" href="{{ route('dashboard') }}" wire:navigate />
             <flux:sidebar.collapse class="lg:hidden" />
             <flux:sidebar.collapse class="in-data-flux-sidebar-on-desktop:not-in-data-flux-sidebar-collapsed-desktop:-mr-2" />
@@ -15,7 +15,7 @@
         </flux:sidebar.header>
 
         <flux:sidebar.nav>
-            <flux:sidebar.group :heading="__('Platform')" class="grid">
+            <flux:sidebar.group :heading="__('Platform')" class="grid text-slate-400">
                 <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
                     {{ __('Dashboard') }}
                 </flux:sidebar.item>
@@ -26,10 +26,6 @@
             {{ __('Master Data') }}
         </flux:sidebar.item>
 
-        {{-- <flux:sidebar.item icon="calendar" :href="route('master.jadwal-dokter')" :current="request()->routeIs('master.jadwal-dokter')" wire:navigate>
-            {{ __('Jadwal Dokter') }}
-        </flux:sidebar.item> --}}
-
         @can('akses_pendaftaran')
         <flux:sidebar.item icon="user-plus" :href="route('pendaftaran.index')" :current="request()->routeIs('pendaftaran.*')" wire:navigate>
             {{ __('Pendaftaran') }}
@@ -37,7 +33,7 @@
         @endcan
 
         <flux:sidebar.nav>
-            <flux:sidebar.group :heading="__('Poliklinik & Layanan')" class="grid">
+            <flux:sidebar.group :heading="__('Poliklinik & Layanan')" class="grid text-slate-400">
                 @if (auth()->user()->can('akses_poli_umum') || auth()->user()->can('akses_poli_gigi') || auth()->user()->can('akses_poli_kia'))
                 @php
                     $totalWaiting = ($waitingCounts['umum'] ?? 0) + ($waitingCounts['gigi'] ?? 0) + ($waitingCounts['kia'] ?? 0);
@@ -46,7 +42,7 @@
                     :badge="$totalWaiting > 0 ? $totalWaiting : null"
                     badge-color="red"
                     badge:variant="solid"
-                    badge:class="rounded-full">
+                    badge:class="rounded-full shadow-sm">
                     {{ __('Pemeriksaan Medis') }}
                 </flux:sidebar.item>
                 @endif
@@ -77,7 +73,7 @@
 
         @can('akses_pengaturan_akses')
         <flux:sidebar.nav>
-            <flux:sidebar.group :heading="__('Pengaturan')" class="grid">
+            <flux:sidebar.group :heading="__('Pengaturan')" class="grid text-slate-400">
                 <flux:sidebar.item icon="cog" :href="route('admin.hak-akses')" :current="request()->routeIs('admin.hak-akses')" wire:navigate>
                     {{ __('Hak Akses') }}
                 </flux:sidebar.item>
@@ -85,7 +81,7 @@
                     {{ __('SatuSehat Dashboard') }}
                 </flux:sidebar.item>
                 <flux:sidebar.item icon="chart-bar" :href="route('admin.laporan-eksekutif')" :current="request()->routeIs('admin.laporan-eksekutif')" wire:navigate>
-                    {{ __('Laporan Eksekutif') }}
+                    {{ __('Laporan Executive') }}
                 </flux:sidebar.item>
             </flux:sidebar.group>
         </flux:sidebar.nav>
@@ -98,19 +94,18 @@
         <flux:spacer />
 
         <flux:sidebar.nav>
-            <flux:sidebar.item icon="folder-git-2" href="https://github.com/laravel/livewire-starter-kit" target="_blank">
+            <flux:sidebar.item icon="folder-git-2" href="https://github.com/laravel/livewire-starter-kit" target="_blank" class="text-slate-400 hover:text-slate-200">
                 {{ __('Repository') }}
             </flux:sidebar.item>
 
-            <flux:sidebar.item icon="book-open-text" href="https://laravel.com/docs/starter-kits#livewire" target="_blank">
+            <flux:sidebar.item icon="book-open-text" href="https://laravel.com/docs/starter-kits#livewire" target="_blank" class="text-slate-400 hover:text-slate-200">
                 {{ __('Documentation') }}
             </flux:sidebar.item>
         </flux:sidebar.nav>
-        <x-desktop-user-menu class="hidden lg:block" :name="auth()->user()->name" />
+        <x-desktop-user-menu class="hidden lg:block border-t border-slate-800 pt-4" :name="auth()->user()->name" />
     </flux:sidebar>
 
-    <!-- Mobile User Menu -->
-    <flux:header class="lg:hidden">
+    <flux:header class="lg:hidden bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
         <flux:sidebar.toggle class="lg:hidden" icon="bars-2" inset="left" />
 
         <flux:spacer />

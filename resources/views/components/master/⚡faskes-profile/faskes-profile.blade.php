@@ -35,7 +35,7 @@
                 <flux:input wire:model="nama_faskes" label="Nama Fasilitas Kesehatan" required placeholder="Contoh: Klinik Pratama Pormiki" />
                 <flux:input wire:model="kode_faskes_kemenkes" label="Kode Faskes (Kemenkes)" required placeholder="Contoh: F-12345" />
 
-                <flux:input wire:model="penanggung_jawab" label="Dokter Penanggung Jawab" required placeholder="Contoh: dr. Andi Wijaya" />
+                <flux:input wire:model="penanggung_jawab" label="Dokter Penanggung Jawab" required placeholder="Contoh: Yuda Setiawan" />
                 <flux:input wire:model="no_telp" label="Nomor Telepon" required placeholder="Contoh: 022-7654321" />
 
                 <flux:input wire:model="email" type="email" label="Email Faskes" required placeholder="Contoh: info@rmepormikijabar.com" />

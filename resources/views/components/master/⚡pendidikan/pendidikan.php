@@ -20,6 +20,7 @@ new class extends Component
     {
         return [
             'Nama Pendidikan' => 'nama_pendidikan',
+            'Status Aktif' => 'is_active',
         ];
     }
 
@@ -38,6 +39,8 @@ new class extends Component
     public $selectedId = null;
 
     public $nama_pendidikan = '';
+
+    public $is_active = true;
 
     public function updatingSearch()
     {
@@ -60,12 +63,14 @@ new class extends Component
         $this->selectedId = $id;
         $record = MasterPendidikan::findOrFail($id);
         $this->nama_pendidikan = $record->nama_pendidikan;
+        $this->is_active = (bool) $record->is_active;
     }
 
     public function resetForm()
     {
         $this->selectedId = null;
         $this->nama_pendidikan = '';
+        $this->is_active = true;
         $this->resetErrorBag();
     }
 
@@ -73,15 +78,19 @@ new class extends Component
     {
         $rules = [
             'nama_pendidikan' => 'required|string|max:100',
+            'is_active' => 'required|boolean',
         ];
 
         $validated = $this->validate($rules);
+
+        $clinicId = \App\Models\FaskesProfile::first()->id ?? null;
 
         if ($this->selectedId) {
             $record = MasterPendidikan::findOrFail($this->selectedId);
             $record->update($validated);
             $message = 'Data pendidikan berhasil diperbarui.';
         } else {
+            $validated['clinic_id'] = $clinicId;
             MasterPendidikan::create($validated);
             $message = 'Data pendidikan berhasil ditambahkan.';
         }
@@ -102,7 +111,12 @@ new class extends Component
 
     public function render()
     {
+        $clinicId = \App\Models\FaskesProfile::first()->id ?? null;
         $data = MasterPendidikan::query()
+            ->where(function ($q) use ($clinicId) {
+                $q->whereNull('clinic_id')
+                  ->orWhere('clinic_id', $clinicId);
+            })
             ->when($this->search, function ($query) {
                 $query->where('nama_pendidikan', 'like', '%'.$this->search.'%');
             })

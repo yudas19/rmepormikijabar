@@ -49,8 +49,11 @@ new class extends Component
             ->latest()
             ->paginate(20);
 
-        return view('components.layanan.⚡laboratorium.laboratorium', [
+        /** @var mixed $view */
+        $view = view('components.layanan.⚡laboratorium.laboratorium', [
             'orders' => $orders,
-        ])->layout('layouts::app');
+        ]);
+
+        return $view->layout('layouts::app');
     }
 };

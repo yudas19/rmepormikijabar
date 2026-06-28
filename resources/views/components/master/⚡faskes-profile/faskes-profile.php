@@ -36,7 +36,7 @@ new class extends Component
             [
                 'nama_faskes' => 'Klinik Pratama Pormiki',
                 'alamat' => 'Jl. Pormiki Raya No. 45, Bandung',
-                'penanggung_jawab' => 'dr. Andi Wijaya',
+                'penanggung_jawab' => 'Yuda Setiawan',
                 'no_telp' => '022-7654321',
                 'email' => 'info@rmepormikijabar.com',
                 'kode_faskes_kemenkes' => 'F-12345',

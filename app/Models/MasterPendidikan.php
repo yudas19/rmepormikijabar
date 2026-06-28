@@ -9,4 +9,8 @@ class MasterPendidikan extends Model
     protected $table = 'master_pendidikans';
 
     protected $guarded = ['id'];
+
+    protected $casts = [
+        'is_active' => 'boolean',
+    ];
 }

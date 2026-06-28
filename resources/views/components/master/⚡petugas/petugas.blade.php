@@ -125,6 +125,8 @@
                             <flux:select.option value="Perawat">Perawat</flux:select.option>
                             <flux:select.option value="Apoteker">Apoteker</flux:select.option>
                             <flux:select.option value="Bidan">Bidan</flux:select.option>
+                            <flux:select.option value="Analis">Analis</flux:select.option>
+                            <flux:select.option value="Rekam Medis">Rekam Medis</flux:select.option>
                             <flux:select.option value="Staf Administrasi">Staf Administrasi</flux:select.option>
                         </flux:select>
                     </div>

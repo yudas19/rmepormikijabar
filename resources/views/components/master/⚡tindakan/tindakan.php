@@ -72,7 +72,7 @@ new class extends Component
         $this->selectedId = $id;
         $record = MasterTindakan::findOrFail($id);
         $this->nama_tindakan = $record->nama_tindakan;
-        $this->tarif = $record->tarif;
+        $this->tarif = $record->tarif_umum;
         $this->kode_icd9 = $record->kode_icd9;
         $this->nama_icd9 = $record->nama_icd9;
         $this->is_aktif = (bool) $record->is_aktif;
@@ -101,12 +101,21 @@ new class extends Component
 
         $validated = $this->validate($rules);
 
+        $dataToSave = [
+            'nama_tindakan' => $validated['nama_tindakan'],
+            'tarif_umum' => $validated['tarif'],
+            'tarif_bpjs' => $validated['tarif'],
+            'kode_icd9' => $validated['kode_icd9'],
+            'nama_icd9' => $validated['nama_icd9'],
+            'is_aktif' => $validated['is_aktif'],
+        ];
+
         if ($this->selectedId) {
             $record = MasterTindakan::findOrFail($this->selectedId);
-            $record->update($validated);
+            $record->update($dataToSave);
             $message = 'Tindakan berhasil diperbarui.';
         } else {
-            MasterTindakan::create($validated);
+            MasterTindakan::create($dataToSave);
             $message = 'Tindakan berhasil ditambahkan.';
         }
 

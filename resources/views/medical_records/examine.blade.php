@@ -3,7 +3,13 @@
 
         <!-- Left Column: Form & Workspace (70%) -->
         <div class="lg:col-span-7 space-y-6">
-            @livewire('⚡medical-record.poli-umum', ['record' => $record])
+            @if ($poliklinik === 'gigi')
+                @livewire('⚡medical-record.poli-gigi', ['record' => $record])
+            @elseif ($poliklinik === 'kia')
+                @livewire('⚡medical-record.poli-kia', ['record' => $record])
+            @else
+                @livewire('⚡medical-record.poli-umum', ['record' => $record])
+            @endif
         </div>
 
         <!-- Right Column: Sidebar Patient Info & Timeline (30%) -->

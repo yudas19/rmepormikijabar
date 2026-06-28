@@ -58,4 +58,12 @@ class User extends Authenticatable
     {
         return $this->hasOne(MasterPetugas::class, 'user_id');
     }
+
+    /**
+     * Get the doctor ID associated with the user
+     */
+    public function getDokterIdAttribute(): ?int
+    {
+        return $this->petugas?->id;
+    }
 }

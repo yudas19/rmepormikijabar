@@ -831,6 +831,8 @@
 
         <!-- Tab Content: Dokumen -->
         <div x-show="activeTab === 'dokumen'" class="space-y-6" x-transition>
+            @include('medical_records.partials.pcare-referral-form')
+
             <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6 shadow-sm">
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 pb-3 border-b border-zinc-100 dark:border-zinc-800">
                     <div class="flex items-center gap-2">
@@ -844,6 +846,7 @@
                             <flux:menu.item icon="document" wire:click="openSickLeave">Surat Keterangan Sakit (Sick Leave)</flux:menu.item>
                             <flux:menu.item icon="document-check" wire:click="openHealthCert">Surat Keterangan Sehat (Health Cert.)</flux:menu.item>
                             <flux:menu.item icon="document-arrow-up" wire:click="openReferral">Surat Rujukan Eksternal (Referral)</flux:menu.item>
+                            <flux:menu.item icon="share" wire:click="togglePcareReferral">Rujukan Keluar BPJS (PCare)</flux:menu.item>
                             <flux:menu.item icon="document-duplicate" wire:click="openBebasNarkoba">Surat Ket. Bebas Narkoba</flux:menu.item>
                             <flux:menu.item icon="pencil-square" wire:click="openInformedConsent">Informed Consent (Tindakan)</flux:menu.item>
                             <flux:menu.item icon="clipboard-document-check" wire:click="openGeneralConsent">General Consent (Persetujuan Umum)</flux:menu.item>
@@ -911,6 +914,19 @@
                             'print_url' => route('print.consent', $g->id),
                         ]);
                     }
+
+                    $pcareReferrals = \App\Models\PatientReferral::where('medical_record_id', $record->id)->get();
+                    foreach ($pcareReferrals as $pr) {
+                        $allDocuments->push([
+                            'id' => $pr->id,
+                            'type' => 'pcare_referral',
+                            'no_surat' => $pr->no_rujukan,
+                            'label' => 'Rujukan BPJS (PCare)',
+                            'badge_color' => 'indigo',
+                            'details' => 'Tujuan: ' . $pr->ppk_dirujuk_nama . ' - Spesialis: ' . $pr->spesialis_nama . ($pr->is_tacc ? ' (TACC: ' . $pr->tacc_jenis . ')' : '') . ' - Diagnosa Utama: ' . $pr->diagnosa_utama_kode,
+                            'print_url' => '#',
+                        ]);
+                    }
                 @endphp
 
                 @if ($allDocuments->count() > 0)
@@ -952,7 +968,7 @@
         <div class="flex gap-2">
             @if ($isEditable)
             <flux:button variant="filled" wire:click="saveDraft">Save as Draft</flux:button>
-            <flux:button variant="primary" wire:click="finalizeAndLock">Finalize & Lock</flux:button>
+            <flux:button variant="primary" wire:click="finalizeAndLock">Selesai & Kunci Rekam Medis</flux:button>
             @else
             <flux:badge color="zinc" size="md">Lock State: Tidak dapat diedit</flux:badge>
             @endif

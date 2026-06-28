@@ -22,10 +22,11 @@
             <div class="border border-zinc-200 dark:border-zinc-800 rounded-lg overflow-hidden">
                 <flux:table>
                     <flux:table.columns>
-                        <flux:table.column sortable :sorted="$sortField === 'nama_pemeriksaan'" :direction="$sortDirection" wire:click="sortBy('nama_pemeriksaan')">Nama Pemeriksaan</flux:table.column>
-                        <flux:table.column sortable :sorted="$sortField === 'nilai_normal'" :direction="$sortDirection" wire:click="sortBy('nilai_normal')">Nilai Normal</flux:table.column>
-                        <flux:table.column sortable :sorted="$sortField === 'satuan'" :direction="$sortDirection" wire:click="sortBy('satuan')">Satuan</flux:table.column>
-                        <flux:table.column sortable :sorted="$sortField === 'tarif'" :direction="$sortDirection" wire:click="sortBy('tarif')">Tarif</flux:table.column>
+                        <flux:table.column sortable :sorted="$sortField === 'test_name'" :direction="$sortDirection" wire:click="sortBy('test_name')">Nama Pemeriksaan</flux:table.column>
+                        <flux:table.column sortable :sorted="$sortField === 'default_normal_range'" :direction="$sortDirection" wire:click="sortBy('default_normal_range')">Nilai Normal</flux:table.column>
+                        <flux:table.column sortable :sorted="$sortField === 'default_unit'" :direction="$sortDirection" wire:click="sortBy('default_unit')">Satuan</flux:table.column>
+                        <flux:table.column sortable :sorted="$sortField === 'tarif_bpjs'" :direction="$sortDirection" wire:click="sortBy('tarif_bpjs')">Tarif BPJS</flux:table.column>
+                        <flux:table.column sortable :sorted="$sortField === 'tarif_umum'" :direction="$sortDirection" wire:click="sortBy('tarif_umum')">Tarif Umum</flux:table.column>
                         <flux:table.column sortable :sorted="$sortField === 'is_aktif'" :direction="$sortDirection" wire:click="sortBy('is_aktif')">Status</flux:table.column>
                         <flux:table.column>Aksi</flux:table.column>
                     </flux:table.columns>
@@ -33,10 +34,11 @@
                     <flux:table.rows>
                         @forelse ($labs as $item)
                             <flux:table.row :key="$item->id">
-                                <flux:table.cell class="font-medium text-zinc-950 dark:text-white">{{ $item->nama_pemeriksaan }}</flux:table.cell>
-                                <flux:table.cell>{{ $item->nilai_normal }}</flux:table.cell>
-                                <flux:table.cell class="text-zinc-600 dark:text-zinc-400">{{ $item->satuan }}</flux:table.cell>
-                                <flux:table.cell>Rp {{ number_format($item->tarif, 0, ',', '.') }}</flux:table.cell>
+                                <flux:table.cell class="font-medium text-zinc-950 dark:text-white">{{ $item->test_name }}</flux:table.cell>
+                                <flux:table.cell>{{ $item->default_normal_range }}</flux:table.cell>
+                                <flux:table.cell class="text-zinc-600 dark:text-zinc-400">{{ $item->default_unit }}</flux:table.cell>
+                                <flux:table.cell>Rp {{ number_format($item->tarif_bpjs, 0, ',', '.') }}</flux:table.cell>
+                                <flux:table.cell>Rp {{ number_format($item->tarif_umum, 0, ',', '.') }}</flux:table.cell>
                                 <flux:table.cell>
                                     @if ($item->is_aktif)
                                         <flux:badge color="green" size="sm">Aktif</flux:badge>
@@ -68,28 +70,33 @@
         <div>
             <div class="bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-5 shadow-sm space-y-5">
                 <div>
-                    <flux:heading size="lg">{{ $selectedId ? 'Edit Pemeriksaan' : 'Tambah Pemeriksaan Baru' }}</flux:heading>
+                    <flux:heading size="lg">{{ $selectedLabTestId ? 'Edit Pemeriksaan' : 'Tambah Pemeriksaan Baru' }}</flux:heading>
                     <flux:subheading>Tuliskan detail pemeriksaan laboratorium klinis di bawah.</flux:subheading>
                 </div>
 
                 <form wire:submit.prevent="save" class="space-y-4">
-                    <flux:input wire:model="nama_pemeriksaan" label="Nama Pemeriksaan" required placeholder="Contoh: Hemoglobin (Hb)" />
+                    <flux:input wire:model="test_name" label="Nama Pemeriksaan" required placeholder="Contoh: Hemoglobin (Hb)" />
+
+                    <flux:input wire:model="category" label="Kategori" required placeholder="Contoh: Darah Lengkap / Urine" />
 
                     <div class="grid grid-cols-2 gap-3">
-                        <flux:input wire:model="nilai_normal" label="Nilai Normal Rujukan" required placeholder="Contoh: 12 - 16" />
-                        <flux:input wire:model="satuan" label="Satuan" required placeholder="Contoh: g/dL" />
+                        <flux:input wire:model="default_normal_range" label="Nilai Normal Rujukan" required placeholder="Contoh: 12 - 16" />
+                        <flux:input wire:model="default_unit" label="Satuan" required placeholder="Contoh: g/dL" />
                     </div>
 
-                    <flux:input type="number" step="0.01" wire:model="tarif" label="Tarif (Rp)" required placeholder="Contoh: 35000" />
+                    <div class="grid grid-cols-2 gap-3">
+                        <flux:input type="number" step="1" wire:model="tarif_bpjs" label="Tarif BPJS (Rp)" required placeholder="Tarif BPJS" />
+                        <flux:input type="number" step="1" wire:model="tarif_umum" label="Tarif Umum (Rp)" required placeholder="Tarif Umum" />
+                    </div>
 
-                    <flux:select wire:model="is_aktif" label="Status Keaktifan">
+                    <flux:select wire:model="is_active" label="Status Keaktifan">
                         <flux:select.option value="1">Aktif</flux:select.option>
                         <flux:select.option value="0">Non-Aktif</flux:select.option>
                     </flux:select>
 
                     <div class="flex gap-2 pt-2">
                         <flux:button type="submit" variant="primary" class="flex-1">Simpan</flux:button>
-                        @if ($selectedId)
+                        @if ($selectedLabTestId)
                             <flux:button type="button" variant="filled" wire:click="resetForm">Batal</flux:button>
                         @endif
                     </div>

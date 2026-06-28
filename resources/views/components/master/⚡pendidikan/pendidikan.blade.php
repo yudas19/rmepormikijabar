@@ -23,6 +23,7 @@
                 <flux:table>
                     <flux:table.columns>
                         <flux:table.column sortable :sorted="$sortField === 'nama_pendidikan'" :direction="$sortDirection" wire:click="sortBy('nama_pendidikan')">Nama Pendidikan</flux:table.column>
+                        <flux:table.column sortable :sorted="$sortField === 'is_active'" :direction="$sortDirection" wire:click="sortBy('is_active')">Status</flux:table.column>
                         <flux:table.column>Aksi</flux:table.column>
                     </flux:table.columns>
 
@@ -30,6 +31,11 @@
                         @forelse ($pendidikans as $item)
                             <flux:table.row :key="$item->id">
                                 <flux:table.cell class="font-medium text-zinc-950 dark:text-white">{{ $item->nama_pendidikan }}</flux:table.cell>
+                                <flux:table.cell>
+                                    <flux:badge size="sm" color="{{ $item->is_active ? 'green' : 'zinc' }}">
+                                        {{ $item->is_active ? 'Aktif' : 'Tidak Aktif' }}
+                                    </flux:badge>
+                                </flux:table.cell>
                                 <flux:table.cell class="flex items-center gap-1">
                                     <flux:button variant="ghost" icon="pencil-square" size="sm" wire:click="edit({{ $item->id }})" />
                                     <flux:button variant="ghost" icon="trash" size="sm" wire:click="delete({{ $item->id }})" wire:confirm="Apakah Anda yakin ingin menghapus pendidikan ini?" />
@@ -37,7 +43,7 @@
                             </flux:table.row>
                         @empty
                             <flux:table.row>
-                                <flux:table.cell colspan="2" class="text-center text-zinc-500 py-8">Tidak ada data pendidikan ditemukan.</flux:table.cell>
+                                <flux:table.cell colspan="3" class="text-center text-zinc-500 py-8">Tidak ada data pendidikan ditemukan.</flux:table.cell>
                             </flux:table.row>
                         @endforelse
                     </flux:table.rows>
@@ -60,6 +66,8 @@
 
                 <form wire:submit.prevent="save" class="space-y-4">
                     <flux:input wire:model="nama_pendidikan" label="Nama Pendidikan" required placeholder="Contoh: SMA, S1 - Sarjana" />
+
+                    <flux:checkbox wire:model="is_active" label="Status Aktif" />
 
                     <div class="flex gap-2 pt-2">
                         <flux:button type="submit" variant="primary" class="flex-1">Simpan</flux:button>

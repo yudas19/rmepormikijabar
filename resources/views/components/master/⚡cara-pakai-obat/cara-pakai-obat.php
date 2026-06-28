@@ -20,6 +20,7 @@ new class extends Component
     {
         return [
             'Nama Aturan Pakai' => 'nama_aturan_pakai',
+            'Status Aktif' => 'is_active',
         ];
     }
 
@@ -38,6 +39,8 @@ new class extends Component
     public $selectedId = null;
 
     public $nama_aturan_pakai = '';
+
+    public $is_active = true;
 
     public function updatingSearch()
     {
@@ -60,12 +63,14 @@ new class extends Component
         $this->selectedId = $id;
         $record = MasterAturanPakai::findOrFail($id);
         $this->nama_aturan_pakai = $record->nama_aturan_pakai;
+        $this->is_active = (bool) $record->is_active;
     }
 
     public function resetForm()
     {
         $this->selectedId = null;
         $this->nama_aturan_pakai = '';
+        $this->is_active = true;
         $this->resetErrorBag();
     }
 
@@ -73,6 +78,7 @@ new class extends Component
     {
         $rules = [
             'nama_aturan_pakai' => 'required|string|max:100',
+            'is_active' => 'required|boolean',
         ];
 
         $validated = $this->validate($rules);

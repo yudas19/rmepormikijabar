@@ -77,7 +77,7 @@ new class extends Component
     public function save()
     {
         $rules = [
-            'kode_provinsi' => 'required|string|max:50|unique:provinsis,kode_provinsi,'.($this->selectedId ?? 'NULL').',id',
+            'kode_provinsi' => 'required|string|max:50|unique:master_provinsis,kode_provinsi,'.($this->selectedId ?? 'NULL').',id',
             'nama_provinsi' => 'required|string|max:100',
         ];
 

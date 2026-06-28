@@ -1,7 +1,7 @@
 <?php
 
 use App\Concerns\CanImportExportCsv;
-use App\Models\MasterLab;
+use App\Models\MasterLabTest;
 use Flux\Flux;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -13,50 +13,57 @@ new class extends Component
 
     protected function getModelClass()
     {
-        return MasterLab::class;
+        return MasterLabTest::class;
     }
 
     protected function getExportColumns()
     {
         return [
-            'Nama Pemeriksaan' => 'nama_pemeriksaan',
-            'Nilai Normal' => 'nilai_normal',
-            'Satuan' => 'satuan',
-            'Tarif' => 'tarif',
-            'Status Aktif' => 'is_aktif',
+            'id' => 'id',
+            'test_name' => 'test_name',
+            'tarif_bpjs' => 'tarif_bpjs',
+            'tarif_umum' => 'tarif_umum',
+            'category' => 'category',
+            'default_normal_range' => 'default_normal_range',
+            'default_unit' => 'default_unit',
+            'is_active' => 'is_active',
         ];
     }
 
     protected function getUniqueKeys()
     {
-        return ['nama_pemeriksaan'];
+        return ['test_name'];
     }
 
     public $search = '';
 
-    public $sortField = 'nama_pemeriksaan';
+    public $sortField = 'test_name';
 
     public $sortDirection = 'asc';
 
     // Form fields
-    public $selectedId = null;
+    public $selectedLabTestId = null;
 
-    public $nama_pemeriksaan = '';
+    public $test_name = '';
 
-    public $nilai_normal = '';
+    public $tarif_bpjs = 0;
 
-    public $satuan = '';
+    public $tarif_umum = 0;
 
-    public $tarif = '';
+    public $category = '';
 
-    public $is_aktif = true;
+    public $default_normal_range = '';
+
+    public $default_unit = '';
+
+    public $is_active = true;
 
     public function updatingSearch()
     {
         $this->resetPage();
     }
 
-    public function sortBy($field)
+    public function sortBy(string $field)
     {
         if ($this->sortField === $field) {
             $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
@@ -66,47 +73,53 @@ new class extends Component
         }
     }
 
-    public function edit($id)
+    public function edit(int $id)
     {
         $this->resetForm();
-        $this->selectedId = $id;
-        $record = MasterLab::findOrFail($id);
-        $this->nama_pemeriksaan = $record->nama_pemeriksaan;
-        $this->nilai_normal = $record->nilai_normal;
-        $this->satuan = $record->satuan;
-        $this->tarif = $record->tarif;
-        $this->is_aktif = (bool) $record->is_aktif;
+        $this->selectedLabTestId = $id;
+        $record = MasterLabTest::findOrFail($id);
+        $this->test_name = $record->test_name;
+        $this->tarif_bpjs = $record->tarif_bpjs;
+        $this->tarif_umum = $record->tarif_umum;
+        $this->category = $record->category;
+        $this->default_normal_range = $record->default_normal_range;
+        $this->default_unit = $record->default_unit;
+        $this->is_active = (bool) $record->is_active;
     }
 
     public function resetForm()
     {
-        $this->selectedId = null;
-        $this->nama_pemeriksaan = '';
-        $this->nilai_normal = '';
-        $this->satuan = '';
-        $this->tarif = '';
-        $this->is_aktif = true;
+        $this->selectedLabTestId = null;
+        $this->test_name = '';
+        $this->tarif_bpjs = 0;
+        $this->tarif_umum = 0;
+        $this->category = '';
+        $this->default_normal_range = '';
+        $this->default_unit = '';
+        $this->is_active = true;
         $this->resetErrorBag();
     }
 
     public function save()
     {
         $rules = [
-            'nama_pemeriksaan' => 'required|string|max:100',
-            'nilai_normal' => 'required|string|max:100',
-            'satuan' => 'required|string|max:50',
-            'tarif' => 'required|numeric|min:0',
-            'is_aktif' => 'required|boolean',
+            'test_name' => 'required|string|max:100',
+            'tarif_bpjs' => 'required|numeric|min:0',
+            'tarif_umum' => 'required|numeric|min:0',
+            'category' => 'required|string|max:50',
+            'default_normal_range' => 'required|string|max:100',
+            'default_unit' => 'required|string|max:50',
+            'is_active' => 'required|boolean',
         ];
 
         $validated = $this->validate($rules);
 
-        if ($this->selectedId) {
-            $record = MasterLab::findOrFail($this->selectedId);
+        if ($this->selectedLabTestId) {
+            $record = MasterLabTest::findOrFail($this->selectedLabTestId);
             $record->update($validated);
             $message = 'Layanan laboratorium berhasil diperbarui.';
         } else {
-            MasterLab::create($validated);
+            MasterLabTest::create($validated);
             $message = 'Layanan laboratorium berhasil ditambahkan.';
         }
 
@@ -114,22 +127,22 @@ new class extends Component
         $this->resetForm();
     }
 
-    public function delete($id)
+    public function delete(int $id)
     {
-        $record = MasterLab::findOrFail($id);
+        $record = MasterLabTest::findOrFail($id);
         $record->delete();
         Flux::toast(variant: 'success', text: 'Layanan laboratorium berhasil dihapus.');
-        if ($this->selectedId === $id) {
+        if ($this->selectedLabTestId === $id) {
             $this->resetForm();
         }
     }
 
     public function render()
     {
-        $data = MasterLab::query()
+        $data = MasterLabTest::query()
             ->when($this->search, function ($query) {
-                $query->where('nama_pemeriksaan', 'like', '%'.$this->search.'%')
-                    ->orWhere('satuan', 'like', '%'.$this->search.'%');
+                $query->where('test_name', 'like', '%'.$this->search.'%')
+                    ->orWhere('default_unit', 'like', '%'.$this->search.'%');
             })
             ->orderBy($this->sortField, $this->sortDirection)
             ->paginate(10);

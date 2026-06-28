@@ -20,24 +20,10 @@ new class extends Component
     {
         return [
             'Kode PCare' => 'kode_pcare',
-            'Nama PCare' => 'nama_pcare',
-            'Kode RS' => 'kode_rs',
-            'Kode Wilayah' => 'kode_wilayah',
-            'Kode Provinsi' => 'kode_provinsi',
-            'Kode Kabupaten' => 'kode_kabupaten',
-            'Kode Kecamatan' => 'kode_kecamatan',
-            'Nama Provinsi' => 'nama_propinsi',
-            'Nama Kabupaten' => 'nama_kabupaten',
-            'Nama Kecamatan' => 'nama_kecamatan',
-            'Alamat' => 'alamat',
-            'Telepon' => 'telepon',
-            'Email' => 'email',
-            'Kode Faskes' => 'kode_faskes',
-            'Nama Faskes' => 'nama_faskes',
-            'Jenis Faskes' => 'jenis_faskes',
-            'Tipe Faskes' => 'tipe_faskes',
-            'Tipe Layanan' => 'tipe_layanan',
-            'Is BPJS' => 'is_bpjs',
+            'Nama Konfigurasi' => 'nama_pcare',
+            'Kode Faskes BPJS' => 'kode_faskes',
+            'Nama Faskes BPJS' => 'nama_faskes',
+            'Environment' => 'bpjs_env',
             'Is Active' => 'is_active',
         ];
     }
@@ -54,43 +40,29 @@ new class extends Component
     public $sortDirection = 'asc';
 
     // Form fields
-    public $selectedId = null;
+    public $selectedPcareId = null;
 
     public $kode_pcare = '';
 
     public $nama_pcare = '';
 
-    public $kode_rs = '';
-
-    public $kode_wilayah = '';
-
-    public $kode_provinsi = '';
-
-    public $kode_kabupaten = '';
-
-    public $kode_kecamatan = '';
-
-    public $nama_propinsi = '';
-
-    public $nama_kabupaten = '';
-
-    public $nama_kecamatan = '';
-
-    public $alamat = '';
-
-    public $telepon = '';
-
-    public $email = '';
-
     public $kode_faskes = '';
 
     public $nama_faskes = '';
 
-    public $jenis_faskes = '';
+    public $bpjs_env = 'development';
 
-    public $tipe_faskes = '';
+    public $bpjs_cons_id = '';
 
-    public $tipe_layanan = '';
+    public $bpjs_secret_key = '';
+
+    public $bpjs_user_key = '';
+
+    public $pcare_username = '';
+
+    public $pcare_password = '';
+
+    public $user_mjkn = '';
 
     public $is_bpjs = true;
 
@@ -101,7 +73,7 @@ new class extends Component
         $this->resetPage();
     }
 
-    public function sortBy($field)
+    public function sortBy(string $field)
     {
         if ($this->sortField === $field) {
             $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
@@ -111,55 +83,62 @@ new class extends Component
         }
     }
 
-    public function edit($id)
+    public function edit(int $id)
     {
         $this->resetForm();
-        $this->selectedId = $id;
+        $this->selectedPcareId = $id;
         $record = MasterPcare::findOrFail($id);
 
         $this->kode_pcare = $record->kode_pcare;
         $this->nama_pcare = $record->nama_pcare;
-        $this->kode_rs = $record->kode_rs;
-        $this->kode_wilayah = $record->kode_wilayah;
-        $this->kode_provinsi = $record->kode_provinsi;
-        $this->kode_kabupaten = $record->kode_kabupaten;
-        $this->kode_kecamatan = $record->kode_kecamatan;
-        $this->nama_propinsi = $record->nama_propinsi;
-        $this->nama_kabupaten = $record->nama_kabupaten;
-        $this->nama_kecamatan = $record->nama_kecamatan;
-        $this->alamat = $record->alamat;
-        $this->telepon = $record->telepon;
-        $this->email = $record->email;
         $this->kode_faskes = $record->kode_faskes;
         $this->nama_faskes = $record->nama_faskes;
-        $this->jenis_faskes = $record->jenis_faskes;
-        $this->tipe_faskes = $record->tipe_faskes;
-        $this->tipe_layanan = $record->tipe_layanan;
+        $this->bpjs_env = $record->bpjs_env ?? 'development';
+        $this->pcare_username = $record->pcare_username;
+        $this->user_mjkn = $record->user_mjkn;
         $this->is_bpjs = (bool) $record->is_bpjs;
         $this->is_active = (bool) $record->is_active;
+
+        // Decrypt values safely
+        try {
+            $this->bpjs_cons_id = $record->bpjs_cons_id ? decrypt($record->bpjs_cons_id) : '';
+        } catch (\Exception $e) {
+            $this->bpjs_cons_id = $record->bpjs_cons_id ?? '';
+        }
+
+        try {
+            $this->bpjs_secret_key = $record->bpjs_secret_key ? decrypt($record->bpjs_secret_key) : '';
+        } catch (\Exception $e) {
+            $this->bpjs_secret_key = $record->bpjs_secret_key ?? '';
+        }
+
+        try {
+            $this->bpjs_user_key = $record->bpjs_user_key ? decrypt($record->bpjs_user_key) : '';
+        } catch (\Exception $e) {
+            $this->bpjs_user_key = $record->bpjs_user_key ?? '';
+        }
+
+        try {
+            $this->pcare_password = $record->pcare_password ? decrypt($record->pcare_password) : '';
+        } catch (\Exception $e) {
+            $this->pcare_password = $record->pcare_password ?? '';
+        }
     }
 
     public function resetForm()
     {
-        $this->selectedId = null;
+        $this->selectedPcareId = null;
         $this->kode_pcare = '';
         $this->nama_pcare = '';
-        $this->kode_rs = '';
-        $this->kode_wilayah = '';
-        $this->kode_provinsi = '';
-        $this->kode_kabupaten = '';
-        $this->kode_kecamatan = '';
-        $this->nama_propinsi = '';
-        $this->nama_kabupaten = '';
-        $this->nama_kecamatan = '';
-        $this->alamat = '';
-        $this->telepon = '';
-        $this->email = '';
         $this->kode_faskes = '';
         $this->nama_faskes = '';
-        $this->jenis_faskes = '';
-        $this->tipe_faskes = '';
-        $this->tipe_layanan = '';
+        $this->bpjs_env = 'development';
+        $this->bpjs_cons_id = '';
+        $this->bpjs_secret_key = '';
+        $this->bpjs_user_key = '';
+        $this->pcare_username = '';
+        $this->pcare_password = '';
+        $this->user_mjkn = '';
         $this->is_bpjs = true;
         $this->is_active = true;
         $this->resetErrorBag();
@@ -170,30 +149,47 @@ new class extends Component
         $rules = [
             'kode_pcare' => 'required|string|max:50',
             'nama_pcare' => 'required|string|max:100',
-            'kode_rs' => 'nullable|string|max:50',
-            'kode_wilayah' => 'nullable|string|max:50',
-            'kode_provinsi' => 'nullable|string|max:50',
-            'kode_kabupaten' => 'nullable|string|max:50',
-            'kode_kecamatan' => 'nullable|string|max:50',
-            'nama_propinsi' => 'nullable|string|max:100',
-            'nama_kabupaten' => 'nullable|string|max:100',
-            'nama_kecamatan' => 'nullable|string|max:100',
-            'alamat' => 'nullable|string|max:255',
-            'telepon' => 'nullable|string|max:50',
-            'email' => 'nullable|email|max:100',
             'kode_faskes' => 'nullable|string|max:50',
             'nama_faskes' => 'nullable|string|max:100',
-            'jenis_faskes' => 'nullable|string|max:50',
-            'tipe_faskes' => 'nullable|string|max:50',
-            'tipe_layanan' => 'nullable|string|max:50',
+            'bpjs_env' => 'required|string|in:development,production',
+            'bpjs_cons_id' => 'nullable|string|max:100',
+            'bpjs_secret_key' => 'nullable|string|max:255',
+            'bpjs_user_key' => 'nullable|string|max:255',
+            'pcare_username' => 'nullable|string|max:100',
+            'pcare_password' => 'nullable|string|max:255',
+            'user_mjkn' => 'nullable|string|max:100',
             'is_bpjs' => 'required|boolean',
             'is_active' => 'required|boolean',
         ];
 
         $validated = $this->validate($rules);
 
-        if ($this->selectedId) {
-            $record = MasterPcare::findOrFail($this->selectedId);
+        // Map legacy non-nullable database columns
+        $validated['kode_rs'] = '-';
+        $validated['kode_wilayah'] = '-';
+        $validated['kode_provinsi'] = '-';
+        $validated['kode_kabupaten'] = '-';
+        $validated['kode_kecamatan'] = '-';
+        $validated['nama_propinsi'] = '-';
+        $validated['nama_kabupaten'] = '-';
+        $validated['nama_kecamatan'] = '-';
+
+        // Secure encryption for sensitive data
+        if (!empty($validated['bpjs_cons_id'])) {
+            $validated['bpjs_cons_id'] = encrypt($validated['bpjs_cons_id']);
+        }
+        if (!empty($validated['bpjs_secret_key'])) {
+            $validated['bpjs_secret_key'] = encrypt($validated['bpjs_secret_key']);
+        }
+        if (!empty($validated['bpjs_user_key'])) {
+            $validated['bpjs_user_key'] = encrypt($validated['bpjs_user_key']);
+        }
+        if (!empty($validated['pcare_password'])) {
+            $validated['pcare_password'] = encrypt($validated['pcare_password']);
+        }
+
+        if ($this->selectedPcareId) {
+            $record = MasterPcare::findOrFail($this->selectedPcareId);
             $record->update($validated);
             $message = 'Konfigurasi PCare BPJS berhasil diperbarui.';
         } else {
@@ -205,12 +201,12 @@ new class extends Component
         $this->resetForm();
     }
 
-    public function delete($id)
+    public function delete(int $id)
     {
         $record = MasterPcare::findOrFail($id);
         $record->delete();
         Flux::toast(variant: 'success', text: 'Konfigurasi PCare BPJS berhasil dihapus.');
-        if ($this->selectedId === $id) {
+        if ($this->selectedPcareId === $id) {
             $this->resetForm();
         }
     }

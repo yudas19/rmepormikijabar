@@ -35,7 +35,7 @@ test('it loads the default or existing faskes profile on mount', function () {
 
     Livewire::test('master.faskes-profile')
         ->assertSet('nama_faskes', 'Klinik Pratama Pormiki')
-        ->assertSet('penanggung_jawab', 'dr. Andi Wijaya');
+        ->assertSet('penanggung_jawab', 'Yuda Setiawan');
 });
 
 test('it updates the faskes profile details successfully', function () {
