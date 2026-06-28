@@ -66,17 +66,22 @@ new class extends Component
         $polis = \App\Models\Poli::where('jenis_unit', 'medis')->where('is_active', true)->get();
         $currentPoli = $polis->firstWhere('id', $this->selectedPoliId);
 
-        $antreanMode = config('app.antrean_mode')
-            ?? session('antrean_mode')
-            ?? (auth()->check() ? (auth()->user()->antrean_mode ?? 'all_poli') : 'all_poli');
+        $petugas = auth()->check() ? \App\Models\MasterPetugas::where('user_id', auth()->id())->first() : null;
+        $cakupan = $petugas?->cakupan_antrean ?? 'hanya_poli_terpilih';
+        $currentPetugasId = $petugas?->id;
 
         // Fetch medical records for the selected polyclinic
         $queues = MedicalRecord::with(['pasien', 'pendaftaran.dokter', 'poli'])
-            ->when($this->selectedPoliId, function ($q) {
+            ->when($cakupan === 'hanya_poli_terpilih' && $this->selectedPoliId, function ($q) {
                 $q->where('poli_id', $this->selectedPoliId);
             })
-            ->when($antreanMode === 'only_assigned_doctor' && auth()->check() && auth()->user()->dokter_id, function ($q) {
-                $q->where('dokter_id', auth()->user()->dokter_id);
+            ->when($cakupan === 'hanya_dokter_bersangkutan', function ($q) use ($currentPetugasId) {
+                if ($this->selectedPoliId) {
+                    $q->where('poli_id', $this->selectedPoliId);
+                }
+                if ($currentPetugasId) {
+                    $q->where('dokter_id', $currentPetugasId);
+                }
             })
             ->whereDate('tanggal_kunjungan', '>=', $this->filterStartDate)
             ->whereDate('tanggal_kunjungan', '<=', $this->filterEndDate)

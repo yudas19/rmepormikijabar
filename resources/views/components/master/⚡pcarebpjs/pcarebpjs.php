@@ -73,7 +73,7 @@ new class extends Component
         $this->resetPage();
     }
 
-    public function sortBy(string $field)
+    public function sortBy($field)
     {
         if ($this->sortField === $field) {
             $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
@@ -83,7 +83,7 @@ new class extends Component
         }
     }
 
-    public function edit(int $id)
+    public function edit($id)
     {
         $this->resetForm();
         $this->selectedPcareId = $id;
@@ -127,7 +127,7 @@ new class extends Component
 
     public function resetForm()
     {
-        $this->selectedPcareId = null;
+        $this->selectedId = null;
         $this->kode_pcare = '';
         $this->nama_pcare = '';
         $this->kode_faskes = '';
@@ -188,8 +188,8 @@ new class extends Component
             $validated['pcare_password'] = encrypt($validated['pcare_password']);
         }
 
-        if ($this->selectedPcareId) {
-            $record = MasterPcare::findOrFail($this->selectedPcareId);
+        if ($this->selectedId) {
+            $record = MasterPcare::findOrFail($this->selectedId);
             $record->update($validated);
             $message = 'Konfigurasi PCare BPJS berhasil diperbarui.';
         } else {
@@ -201,12 +201,12 @@ new class extends Component
         $this->resetForm();
     }
 
-    public function delete(int $id)
+    public function delete($id)
     {
         $record = MasterPcare::findOrFail($id);
         $record->delete();
         Flux::toast(variant: 'success', text: 'Konfigurasi PCare BPJS berhasil dihapus.');
-        if ($this->selectedPcareId === $id) {
+        if ($this->selectedId === $id) {
             $this->resetForm();
         }
     }

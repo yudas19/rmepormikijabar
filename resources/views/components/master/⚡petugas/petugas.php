@@ -80,6 +80,8 @@ new class extends Component
 
     public $is_aktif = true;
 
+    public string $cakupan_antrean = 'hanya_poli_terpilih';
+
     // Login credentials fields
     public $email = '';
 
@@ -92,7 +94,7 @@ new class extends Component
         $this->resetPage();
     }
 
-    public function sortBy($field)
+    public function sortBy(string $field)
     {
         if ($this->sortField === $field) {
             $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
@@ -102,7 +104,7 @@ new class extends Component
         }
     }
 
-    public function edit($id)
+    public function edit(int $id)
     {
         $this->resetForm();
         $this->selectedId = $id;
@@ -121,6 +123,7 @@ new class extends Component
         $this->nomor_sip = $record->nomor_sip;
         $this->ihs_number_practitioner = $record->ihs_number_practitioner;
         $this->is_aktif = (bool) $record->is_aktif;
+        $this->cakupan_antrean = $record->cakupan_antrean ?? 'hanya_poli_terpilih';
 
         if ($record->user) {
             $this->email = $record->user->email;
@@ -147,6 +150,7 @@ new class extends Component
         $this->nomor_sip = '';
         $this->ihs_number_practitioner = '';
         $this->is_aktif = true;
+        $this->cakupan_antrean = 'hanya_poli_terpilih';
         $this->email = '';
         $this->password = '';
         $this->role = '';
@@ -169,6 +173,7 @@ new class extends Component
             'nomor_sip' => 'nullable|string|max:50',
             'ihs_number_practitioner' => 'nullable|string|max:100',
             'is_aktif' => 'required|boolean',
+            'cakupan_antrean' => 'required|string|in:semua_poli,hanya_poli_terpilih,hanya_dokter_bersangkutan',
             'email' => 'required|email|max:255|unique:users,email,'.($this->selectedId ? MasterPetugas::findOrFail($this->selectedId)->user_id : 'NULL').',id',
             'password' => ($this->selectedId ? 'nullable' : 'required').'|string|min:8',
             'role' => 'required|string|exists:roles,name',
@@ -221,7 +226,7 @@ new class extends Component
         $this->resetForm();
     }
 
-    public function delete($id)
+    public function delete(int $id)
     {
         $record = MasterPetugas::findOrFail($id);
         $record->delete();

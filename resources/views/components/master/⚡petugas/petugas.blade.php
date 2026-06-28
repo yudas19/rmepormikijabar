@@ -164,6 +164,12 @@
                         @endforeach
                     </flux:select>
 
+                    <flux:select wire:model="cakupan_antrean" label="Hak Akses Cakupan Antrean Pasien" required>
+                        <flux:select.option value="semua_poli">Semua Poli (Dapat melihat semua antrean di klinik)</flux:select.option>
+                        <flux:select.option value="hanya_poli_terpilih">Hanya Poli Terpilih (Dapat melihat semua pasien di Poli tempatnya bertugas)</flux:select.option>
+                        <flux:select.option value="hanya_dokter_bersangkutan">Hanya Dokter Terpilih (Hanya melihat pasien yang diarahkan atas nama dirinya saja)</flux:select.option>
+                    </flux:select>
+
                     <flux:input wire:model="alamat" label="Alamat Tempat Tinggal" placeholder="Alamat Lengkap" />
 
                     <flux:select wire:model="is_aktif" label="Status Keaktifan">
