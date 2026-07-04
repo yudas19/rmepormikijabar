@@ -35,6 +35,11 @@ class MasterLabTest extends Model
         return $this->hasMany(LabOrderResult::class, 'master_lab_test_id');
     }
 
+    public function getTariffAttribute(): int
+    {
+        return (int) ($this->attributes['tarif_umum'] ?? $this->attributes['tariff'] ?? 0);
+    }
+
     public function getFormattedTariffAttribute(): string
     {
         return 'Rp '.number_format($this->tariff, 0, ',', '.');

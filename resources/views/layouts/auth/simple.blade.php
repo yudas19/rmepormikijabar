@@ -5,7 +5,7 @@
         @include('partials.head')
     </head>
     <!-- Background utama diubah menjadi biru bersih (bg-white) -->
-    <body class="min-h-screen bg-gradient-to-br from-blue-400 via-blue-500 to-indigo-600 antialiased relative overflow-hidden">
+    <body class="min-h-screen bg-linear-to-br from-blue-400 via-blue-500 to-indigo-600 antialiased relative overflow-hidden">
         
         <div class="flex min-h-svh flex-col items-center justify-center gap-6 p-6 md:p-10 relative z-10">
             <div class="flex w-full max-w-sm flex-col gap-4">

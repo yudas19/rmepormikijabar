@@ -1,5 +1,5 @@
 @if ($showPcareReferralForm)
-<div class="bg-gradient-to-br from-indigo-50/50 to-emerald-50/30 dark:from-zinc-950 dark:to-zinc-900/50 border-2 border-indigo-200 dark:border-indigo-950/80 rounded-2xl p-6 shadow-lg mb-6 ring-4 ring-indigo-500/5 transition-all duration-300">
+<div class="bg-linear-gradient-to-br from-indigo-50/50 to-emerald-50/30 dark:from-zinc-950 dark:to-zinc-900/50 border-2 border-indigo-200 dark:border-indigo-950/80 rounded-2xl p-6 shadow-lg mb-6 ring-4 ring-indigo-500/5 transition-all duration-300">
     <div class="flex items-center justify-between pb-4 border-b border-indigo-100 dark:border-indigo-950 mb-6">
         <div class="flex items-center gap-3">
             <div class="p-2.5 bg-indigo-600 text-white rounded-xl shadow-md shadow-indigo-500/20">

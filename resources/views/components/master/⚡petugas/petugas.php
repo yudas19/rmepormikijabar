@@ -52,7 +52,7 @@ new class extends Component
     public $sortDirection = 'asc';
 
     // Form fields
-    public $selectedId = null;
+    public ?int $selectedId = null;
 
     public $nama_petugas = '';
 

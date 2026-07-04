@@ -11,7 +11,7 @@
 
     <div class="space-y-8 p-6 font-jakarta bg-slate-50 dark:bg-slate-950 min-h-screen">
         
-        <div class="relative overflow-hidden rounded-2xl border border-blue-100 bg-slate-950 p-8 text-white shadow-xl shadow-blue-900/5 dark:border-slate-800">
+        <div class="relative overflow-hidden rounded-2xl border border-blue-100 bg-sky-600 p-8 text-white shadow-xl shadow-blue-900/5 dark:border-slate-800">
             <div class="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-amber-400/20 blur-2xl"></div>
             <div class="absolute -left-10 -bottom-10 h-40 w-40 rounded-full bg-blue-600/20 blur-2xl"></div>
             

@@ -152,6 +152,20 @@
                             <flux:badge color="{{ $color }}" size="sm" class="font-bold shadow-xs">{{ $name }}</flux:badge>
                         </flux:table.cell>
                         <flux:table.cell class="flex items-center gap-2">
+                            @if ($q->status !== 'completed' && $q->status !== 'completed_all')
+                                @php
+                                    $sudahDipanggil = in_array($q->status_panggilan, ['memanggil', 'selesai']);
+                                @endphp
+                                @if ($sudahDipanggil)
+                                    <flux:button variant="ghost" icon="speaker-wave" size="sm" class="text-green-600 hover:bg-green-50 dark:text-green-400 dark:hover:bg-green-950/40 rounded-lg" wire:click="panggilAntrean({{ $q->id }})" title="Panggil Ulang Pasien">
+                                        Panggil Ulang
+                                    </flux:button>
+                                @else
+                                    <flux:button variant="ghost" icon="speaker-wave" size="sm" class="text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg" wire:click="panggilAntrean({{ $q->id }})" title="Panggil Pasien">
+                                        Panggil
+                                    </flux:button>
+                                @endif
+                            @endif
                             <flux:button variant="ghost" icon="printer" size="sm" class="hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400" href="{{ route('print.queue-ticket', ['id' => $q->id]) }}" target="_blank" title="Cetak Ulang Tiket" />
                             <flux:button size="sm" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg shadow-xs" href="{{ route('medical-record.examine', ['poliklinik' => $q->poliklinik_type, 'encounter_id' => $q->encounter_id]) }}" wire:navigate>
                                 Periksa
@@ -301,7 +315,7 @@
             </div>
 
             <form wire:submit.prevent="saveOutpatientRegistration" class="p-6 space-y-4">
-                <flux:select wire:model="reg_poli_id" label="Klinik / Poli Tujuan" required placeholder="Pilih Klinik">
+                <flux:select wire:model.live="reg_poli_id" label="Klinik / Poli Tujuan" required placeholder="Pilih Klinik">
                     @foreach ($polis as $poli)
                     <flux:select.option value="{{ $poli->id }}">{{ $poli->kode_poli }} - {{ $poli->nama_poli }}</flux:select.option>
                     @endforeach

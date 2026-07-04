@@ -75,7 +75,7 @@ new class extends Component
         }
 
         $this->tempatLahirResults = \App\Models\KabupatenKota::where('nama_kabupaten_kota', 'like', '%'.$this->tempatLahirQuery.'%')
-            ->limit(10)
+            ->limit(5)
             ->get()
             ->toArray();
     }
@@ -424,6 +424,14 @@ new class extends Component
         $this->isIhsSynced = true;
         $this->showIhsWarning = false;
         $this->resetErrorBag();
+    }
+
+    // --- QUEUE CALLING ---
+    public function panggilAntrean(int $id): void
+    {
+        $record = MedicalRecord::findOrFail($id);
+        $record->update(['status_panggilan' => 'memanggil']);
+        Flux::toast(variant: 'success', text: 'Memanggil nomor antrean '.$record->nomor_antrean.'.');
     }
 
     // --- OUTPATIENT REGISTRATION FLOW ---
@@ -881,7 +889,7 @@ new class extends Component
                     ->orWhere('nik', 'like', '%'.$this->search.'%');
             })
             ->orderBy($this->sortField, $this->sortDirection)
-            ->paginate(10);
+            ->paginate(5);
 
         $todayQueues = MedicalRecord::with(['pasien', 'poli', 'pendaftaran.dokter', 'pendaftaran.poli'])
             ->whereDate('tanggal_kunjungan', '>=', $this->filterStartDate)

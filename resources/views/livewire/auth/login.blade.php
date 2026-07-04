@@ -37,14 +37,14 @@
                     class="focus:border-emerald-500 focus:ring-emerald-500"
                 />
 
-                @if (Route::has('password.request'))
-                    <flux:link class="absolute top-0 text-xs font-medium end-0 text-emerald-600 hover:text-emerald-700 transition-colors" :href="route('password.request')" wire:navigate>
-                        {{ __('Forgot your password?') }}
+                {{-- @if (Route::has('password.request'))
+                    <flux:link class="absolute top-0 text-xs font-medium insert-e-0 text-emerald-600 hover:text-emerald-700 transition-colors" :href="route('password.request')" wire:navigate>
+                        {{ __('Lupa Password?') }}
                     </flux:link>
-                @endif
+                @endif --}}
             </div>
 
-            <flux:checkbox name="remember" :label="__('Remember me')" :checked="old('remember')" class="text-emerald-600 focus:ring-emerald-500" />
+            <flux:checkbox name="remember" :label="__('Ingat Saya')" :checked="old('remember')" class="text-emerald-600 focus:ring-emerald-500" />
 
             <div class="flex items-center justify-end mt-2">
                 <flux:button type="submit" class="w-full bg-amber-400 hover:bg-amber-500 text-zinc-950 font-semibold shadow-md shadow-amber-400/20 py-2.5 rounded-lg transition-all border-none" data-test="login-button">

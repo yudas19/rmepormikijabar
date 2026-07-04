@@ -94,12 +94,12 @@
         <flux:spacer />
 
         <flux:sidebar.nav>
-            <flux:sidebar.item icon="folder-git-2" href="https://github.com/laravel/livewire-starter-kit" target="_blank" class="text-slate-400 hover:text-slate-200">
-                {{ __('Repository') }}
+            <flux:sidebar.item icon="folder-git-2" href="https://github.com/yudas19/rmepormikijabar" target="_blank" class="text-slate-400 hover:text-slate-200">
+                {{ __('Repository GitHub') }}
             </flux:sidebar.item>
 
-            <flux:sidebar.item icon="book-open-text" href="https://laravel.com/docs/starter-kits#livewire" target="_blank" class="text-slate-400 hover:text-slate-200">
-                {{ __('Documentation') }}
+            <flux:sidebar.item icon="book-open-text" href="https://youtu.be/ulp83bbf6-U" target="_blank" class="text-slate-400 hover:text-slate-200">
+                {{ __('Tutorial Penggunaan') }}
             </flux:sidebar.item>
         </flux:sidebar.nav>
         <x-desktop-user-menu class="hidden lg:block border-t border-slate-800 pt-4" :name="auth()->user()->name" />

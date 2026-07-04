@@ -680,12 +680,13 @@ new class extends Component
         }
 
         $test = MasterLabTest::findOrFail($id);
+        $isBpjs = $this->record->pendaftaran?->cara_bayar === 'BPJS';
 
         $this->selectedLabTests[] = [
             'id' => $test->id,
             'test_name' => $test->test_name,
             'category' => $test->category,
-            'tariff' => $test->tariff,
+            'tariff' => $isBpjs ? $test->tarif_bpjs : $test->tarif_umum,
             'default_normal_range' => $test->default_normal_range,
             'default_unit' => $test->default_unit,
         ];

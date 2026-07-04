@@ -1,11 +1,13 @@
 <?php
 
 use App\Models\MedicalRecord;
+use Flux\Flux;
+use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
 new class extends Component
 {
-    public $selectedPoliId;
+    public ?int $selectedPoliId = null;
 
     public $filterStartDate = '';
 
@@ -45,14 +47,14 @@ new class extends Component
         }
     }
 
-    public function panggilAntrean($id)
+    public function panggilAntrean(int $id): void
     {
         $record = MedicalRecord::findOrFail($id);
         $record->update(['status_panggilan' => 'memanggil']);
         Flux::toast(variant: 'success', text: 'Memanggil nomor antrean '.$record->nomor_antrean.'.');
     }
 
-    public function periksaPasien($id)
+    public function periksaPasien(int $id)
     {
         $record = MedicalRecord::findOrFail($id);
         return $this->redirect(route('medical-record.examine', [
@@ -66,7 +68,7 @@ new class extends Component
         $polis = \App\Models\Poli::where('jenis_unit', 'medis')->where('is_active', true)->get();
         $currentPoli = $polis->firstWhere('id', $this->selectedPoliId);
 
-        $petugas = auth()->check() ? \App\Models\MasterPetugas::where('user_id', auth()->id())->first() : null;
+        $petugas = Auth::check() ? \App\Models\MasterPetugas::where('user_id', Auth::id())->first() : null;
         $cakupan = $petugas?->cakupan_antrean ?? 'hanya_poli_terpilih';
         $currentPetugasId = $petugas?->id;
 
@@ -90,10 +92,14 @@ new class extends Component
             ->orderBy('id', 'asc')
             ->get();
 
-        return view('components.⚡poliklinik-queue.poliklinik-queue', [
+        /** @var mixed $view */
+        $view = view('components.⚡poliklinik-queue.poliklinik-queue', [
             'queues' => $queues,
             'polis' => $polis,
             'title' => $currentPoli ? $currentPoli->nama_poli : 'Pemeriksaan Medis',
-        ])->layout('layouts::app');
+        ]);
+
+        return $view->layout('layouts::app');
     }
 };
+
