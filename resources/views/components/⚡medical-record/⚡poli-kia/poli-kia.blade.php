@@ -889,7 +889,7 @@
             <flux:button variant="filled" wire:click="saveDraft">Save as Draft</flux:button>
             <flux:button variant="primary" wire:click="finalizeAndLock">Selesai & Kunci Rekam Medis</flux:button>
             @else
-            <flux:badge color="zinc" size="md">Lock State: Tidak dapat diedit</flux:badge>
+            <flux:badge color="zinc" size="md">Terkunci: Tidak dapat diedit</flux:badge>
             @endif
         </div>
     </div>

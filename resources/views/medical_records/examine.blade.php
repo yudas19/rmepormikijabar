@@ -18,27 +18,27 @@
             <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg p-6 shadow-sm">
                 <flux:heading size="lg" class="mb-4">Informasi Pasien</flux:heading>
 
-                <div class="space-y-4 text-sm">
+                <div class="space-y-3 text-sm">
                     <div>
                         <div class="text-xs text-zinc-500 font-semibold uppercase tracking-wider">Nama Pasien</div>
                         <div class="font-bold text-base text-zinc-900 dark:text-white mt-0.5">{{ $patient->nama_pasien }}</div>
                     </div>
 
                     <div class="grid grid-cols-2 gap-4">
-                        <div>
+                        {{-- <div>
                             <div class="text-xs text-zinc-500 font-semibold uppercase tracking-wider">No. Rekam Medis</div>
                             <div class="font-mono font-semibold text-emerald-600 dark:text-emerald-400 mt-0.5">{{ $patient->no_rekam_medis }}</div>
-                        </div>
-                        <div>
+                        </div> --}}
+                        {{-- <div>
                             <div class="text-xs text-zinc-500 font-semibold uppercase tracking-wider">No. BPJS</div>
                             <div class="font-mono mt-0.5 text-zinc-800 dark:text-zinc-200">{{ $patient->no_bpjs ?? '-' }}</div>
-                        </div>
+                        </div> --}}
                     </div>
 
-                    <div>
+                    {{-- <div>
                         <div class="text-xs text-zinc-500 font-semibold uppercase tracking-wider">NIK</div>
                         <div class="font-mono mt-0.5 text-zinc-800 dark:text-zinc-200">{{ $patient->nik }}</div>
-                    </div>
+                    </div> --}}
 
                     <div class="grid grid-cols-2 gap-4">
                         <div>
@@ -54,15 +54,15 @@
                         </div>
                     </div>
 
-                    <div>
+                    {{-- <div>
                         <div class="text-xs text-zinc-500 font-semibold uppercase tracking-wider">Alamat</div>
                         <div class="text-zinc-700 dark:text-zinc-300 leading-relaxed mt-0.5">{{ $patient->alamat }}</div>
-                    </div>
+                    </div> --}}
 
-                    <div>
+                    {{-- <div>
                         <div class="text-xs text-zinc-500 font-semibold uppercase tracking-wider">No. WhatsApp</div>
                         <div class="mt-0.5 font-mono text-zinc-800 dark:text-zinc-200">{{ $patient->no_whatsapp ?? '-' }}</div>
-                    </div>
+                    </div> --}}
                 </div>
             </div>
 
