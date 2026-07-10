@@ -299,8 +299,18 @@ new class extends Component
     public function openAddPatient()
     {
         $this->resetForm();
-        // Auto-generate local rekam medis code
-        $this->no_rekam_medis = 'RM-'.date('Ymd').'-'.sprintf('%04d', rand(1, 9999));
+        // Auto-generate 6-digit sequential local rekam medis code
+        $lastPasien = Pasien::where('no_rekam_medis', '>=', '000001')
+            ->where('no_rekam_medis', '<=', '999999')
+            ->orderBy('no_rekam_medis', 'desc')
+            ->first();
+
+        $nextNumber = 1;
+        if ($lastPasien) {
+            $nextNumber = intval($lastPasien->no_rekam_medis) + 1;
+        }
+
+        $this->no_rekam_medis = sprintf('%06d', $nextNumber);
         $this->showPatientModal = true;
     }
 

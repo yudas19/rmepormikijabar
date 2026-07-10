@@ -1,7 +1,7 @@
 <div class="py-6 bg-slate-50 dark:bg-slate-950 min-h-screen space-y-6">
     <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800/80 rounded-2xl shadow-sm overflow-hidden">
         <!-- Gradient Header -->
-        <div class="relative overflow-hidden bg-gradient-to-br from-blue-500 to-indigo-600 p-6">
+        <div class="relative overflow-hidden bg-gradient-to-br from-blue-500 to-sky-600 p-6">
             <div class="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/10 blur-2xl"></div>
             <div class="absolute -left-10 -bottom-10 h-40 w-40 rounded-full bg-white/5 blur-2xl"></div>
             <div class="relative z-10">
@@ -11,7 +11,7 @@
         </div>
 
         <div class="p-6">
-        <div class="rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 px-5 py-2.5 mb-6 w-fit shadow-md shadow-blue-500/20">
+        <div class="rounded-full bg-gradient-to-r from-blue-500 to-sky-500 px-5 py-2.5 mb-6 w-fit shadow-md shadow-blue-500/20">
             <flux:subheading class="font-black text-white text-center w-fit">Halo {{ Auth::user()->name ?? "User" }} 👋</flux:subheading>
         </div>
 
@@ -24,7 +24,7 @@
 
         <div class="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden bg-white dark:bg-slate-900">
             <flux:table>
-                <flux:table.columns class="bg-gradient-to-r from-slate-700 to-slate-900 text-white">
+                <flux:table.columns class="bg-gradient-to-r from-slate-200 to-slate-300 text-white">
                     <flux:table.column sortable :sorted="$sortField === 'no_rekam_medis'" :direction="$sortDirection" wire:click="sortBy('no_rekam_medis')">No. RM</flux:table.column>
                     <flux:table.column sortable :sorted="$sortField === 'nama_pasien'" :direction="$sortDirection" wire:click="sortBy('nama_pasien')">Nama Pasien</flux:table.column>
                     <flux:table.column sortable :sorted="$sortField === 'nik'" :direction="$sortDirection" wire:click="sortBy('nik')">NIK</flux:table.column>
@@ -85,7 +85,7 @@
 
     <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800/80 rounded-2xl shadow-sm overflow-hidden">
         <!-- Gradient Header for Queue -->
-        <div class="relative overflow-hidden bg-gradient-to-br from-emerald-500 to-teal-600 p-6">
+        <div class="relative overflow-hidden bg-gradient-to-br from-sky-500 to-blue-600 p-6">
             <div class="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/10 blur-2xl"></div>
             <div class="absolute -left-10 -bottom-10 h-40 w-40 rounded-full bg-white/5 blur-2xl"></div>
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 relative z-10">
@@ -103,7 +103,7 @@
         <div class="p-6">
         <div class="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden bg-white dark:bg-slate-900">
             <flux:table>
-                <flux:table.columns class="bg-gradient-to-r from-slate-700 to-slate-900 text-white">
+                <flux:table.columns class="bg-gradient-to-r from-slate-200 to-slate-300 text-white">
                     <flux:table.column>No. Antrean</flux:table.column>
                     <flux:table.column>No. RM / Pasien</flux:table.column>
                     <flux:table.column>Poliklinik</flux:table.column>

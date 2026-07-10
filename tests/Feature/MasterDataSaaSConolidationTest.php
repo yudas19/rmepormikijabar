@@ -205,3 +205,28 @@ test('master agama route is accessible to authenticated user', function () {
     $response = $this->get(route('master.agama'));
     $response->assertStatus(200);
 });
+
+test('pendaftaran component auto generates 6 digit sequential rekam medis number', function () {
+    $user = User::first();
+    $this->actingAs($user);
+
+    // Initial state: no numeric patients exist. Should start at '000001'
+    Livewire::test('⚡pendaftaran')
+        ->call('openAddPatient')
+        ->assertSet('no_rekam_medis', '000001');
+
+    // Create a patient with '000005'
+    Pasien::create([
+        'no_rekam_medis' => '000005',
+        'nama_pasien' => 'Tes Pasien RM',
+        'nik' => '9991234567891234',
+        'tanggal_lahir' => '1990-01-01',
+        'jenis_kelamin' => 'L',
+        'alamat' => 'Test Alamat',
+    ]);
+
+    // Should increment to '000006'
+    Livewire::test('⚡pendaftaran')
+        ->call('openAddPatient')
+        ->assertSet('no_rekam_medis', '000006');
+});
