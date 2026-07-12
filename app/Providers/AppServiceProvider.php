@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use Illuminate\Support\Facades\URL;
 use App\Models\MedicalRecord;
 use App\Models\Poli;
 use Carbon\CarbonImmutable;
@@ -26,7 +27,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        file_put_contents('/Users/digisekre/Herd/rmepormikijabar/storage/logs/boot.log', 'booted'.PHP_EOL, FILE_APPEND);
+
+        if (config('app.env') === 'production') {
+            URL::forceScheme('https');
+        }
+
+        file_put_contents(storage_path('logs/boot.log'), 'booted'.PHP_EOL, FILE_APPEND);
         $this->configureDefaults();
 
         // Implicitly grant "admin" role all permissions
