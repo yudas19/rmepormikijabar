@@ -6,7 +6,7 @@
             <div class="w-1/2 bg-emerald-500"></div>
         </div>
 
-        <x-auth-header :title="__('Log in to your account')" :description="__('Enter your email and password below to log in')" />
+        <x-auth-header :title="__('Masuk ke Akun Anda')" :description="__('Masukkan email dan kata sandi di bawah ini untuk masuk')" />
 
         <x-auth-session-status class="text-center text-emerald-600 font-medium" :status="session('status')" />
 
@@ -15,7 +15,7 @@
 
             <flux:input
                 name="email"
-                :label="__('Email address')"
+                :label="__('Alamat Email')"
                 :value="old('email')"
                 type="email"
                 required
@@ -28,11 +28,11 @@
             <div class="relative">
                 <flux:input
                     name="password"
-                    :label="__('Password')"
+                    :label="__('Kata Sandi')"
                     type="password"
                     required
                     autocomplete="current-password"
-                    :placeholder="__('Password')"
+                    :placeholder="__('Kata Sandi')"
                     viewable
                     class="focus:border-emerald-500 focus:ring-emerald-500"
                 />
@@ -48,7 +48,7 @@
 
             <div class="flex items-center justify-end mt-2">
                 <flux:button type="submit" class="w-full bg-amber-400 hover:bg-amber-500 text-zinc-950 font-semibold shadow-md shadow-amber-400/20 py-2.5 rounded-lg transition-all border-none" data-test="login-button">
-                    {{ __('Log in') }}
+                    {{ __('Masuk') }}
                 </flux:button>
             </div>
         </form>

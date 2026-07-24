@@ -17,9 +17,14 @@
 
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
             <flux:input wire:model.live.debounce.300ms="search" placeholder="Cari nama pasien, NIK, atau No Rekam Medis..." icon="magnifying-glass" class="w-full max-w-md focus:border-blue-500" />
-            <flux:button variant="primary" icon="user-plus" wire:click="openAddPatient" class="w-full sm:w-auto bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/20 border-none">
-                + Tambah Pasien Baru
-            </flux:button>
+            <div class="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                <flux:button variant="filled" icon="calendar" wire:click="$set('showBookingList', {{ $showBookingList ? 'false' : 'true' }})" class="font-semibold text-slate-800 dark:text-slate-200">
+                    {{ $showBookingList ? 'Sembunyikan Booking' : 'Lihat Daftar Booking' }}
+                </flux:button>
+                <flux:button variant="primary" icon="user-plus" wire:click="openAddPatient" class="w-full sm:w-auto bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/20 border-none">
+                    + Tambah Pasien Baru
+                </flux:button>
+            </div>
         </div>
 
         <div class="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden bg-white dark:bg-slate-900">
@@ -55,15 +60,16 @@
                                 <flux:menu class="border border-slate-200 dark:border-slate-800 shadow-xl rounded-xl">
                                     <flux:menu.item icon="pencil-square" wire:click="editPatient({{ $pasien->id }})" class="hover:text-emerald-500">Edit Profil Pasien</flux:menu.item>
                                     <flux:menu.separator class="border-slate-100 dark:border-slate-800" />
-                                    <flux:menu.item icon="building-office-2" wire:click="openRegisterOutpatient({{ $pasien->id }})" class="font-semibold text-slate-900 dark:text-white hover:text-emerald-500">Register Outpatient</flux:menu.item>
+                                    <flux:menu.item icon="building-office-2" wire:click="openRegisterOutpatient({{ $pasien->id }})" class="font-semibold text-slate-900 dark:text-white hover:text-emerald-500">Registrasi Pasien Rawat Jalan</flux:menu.item>
+                                    <flux:menu.item icon="calendar" wire:click="openBookingModal({{ $pasien->id }})" class="font-semibold text-slate-900 dark:text-white hover:text-emerald-500">Booking Pendaftaran</flux:menu.item>
                                     <flux:menu.separator class="border-slate-100 dark:border-slate-800" />
-                                    <flux:menu.item icon="document-text" wire:click="openConsentModal({{ $pasien->id }}, 'general_consent')">General Consent</flux:menu.item>
-                                    <flux:menu.item icon="document-check" wire:click="openConsentModal({{ $pasien->id }}, 'informed_consent_tindakan')">Informed Consent</flux:menu.item>
-                                    <flux:menu.item icon="document-arrow-up" wire:click="openReferralModal({{ $pasien->id }})">Referral Letter</flux:menu.item>
+                                    <flux:menu.item icon="document-text" wire:click="openConsentModal({{ $pasien->id }}, 'general_consent')">Persetujuan Umum</flux:menu.item>
+                                    <flux:menu.item icon="document-check" wire:click="openConsentModal({{ $pasien->id }}, 'informed_consent_tindakan')">Persetujuan Tindakan Medis</flux:menu.item>
+                                    <flux:menu.item icon="document-arrow-up" wire:click="openReferralModal({{ $pasien->id }})">Surat Rujukan</flux:menu.item>
                                     <flux:menu.separator class="border-slate-100 dark:border-slate-800" />
-                                    <flux:menu.item icon="document" wire:click="openCertificateModal({{ $pasien->id }}, 'sehat')">Health Certificate</flux:menu.item>
-                                    <flux:menu.item icon="document" wire:click="openCertificateModal({{ $pasien->id }}, 'sakit')">Sick Leave Certificate</flux:menu.item>
-                                    <flux:menu.item icon="document" wire:click="openCertificateModal({{ $pasien->id }}, 'bebas_narkoba')">Drug-Free Certificate</flux:menu.item>
+                                    <flux:menu.item icon="pencil-square" wire:click="openCertificateModal({{ $pasien->id }}, 'sehat')">Surat Keterangan Sehat</flux:menu.item>
+                                    <flux:menu.item icon="pencil-square" wire:click="openCertificateModal({{ $pasien->id }}, 'sakit')">Surat Keterangan Sakit</flux:menu.item>
+                                    <flux:menu.item icon="pencil-square" wire:click="openCertificateModal({{ $pasien->id }}, 'bebas_narkoba')">Surat Keterangan Bebas Narkoba</flux:menu.item>
                                 </flux:menu>
                             </flux:dropdown>
                         </flux:table.cell>
@@ -183,6 +189,81 @@
         </div>
         </div>
     </div>
+
+    @if ($showBookingList)
+    {{-- === DAFTAR BOOKING PENDAFTARAN === --}}
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800/80 rounded-2xl shadow-sm overflow-hidden">
+        <div class="relative overflow-hidden bg-gradient-to-br from-emerald-500 to-teal-600 p-6">
+            <div class="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/10 blur-2xl"></div>
+            <div class="absolute -left-10 -bottom-10 h-40 w-40 rounded-full bg-white/5 blur-2xl"></div>
+            <div class="relative z-10 flex justify-between items-center">
+                <div>
+                    <flux:heading size="lg" class="font-extrabold text-white">Daftar Booking Pendaftaran</flux:heading>
+                    <flux:subheading class="mt-1 text-emerald-100/80">Booking kunjungan pasien yang menunggu konfirmasi kedatangan.</flux:subheading>
+                </div>
+                <flux:button variant="filled" size="sm" class="bg-white/10 border-white/20 text-white hover:bg-white/20" wire:click="$set('showBookingList', false)">
+                    Tutup
+                </flux:button>
+            </div>
+        </div>
+
+        <div class="p-6">
+        <div class="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden bg-white dark:bg-slate-900">
+            <flux:table>
+                <flux:table.columns class="bg-gradient-to-r from-slate-200 to-slate-300 text-white">
+                    <flux:table.column>No.</flux:table.column>
+                    <flux:table.column>Pasien</flux:table.column>
+                    <flux:table.column>Tanggal Booking</flux:table.column>
+                    <flux:table.column>Status</flux:table.column>
+                    <flux:table.column>Dibuat</flux:table.column>
+                    <flux:table.column>Aksi</flux:table.column>
+                </flux:table.columns>
+
+                <flux:table.rows>
+                    @forelse ($bookings as $index => $booking)
+                    <flux:table.row :key="'booking-'.$booking->id" class="hover:bg-slate-50/50 dark:hover:bg-slate-950/20">
+                        <flux:table.cell class="font-mono text-sm font-bold text-slate-600">{{ $index + 1 }}</flux:table.cell>
+                        <flux:table.cell>
+                            <div class="font-bold text-slate-900 dark:text-white">{{ $booking->pasien->nama_pasien }}</div>
+                            <div class="text-xs text-slate-400 font-mono">{{ $booking->pasien->no_rekam_medis }}</div>
+                        </flux:table.cell>
+                        <flux:table.cell>
+                            <flux:badge color="sky" size="sm" class="font-semibold">{{ $booking->booking_date->translatedFormat('l, d M Y') }}</flux:badge>
+                        </flux:table.cell>
+                        <flux:table.cell>
+                            @if ($booking->status === 'pending')
+                                <flux:badge color="amber" size="sm" class="font-bold animate-pulse">Menunggu Konfirmasi</flux:badge>
+                            @elseif ($booking->status === 'confirmed')
+                                <flux:badge color="emerald" size="sm" class="font-bold">Terkonfirmasi</flux:badge>
+                            @else
+                                <flux:badge color="red" size="sm" class="font-bold">Dibatalkan</flux:badge>
+                            @endif
+                        </flux:table.cell>
+                        <flux:table.cell class="text-xs text-slate-500">{{ $booking->created_at->format('d/m/Y H:i') }}</flux:table.cell>
+                        <flux:table.cell class="flex items-center gap-2">
+                            @if ($booking->status === 'pending')
+                                @if ($booking->booking_date->isToday())
+                                    <flux:button size="sm" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg shadow-xs" wire:click="confirmBooking({{ $booking->id }})">
+                                        Konfirmasi Kedatangan
+                                    </flux:button>
+                                @else
+                                    <flux:badge color="slate" size="sm" class="font-medium">Belum waktunya</flux:badge>
+                                @endif
+                                <flux:button variant="ghost" icon="trash" size="sm" class="text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg" wire:click="cancelBooking({{ $booking->id }})" title="Batalkan Booking" />
+                            @endif
+                        </flux:table.cell>
+                    </flux:table.row>
+                    @empty
+                    <flux:table.row>
+                        <flux:table.cell colspan="6" class="text-center text-slate-400 py-8 italic">Belum ada booking pendaftaran.</flux:table.cell>
+                    </flux:table.row>
+                    @endforelse
+                </flux:table.rows>
+            </flux:table>
+        </div>
+        </div>
+    </div>
+    @endif
 
     @if ($showPatientModal)
     <div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
@@ -371,7 +452,38 @@
         </div>
     </div>
     @endif
-
+@if ($showBookingModal)
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto flex flex-col">
+            <div class="p-6 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-gradient-to-r from-emerald-500 to-teal-600">
+                <flux:heading size="lg" class="font-black text-white">Booking Pendaftaran</flux:heading>
+                <button type="button" wire:click="$set('showBookingModal', false)" class="text-white/70 hover:text-white p-1 rounded-lg hover:bg-white/10">
+                    <flux:icon.x-mark class="w-6 h-6" />
+                </button>
+            </div>
+            <form wire:submit.prevent="saveBooking" class="p-6 space-y-4">
+                @if ($selectedPasienId)
+                    @php $bookingPasien = \App\Models\Pasien::find($selectedPasienId); @endphp
+                    @if ($bookingPasien)
+                    <div class="bg-slate-50 dark:bg-slate-950/40 p-4 rounded-xl border border-slate-200 dark:border-slate-800">
+                        <p class="text-xs text-slate-400 mb-1">Pasien</p>
+                        <p class="font-bold text-slate-900 dark:text-white">{{ $bookingPasien->nama_pasien }}</p>
+                        <p class="text-xs text-slate-500 font-mono">RM: {{ $bookingPasien->no_rekam_medis }}</p>
+                    </div>
+                    @endif
+                @endif
+                <div>
+                    <flux:input type="date" wire:model.live="bookingDate" label="Tanggal Kunjungan (Booking)" required min="{{ now()->addDay()->format('Y-m-d') }}" class="w-full" />
+                    <p class="text-xs text-slate-400 mt-1">Pilih tanggal kunjungan untuk hari esok atau seterusnya.</p>
+                </div>
+                <div class="flex justify-end gap-2 border-t border-slate-200 dark:border-slate-800 pt-4">
+                    <flux:button type="button" variant="ghost" wire:click="$set('showBookingModal', false)">Batal</flux:button>
+                    <flux:button type="submit" variant="primary" class="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold">Simpan Booking</flux:button>
+                </div>
+            </form>
+        </div>
+    </div>
+@endif
     @if ($showConsentModal)
     <div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
         <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto flex flex-col">
@@ -430,7 +542,7 @@
     <div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
         <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto flex flex-col">
             <div class="p-6 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-gradient-to-r from-purple-500 to-violet-600">
-                <flux:heading size="lg" class="font-black text-white">Buat Surat Rujukan Pasien (Referral Letter)</flux:heading>
+                <flux:heading size="lg" class="font-black text-white">Buat Surat Rujukan Pasien</flux:heading>
                 <button type="button" wire:click="$set('showReferralModal', false)" class="text-white/70 hover:text-white">
                     <flux:icon.x-mark class="w-6 h-6" />
                 </button>

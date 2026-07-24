@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Booking;
 use App\Models\MasterAgama;
 use App\Models\MasterPekerjaan;
 use App\Models\MasterPendidikan;
@@ -59,6 +60,13 @@ new class extends Component
     public $cancelId = null;
 
     public $showCancelConfirmation = false;
+
+    // --- BOOKING FIELDS ---
+    public $showBookingModal = false;
+
+    public $bookingDate = '';
+
+    public $showBookingList = false;
 
     public function mount()
     {
@@ -455,6 +463,81 @@ new class extends Component
         $this->reg_keluhan_awal = '';
         $this->reg_tanggal_kunjungan = date('Y-m-d');
         $this->showRegisterModal = true;
+    }
+
+    // --- BOOKING FLOW ---
+    public function openBookingModal($pasienId)
+    {
+        $this->selectedPasienId = $pasienId;
+        $this->bookingDate = now()->addDay()->format('Y-m-d');
+        $this->showBookingModal = true;
+    }
+
+    public function saveBooking()
+    {
+        $this->validate([
+            'bookingDate' => 'required|date|after:today',
+        ], [
+            'bookingDate.after' => 'Tanggal booking harus minimal hari esok.',
+        ]);
+
+        // Check for duplicate booking on the same date
+        $exists = Booking::where('pasien_id', $this->selectedPasienId)
+            ->whereDate('booking_date', $this->bookingDate)
+            ->where('status', 'pending')
+            ->exists();
+
+        if ($exists) {
+            $this->addError('bookingDate', 'Pasien sudah memiliki booking pada tanggal tersebut.');
+
+            return;
+        }
+
+        Booking::create([
+            'pasien_id' => $this->selectedPasienId,
+            'booking_date' => $this->bookingDate,
+            'status' => 'pending',
+            'created_by' => auth()->id(),
+        ]);
+
+        $this->showBookingModal = false;
+        Flux::toast(variant: 'success', text: 'Booking pendaftaran berhasil disimpan untuk tanggal '.Carbon::parse($this->bookingDate)->translatedFormat('l, d M Y').'.');
+    }
+
+    public function confirmBooking(int $bookingId)
+    {
+        $booking = Booking::findOrFail($bookingId);
+
+        if (! $booking->booking_date->isToday()) {
+            Flux::toast(variant: 'danger', text: 'Booking hanya dapat dikonfirmasi pada tanggal kunjungan yang dipilih.');
+
+            return;
+        }
+
+        $booking->update([
+            'status' => 'confirmed',
+            'confirmed_by' => auth()->id(),
+            'confirmed_at' => now(),
+        ]);
+
+        // Auto-open outpatient registration for confirmed booking
+        $this->selectedPasienId = $booking->pasien_id;
+        $this->reg_poli_id = '';
+        $this->reg_dokter_id = '';
+        $this->reg_cara_bayar = 'Umum';
+        $this->reg_jenis_kunjungan = 'Baru';
+        $this->reg_keluhan_awal = '';
+        $this->reg_tanggal_kunjungan = $booking->booking_date->format('Y-m-d');
+        $this->showRegisterModal = true;
+
+        Flux::toast(variant: 'success', text: 'Kedatangan pasien terkonfirmasi! Silakan lengkapi registrasi rawat jalan.');
+    }
+
+    public function cancelBooking(int $bookingId)
+    {
+        $booking = Booking::findOrFail($bookingId);
+        $booking->update(['status' => 'cancelled']);
+        Flux::toast(variant: 'success', text: 'Booking pendaftaran berhasil dibatalkan.');
     }
 
     public function saveOutpatientRegistration()
@@ -922,6 +1005,11 @@ new class extends Component
             $q->whereNull('clinic_id')->orWhere('clinic_id', $clinicId);
         })->get();
 
+        $bookings = Booking::with('pasien')
+            ->whereIn('status', ['pending', 'confirmed'])
+            ->orderBy('booking_date', 'asc')
+            ->get();
+
         return view('components.⚡pendaftaran.pendaftaran', [
             'pasiens' => $data,
             'polis' => Poli::where('is_active', true)->get(),
@@ -932,6 +1020,7 @@ new class extends Component
             'pekerjaans' => $pekerjaans,
             'labTests' => \App\Models\MasterLabTest::where('is_aktif', true)->get(),
             'todayQueues' => $todayQueues,
+            'bookings' => $bookings,
         ]);
     }
 };
