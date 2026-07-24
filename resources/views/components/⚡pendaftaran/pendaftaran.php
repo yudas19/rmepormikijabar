@@ -66,7 +66,21 @@ new class extends Component
 
     public $bookingDate = '';
 
+    public $booking_poli_id = '';
+
+    public $booking_dokter_id = '';
+
     public $showBookingList = false;
+
+    public function updatedBookingDate()
+    {
+        $this->booking_dokter_id = '';
+    }
+
+    public function updatedBookingPoliId()
+    {
+        $this->booking_dokter_id = '';
+    }
 
     public function mount()
     {
@@ -470,6 +484,8 @@ new class extends Component
     {
         $this->selectedPasienId = $pasienId;
         $this->bookingDate = now()->addDay()->format('Y-m-d');
+        $this->booking_poli_id = '';
+        $this->booking_dokter_id = '';
         $this->showBookingModal = true;
     }
 
@@ -477,9 +493,33 @@ new class extends Component
     {
         $this->validate([
             'bookingDate' => 'required|date|after:today',
+            'booking_poli_id' => 'required|exists:master_polis,id',
+            'booking_dokter_id' => 'required|exists:master_petugass,id',
         ], [
             'bookingDate.after' => 'Tanggal booking harus minimal hari esok.',
         ]);
+
+        // Verify scheduled doctor
+        $dayMap = [
+            0 => 'Minggu',
+            1 => 'Senin',
+            2 => 'Selasa',
+            3 => 'Rabu',
+            4 => 'Kamis',
+            5 => 'Jumat',
+            6 => 'Sabtu',
+        ];
+        $currentDay = $dayMap[Carbon::parse($this->bookingDate)->dayOfWeek];
+        $isScheduled = DB::table('master_jadwal_dokters')
+            ->where('petugas_id', $this->booking_dokter_id)
+            ->where('poli_id', $this->booking_poli_id)
+            ->where('hari', $currentDay)
+            ->exists();
+
+        if (! $isScheduled) {
+            $this->addError('booking_dokter_id', 'Dokter tersebut tidak memiliki jadwal pada hari ' . $currentDay . '.');
+            return;
+        }
 
         // Check for duplicate booking on the same date
         $exists = Booking::where('pasien_id', $this->selectedPasienId)
@@ -495,6 +535,8 @@ new class extends Component
 
         Booking::create([
             'pasien_id' => $this->selectedPasienId,
+            'poli_id' => $this->booking_poli_id,
+            'dokter_id' => $this->booking_dokter_id,
             'booking_date' => $this->bookingDate,
             'status' => 'pending',
             'created_by' => auth()->id(),
@@ -520,10 +562,10 @@ new class extends Component
             'confirmed_at' => now(),
         ]);
 
-        // Auto-open outpatient registration for confirmed booking
+        // Auto-open outpatient registration for confirmed booking with prefilled values
         $this->selectedPasienId = $booking->pasien_id;
-        $this->reg_poli_id = '';
-        $this->reg_dokter_id = '';
+        $this->reg_poli_id = $booking->poli_id;
+        $this->reg_dokter_id = $booking->dokter_id;
         $this->reg_cara_bayar = 'Umum';
         $this->reg_jenis_kunjungan = 'Baru';
         $this->reg_keluhan_awal = '';

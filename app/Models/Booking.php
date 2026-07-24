@@ -28,4 +28,14 @@ class Booking extends Model
     {
         return $this->belongsTo(User::class, 'created_by');
     }
+
+    public function poli(): BelongsTo
+    {
+        return $this->belongsTo(Poli::class);
+    }
+
+    public function dokter(): BelongsTo
+    {
+        return $this->belongsTo(MasterPetugas::class, 'dokter_id');
+    }
 }
