@@ -1,23 +1,61 @@
 <?php
 
 use App\Models\Booking;
+use App\Models\MasterPetugas;
 use App\Models\Pasien;
+use App\Models\Poli;
 use App\Models\User;
+use Carbon\Carbon;
 use Database\Seeders\DatabaseSeeder;
+use Illuminate\Support\Facades\DB;
 use Livewire\Livewire;
 
 beforeEach(function () {
     $this->seed(DatabaseSeeder::class);
 });
 
-test('can open booking modal and save a booking for a future date', function () {
-    $user = User::first();
-    $this->actingAs($user);
+/**
+ * Helper: buat poli medis beserta dokter + jadwal sesuai hari yang diminta.
+ */
+function createPoliAndDokterWithSchedule(string $namaHari): array
+{
+    $poli = Poli::create([
+        'kode_poli' => 'TES',
+        'nama_poli' => 'Poli Test',
+        'jenis_unit' => 'medis',
+        'is_active' => true,
+    ]);
 
-    $pasien = Pasien::create([
-        'no_rekam_medis' => 'RM-BK-0001',
-        'nama_pasien' => 'Booking Tester',
-        'nik' => '3301010101010001',
+    $dokter = MasterPetugas::create([
+        'nama_petugas' => 'dr. Test Dokter',
+        'jenis_petugas' => 'Dokter',
+        'nomor_sip' => 'SIP-TEST-001',
+        'is_aktif' => true,
+    ]);
+
+    DB::table('master_jadwal_dokters')->insert([
+        'petugas_id' => $dokter->id,
+        'poli_id' => $poli->id,
+        'hari' => $namaHari,
+        'jam_mulai' => '08:00:00',
+        'jam_selesai' => '14:00:00',
+        'kuota_pasien' => 30,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+
+    return [$poli, $dokter];
+}
+
+/**
+ * Helper: buat pasien baru dengan NIK unik.
+ */
+function createTestPasien(string $noRm, string $nik): Pasien
+{
+    return Pasien::create([
+        'no_rekam_medis' => $noRm,
+        'nama_pasien' => 'Booking Tester '.$noRm,
+        'nik' => $nik,
         'tempat_lahir' => 'Bandung',
         'tanggal_lahir' => '1990-01-01',
         'jenis_kelamin' => 'L',
@@ -25,24 +63,39 @@ test('can open booking modal and save a booking for a future date', function () 
         'alamat' => 'Jl. Test No. 1',
         'status_pasien' => 'aktif',
     ]);
+}
+
+test('can open booking modal and save a booking for a future date', function () {
+    $user = User::first();
+    $this->actingAs($user);
+
+    $pasien = createTestPasien('RM-BK-0001', '3301010101010001');
+
+    // Tentukan tanggal 2 hari kedepan dan dapatkan nama harinya
+    $futureDate = now()->addDays(2)->format('Y-m-d');
+    $dayMap = [0 => 'Minggu', 1 => 'Senin', 2 => 'Selasa', 3 => 'Rabu', 4 => 'Kamis', 5 => 'Jumat', 6 => 'Sabtu'];
+    $namaHari = $dayMap[Carbon::parse($futureDate)->dayOfWeek];
+
+    [$poli, $dokter] = createPoliAndDokterWithSchedule($namaHari);
 
     $component = Livewire::test('⚡pendaftaran');
-
     $component->call('openBookingModal', $pasien->id);
 
     $component->assertSet('showBookingModal', true)
         ->assertSet('selectedPasienId', $pasien->id);
 
-    $futureDate = now()->addDays(2)->format('Y-m-d');
-
     $component->set('bookingDate', $futureDate)
+        ->set('booking_poli_id', $poli->id)
+        ->set('booking_dokter_id', $dokter->id)
         ->call('saveBooking');
 
     $component->assertSet('showBookingModal', false);
 
     $this->assertDatabaseHas('bookings', [
         'pasien_id' => $pasien->id,
-        'booking_date' => $futureDate . ' 00:00:00',
+        'poli_id' => $poli->id,
+        'dokter_id' => $dokter->id,
+        'booking_date' => $futureDate.' 00:00:00',
         'status' => 'pending',
     ]);
 });
@@ -51,17 +104,7 @@ test('cannot create booking for today or past dates', function () {
     $user = User::first();
     $this->actingAs($user);
 
-    $pasien = Pasien::create([
-        'no_rekam_medis' => 'RM-BK-0002',
-        'nama_pasien' => 'Past Date Tester',
-        'nik' => '3301010101010002',
-        'tempat_lahir' => 'Jakarta',
-        'tanggal_lahir' => '1995-05-15',
-        'jenis_kelamin' => 'P',
-        'golongan_darah' => 'A',
-        'alamat' => 'Jl. Test No. 2',
-        'status_pasien' => 'aktif',
-    ]);
+    $pasien = createTestPasien('RM-BK-0002', '3301010101010002');
 
     Livewire::test('⚡pendaftaran')
         ->call('openBookingModal', $pasien->id)
@@ -78,22 +121,17 @@ test('cannot create duplicate booking for same patient on same date', function (
     $user = User::first();
     $this->actingAs($user);
 
-    $pasien = Pasien::create([
-        'no_rekam_medis' => 'RM-BK-0003',
-        'nama_pasien' => 'Duplicate Tester',
-        'nik' => '3301010101010003',
-        'tempat_lahir' => 'Surabaya',
-        'tanggal_lahir' => '1988-03-20',
-        'jenis_kelamin' => 'L',
-        'golongan_darah' => 'B',
-        'alamat' => 'Jl. Test No. 3',
-        'status_pasien' => 'aktif',
-    ]);
-
+    $pasien = createTestPasien('RM-BK-0003', '3301010101010003');
     $futureDate = now()->addDays(3)->format('Y-m-d');
+    $dayMap = [0 => 'Minggu', 1 => 'Senin', 2 => 'Selasa', 3 => 'Rabu', 4 => 'Kamis', 5 => 'Jumat', 6 => 'Sabtu'];
+    $namaHari = $dayMap[Carbon::parse($futureDate)->dayOfWeek];
+
+    [$poli, $dokter] = createPoliAndDokterWithSchedule($namaHari);
 
     Booking::create([
         'pasien_id' => $pasien->id,
+        'poli_id' => $poli->id,
+        'dokter_id' => $dokter->id,
         'booking_date' => $futureDate,
         'status' => 'pending',
         'created_by' => $user->id,
@@ -102,6 +140,8 @@ test('cannot create duplicate booking for same patient on same date', function (
     Livewire::test('⚡pendaftaran')
         ->call('openBookingModal', $pasien->id)
         ->set('bookingDate', $futureDate)
+        ->set('booking_poli_id', $poli->id)
+        ->set('booking_dokter_id', $dokter->id)
         ->call('saveBooking')
         ->assertHasErrors('bookingDate');
 
@@ -112,20 +152,14 @@ test('can confirm booking on the booking date and opens registration modal', fun
     $user = User::first();
     $this->actingAs($user);
 
-    $pasien = Pasien::create([
-        'no_rekam_medis' => 'RM-BK-0004',
-        'nama_pasien' => 'Confirm Tester',
-        'nik' => '3301010101010004',
-        'tempat_lahir' => 'Medan',
-        'tanggal_lahir' => '1992-07-10',
-        'jenis_kelamin' => 'L',
-        'golongan_darah' => 'AB',
-        'alamat' => 'Jl. Test No. 4',
-        'status_pasien' => 'aktif',
-    ]);
+    $pasien = createTestPasien('RM-BK-0004', '3301010101010004');
+    $namaHari = [0 => 'Minggu', 1 => 'Senin', 2 => 'Selasa', 3 => 'Rabu', 4 => 'Kamis', 5 => 'Jumat', 6 => 'Sabtu'][now()->dayOfWeek];
+    [$poli, $dokter] = createPoliAndDokterWithSchedule($namaHari);
 
     $booking = Booking::create([
         'pasien_id' => $pasien->id,
+        'poli_id' => $poli->id,
+        'dokter_id' => $dokter->id,
         'booking_date' => now()->format('Y-m-d'),
         'status' => 'pending',
         'created_by' => $user->id,
@@ -147,17 +181,7 @@ test('cannot confirm booking on a different day', function () {
     $user = User::first();
     $this->actingAs($user);
 
-    $pasien = Pasien::create([
-        'no_rekam_medis' => 'RM-BK-0005',
-        'nama_pasien' => 'Future Confirm Tester',
-        'nik' => '3301010101010005',
-        'tempat_lahir' => 'Semarang',
-        'tanggal_lahir' => '1985-11-25',
-        'jenis_kelamin' => 'P',
-        'golongan_darah' => 'O',
-        'alamat' => 'Jl. Test No. 5',
-        'status_pasien' => 'aktif',
-    ]);
+    $pasien = createTestPasien('RM-BK-0005', '3301010101010005');
 
     $booking = Booking::create([
         'pasien_id' => $pasien->id,
@@ -178,17 +202,7 @@ test('can cancel a pending booking', function () {
     $user = User::first();
     $this->actingAs($user);
 
-    $pasien = Pasien::create([
-        'no_rekam_medis' => 'RM-BK-0006',
-        'nama_pasien' => 'Cancel Tester',
-        'nik' => '3301010101010006',
-        'tempat_lahir' => 'Yogyakarta',
-        'tanggal_lahir' => '1998-04-18',
-        'jenis_kelamin' => 'L',
-        'golongan_darah' => 'A',
-        'alamat' => 'Jl. Test No. 6',
-        'status_pasien' => 'aktif',
-    ]);
+    $pasien = createTestPasien('RM-BK-0006', '3301010101010006');
 
     $booking = Booking::create([
         'pasien_id' => $pasien->id,
