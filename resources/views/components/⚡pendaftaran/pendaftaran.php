@@ -72,14 +72,47 @@ new class extends Component
 
     public $showBookingList = false;
 
-    public function updatedBookingDate()
+    public function updatedBookingDate(): void
     {
         $this->booking_dokter_id = '';
     }
 
-    public function updatedBookingPoliId()
+    public function updatedBookingPoliId(): void
     {
         $this->booking_dokter_id = '';
+    }
+
+    /**
+     * Computed: list dokter yang punya jadwal di poli + hari yang dipilih saat booking.
+     *
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    public function getBookingDoktersProperty()
+    {
+        if (! $this->booking_poli_id || ! $this->bookingDate) {
+            return collect();
+        }
+
+        $dayMap = [
+            0 => 'Minggu',
+            1 => 'Senin',
+            2 => 'Selasa',
+            3 => 'Rabu',
+            4 => 'Kamis',
+            5 => 'Jumat',
+            6 => 'Sabtu',
+        ];
+
+        $hari = $dayMap[\Carbon\Carbon::parse($this->bookingDate)->dayOfWeek];
+
+        $petugasIds = DB::table('master_jadwal_dokters')
+            ->where('poli_id', $this->booking_poli_id)
+            ->where('hari', $hari)
+            ->pluck('petugas_id');
+
+        return MasterPetugas::whereIn('id', $petugasIds)
+            ->where('is_aktif', true)
+            ->get();
     }
 
     public function mount()
@@ -1047,14 +1080,19 @@ new class extends Component
             $q->whereNull('clinic_id')->orWhere('clinic_id', $clinicId);
         })->get();
 
-        $bookings = Booking::with('pasien')
+        $bookings = Booking::with(['pasien', 'poli', 'dokter'])
             ->whereIn('status', ['pending', 'confirmed'])
             ->orderBy('booking_date', 'asc')
+            ->get();
+
+        $bookingPolis = Poli::where('is_active', true)
+            ->where('jenis_unit', 'medis')
             ->get();
 
         return view('components.⚡pendaftaran.pendaftaran', [
             'pasiens' => $data,
             'polis' => Poli::where('is_active', true)->get(),
+            'bookingPolis' => $bookingPolis,
             'doctors' => MasterPetugas::where('jenis_petugas', 'Dokter')->where('is_aktif', true)->get(),
             'petugass' => MasterPetugas::where('is_aktif', true)->get(),
             'agamas' => $agamas,

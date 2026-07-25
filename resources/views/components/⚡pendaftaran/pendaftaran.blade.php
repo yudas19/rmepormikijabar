@@ -214,6 +214,7 @@
                     <flux:table.column>No.</flux:table.column>
                     <flux:table.column>Pasien</flux:table.column>
                     <flux:table.column>Tanggal Booking</flux:table.column>
+                    <flux:table.column>Poli / Dokter</flux:table.column>
                     <flux:table.column>Status</flux:table.column>
                     <flux:table.column>Dibuat</flux:table.column>
                     <flux:table.column>Aksi</flux:table.column>
@@ -229,6 +230,10 @@
                         </flux:table.cell>
                         <flux:table.cell>
                             <flux:badge color="sky" size="sm" class="font-semibold">{{ $booking->booking_date->translatedFormat('l, d M Y') }}</flux:badge>
+                        </flux:table.cell>
+                        <flux:table.cell>
+                            <div class="text-sm font-semibold text-slate-800 dark:text-slate-200">{{ $booking->poli?->nama_poli ?? '-' }}</div>
+                            <div class="text-xs text-slate-400">{{ $booking->dokter?->nama_petugas ?? '-' }}</div>
                         </flux:table.cell>
                         <flux:table.cell>
                             @if ($booking->status === 'pending')
@@ -255,7 +260,7 @@
                     </flux:table.row>
                     @empty
                     <flux:table.row>
-                        <flux:table.cell colspan="6" class="text-center text-slate-400 py-8 italic">Belum ada booking pendaftaran.</flux:table.cell>
+                        <flux:table.cell colspan="7" class="text-center text-slate-400 py-8 italic">Belum ada booking pendaftaran.</flux:table.cell>
                     </flux:table.row>
                     @endforelse
                 </flux:table.rows>
@@ -454,7 +459,7 @@
     @endif
 @if ($showBookingModal)
     <div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
-        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto flex flex-col">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto flex flex-col">
             <div class="p-6 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-gradient-to-r from-emerald-500 to-teal-600">
                 <flux:heading size="lg" class="font-black text-white">Booking Pendaftaran</flux:heading>
                 <button type="button" wire:click="$set('showBookingModal', false)" class="text-white/70 hover:text-white p-1 rounded-lg hover:bg-white/10">
@@ -472,10 +477,54 @@
                     </div>
                     @endif
                 @endif
+
+                {{-- Tanggal Booking --}}
                 <div>
                     <flux:input type="date" wire:model.live="bookingDate" label="Tanggal Kunjungan (Booking)" required min="{{ now()->addDay()->format('Y-m-d') }}" class="w-full" />
                     <p class="text-xs text-slate-400 mt-1">Pilih tanggal kunjungan untuk hari esok atau seterusnya.</p>
+                    @error('bookingDate')
+                        <span class="text-xs text-red-500 block mt-1">{{ $message }}</span>
+                    @enderror
                 </div>
+
+                {{-- Pilih Poli --}}
+                <div>
+                    <flux:select wire:model.live="booking_poli_id" label="Poli / Klinik Tujuan" required placeholder="Pilih Poli">
+                        @foreach ($bookingPolis as $poli)
+                            <flux:select.option value="{{ $poli->id }}">{{ $poli->kode_poli }} - {{ $poli->nama_poli }}</flux:select.option>
+                        @endforeach
+                    </flux:select>
+                    @error('booking_poli_id')
+                        <span class="text-xs text-red-500 block mt-1">{{ $message }}</span>
+                    @enderror
+                </div>
+
+                {{-- Pilih Dokter (muncul setelah poli & tanggal dipilih) --}}
+                @if ($booking_poli_id && $bookingDate)
+                <div>
+                    @if ($this->bookingDokters->isEmpty())
+                        <div class="flex items-center gap-2 p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-xl text-amber-800 dark:text-amber-400 text-sm">
+                            <flux:icon.exclamation-circle class="w-5 h-5 flex-shrink-0" />
+                            <span>Tidak ada dokter yang memiliki jadwal di poli ini pada hari <strong>{{ \Carbon\Carbon::parse($bookingDate)->isoFormat('dddd') }}</strong>.</span>
+                        </div>
+                    @else
+                        <flux:select wire:model="booking_dokter_id" label="Dokter Pemeriksa" required placeholder="Pilih Dokter">
+                            @foreach ($this->bookingDokters as $dok)
+                                <flux:select.option value="{{ $dok->id }}">{{ $dok->nama_petugas }} (SIP: {{ $dok->nomor_sip ?? '-' }})</flux:select.option>
+                            @endforeach
+                        </flux:select>
+                        @error('booking_dokter_id')
+                            <span class="text-xs text-red-500 block mt-1">{{ $message }}</span>
+                        @enderror
+                    @endif
+                </div>
+                @else
+                <div class="flex items-center gap-2 p-3 bg-slate-50 dark:bg-slate-950/30 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-500 text-sm">
+                    <flux:icon.information-circle class="w-5 h-5 flex-shrink-0" />
+                    <span>Pilih poli dan tanggal terlebih dahulu untuk melihat dokter yang tersedia.</span>
+                </div>
+                @endif
+
                 <div class="flex justify-end gap-2 border-t border-slate-200 dark:border-slate-800 pt-4">
                     <flux:button type="button" variant="ghost" wire:click="$set('showBookingModal', false)">Batal</flux:button>
                     <flux:button type="submit" variant="primary" class="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold">Simpan Booking</flux:button>
