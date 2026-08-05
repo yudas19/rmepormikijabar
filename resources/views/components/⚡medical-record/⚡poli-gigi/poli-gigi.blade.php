@@ -967,7 +967,7 @@
     <div class="flex justify-end bg-zinc-50 dark:bg-zinc-950 p-6 rounded-xl border border-zinc-200/60 dark:border-zinc-800/80">
         <div class="flex gap-2">
             @if ($isEditable)
-            <flux:button variant="filled" wire:click="saveDraft">Save as Draft</flux:button>
+            <flux:button variant="filled" wire:click="saveDraft" class="bg-yellow-500 hover:bg-yellow-600 active:bg-yellow-800 text-white">Simpan</flux:button>
             <flux:button variant="primary" wire:click="finalizeAndLock">Selesai & Kunci Rekam Medis</flux:button>
             @else
             <flux:badge color="zinc" size="md">Terkunci: Tidak dapat diedit</flux:badge>

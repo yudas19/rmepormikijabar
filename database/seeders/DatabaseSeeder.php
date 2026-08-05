@@ -42,23 +42,23 @@ class DatabaseSeeder extends Seeder
 
         // 2. Users & Petugas
         $adminUser = User::factory()->create([
-            'name' => 'Admin System',
-            'email' => 'admin@rmepormikijabar.com',
-            'password' => bcrypt('password'),
+            'name' => 'Yuda',
+            'email' => 'yuda@gmail.com',
+            'password' => bcrypt('pormiki24'),
         ]);
         $adminUser->assignRole('admin');
 
         // Doctor
         $docUser = User::factory()->create([
-            'name' => 'dr. Andi Wijaya',
-            'email' => 'dokter@rmepormikijabar.com',
-            'password' => bcrypt('password'),
+            'name' => 'dr. pormikijabar',
+            'email' => 'pormikijabar@gmail.com',
+            'password' => bcrypt('pormiki24'),
         ]);
         $docUser->assignRole('dokter_umum');
 
         MasterPetugas::create([
             'user_id' => $docUser->id,
-            'nama_petugas' => 'dr. Andi Wijaya',
+            'nama_petugas' => 'dr. pormikijabar',
             'nik' => '3201010101010001',
             'tempat_lahir' => 'Bandung',
             'tanggal_lahir' => '1985-05-12',
@@ -67,8 +67,8 @@ class DatabaseSeeder extends Seeder
             'no_hp' => '081234567890',
             'bekerja_sejak' => '2015-01-01',
             'jenis_petugas' => 'Dokter',
-            'nomor_str' => 'STR-12345-ANDI',
-            'nomor_sip' => 'SIP-67890-ANDI',
+            'nomor_str' => 'STR-12345-PORMIKI',
+            'nomor_sip' => 'SIP-67890-PORMIKI',
             'ihs_number_practitioner' => '1000234567',
             'is_aktif' => true,
         ]);
@@ -76,8 +76,8 @@ class DatabaseSeeder extends Seeder
         // Nurse
         $nurseUser = User::factory()->create([
             'name' => 'Ns. Rina Astuti, S.Kep',
-            'email' => 'perawat@rmepormikijabar.com',
-            'password' => bcrypt('password'),
+            'email' => 'rina@gmail.com',
+            'password' => bcrypt('pormiki24'),
         ]);
         $nurseUser->assignRole('perawat');
 

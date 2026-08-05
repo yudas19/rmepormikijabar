@@ -17,12 +17,12 @@ beforeEach(function () {
     FaskesProfile::updateOrCreate(
         ['id' => 1],
         [
-            'nama_faskes' => 'Klinik EMR Pintar Jabar',
+            'nama_faskes' => 'Klinik Pormiki',
             'logo_path' => 'logos/logo.png',
             'alamat' => 'Jl. Raya Perekaman Medis No. 45, Bandung',
-            'penanggung_jawab' => 'Dr. Jane Doe',
+            'penanggung_jawab' => 'Dr. PMIK',
             'no_telp' => '022-123456',
-            'email' => 'info@emrpintar.id',
+            'email' => 'info@pormiki.id',
             'kode_faskes_kemenkes' => '1234567',
         ]
     );

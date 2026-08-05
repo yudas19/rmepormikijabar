@@ -15,11 +15,13 @@ class SatuSehatDashboardController extends Controller
      */
     public function index(Request $request): View
     {
-        $date = $request->input('date', today()->toDateString());
+        $dateFrom = $request->input('date_from', today()->toDateString());
+        $dateTo = $request->input('date_to', today()->toDateString());
 
-        // Fetch medical records for the selected date
+        // Fetch medical records for the selected date range
         $records = MedicalRecord::with(['pasien', 'dokter', 'poli', 'poli.satusehat', 'icd10s'])
-            ->whereDate('created_at', $date)
+            ->whereDate('created_at', '>=', $dateFrom)
+            ->whereDate('created_at', '<=', $dateTo)
             ->where('status', '!=', 'batal')
             ->get();
 
@@ -51,7 +53,8 @@ class SatuSehatDashboardController extends Controller
 
         return view('admin.satusehat-dashboard.index', [
             'records' => $records,
-            'date' => $date,
+            'dateFrom' => $dateFrom,
+            'dateTo' => $dateTo,
             'counts' => $counts,
         ]);
     }
@@ -80,9 +83,11 @@ class SatuSehatDashboardController extends Controller
      */
     public function dispatchAllReady(Request $request): RedirectResponse
     {
-        $date = $request->input('date', today()->toDateString());
+        $dateFrom = $request->input('date_from', today()->toDateString());
+        $dateTo = $request->input('date_to', today()->toDateString());
 
-        $records = MedicalRecord::whereDate('created_at', $date)
+        $records = MedicalRecord::whereDate('created_at', '>=', $dateFrom)
+            ->whereDate('created_at', '<=', $dateTo)
             ->where('satusehat_status', 'ready')
             ->where('status', '!=', 'batal')
             ->get();

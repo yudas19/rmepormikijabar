@@ -86,9 +86,12 @@
     </style>
 </head>
 <body>
-    <div class="header">
-        <h2>Klinik EMR Pintar Jabar</h2>
-        <p>Jl. Raya Perekaman Medis No. 45, Bandung, Jawa Barat | Telp: (022) 123456 | Email: info@emrpintar.id</p>
+    <div class="header" style="position: relative;">
+        @if (isset($profile) && $profile->logo_path)
+            <img src="{{ public_path('storage/' . $profile->logo_path) }}" alt="Logo" style="position: absolute; left: 0; top: 0; height: 60px; width: 60px; object-fit: contain;">
+        @endif
+        <h2>{{ nama_faskes() }}</h2>
+        <p>{{ alamat_faskes() }} | Telp: {{ telepon_faskes() }} | Email: {{ email_faskes() }}</p>
     </div>
 
     <div class="title">SURAT RUJUKAN PASIEN OUTSOURCING / EKSTERNAL</div>
@@ -163,7 +166,7 @@
     </table>
 
     <div class="footer">
-        Surat rujukan ini dikeluarkan secara digital melalui EMR Pintar Jabar. Dicetak pada {{ date('d-m-Y H:i:s') }}.
+        Surat rujukan ini dikeluarkan secara digital melalui {{ nama_faskes() }}. Dicetak pada {{ date('d-m-Y H:i:s') }}.
     </div>
 </body>
 </html>

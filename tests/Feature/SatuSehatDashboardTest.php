@@ -27,6 +27,74 @@ test('authenticated users can visit the satusehat dashboard', function () {
         ->assertSee('SatuSehat Bridging Monitor');
 });
 
+test('satusehat dashboard filters records by date range', function () {
+    $user = User::first();
+    $this->actingAs($user);
+
+    $poli = Poli::where('kode_poli', 'UMU')->first();
+    $dokter = MasterPetugas::where('jenis_petugas', 'Dokter')->first();
+
+    $pasienA = Pasien::create([
+        'no_rekam_medis' => 'RM-RANGE-A',
+        'nama_pasien' => 'Range Patient A',
+        'nik' => '1234567890123460',
+        'tempat_lahir' => 'Bandung',
+        'tanggal_lahir' => '1990-01-01',
+        'jenis_kelamin' => 'L',
+        'alamat' => 'Jl. Test',
+    ]);
+
+    $pasienB = Pasien::create([
+        'no_rekam_medis' => 'RM-RANGE-B',
+        'nama_pasien' => 'Range Patient B',
+        'nik' => '1234567890123461',
+        'tempat_lahir' => 'Bandung',
+        'tanggal_lahir' => '1990-01-01',
+        'jenis_kelamin' => 'L',
+        'alamat' => 'Jl. Test',
+    ]);
+
+    // Record from 3 days ago
+    MedicalRecord::create([
+        'encounter_id' => 'ENC-RNG-A',
+        'patient_id' => $pasienA->id,
+        'poli_id' => $poli->id,
+        'dokter_id' => $dokter->id,
+        'status' => 'completed',
+        'nomor_antrean' => 'R-01',
+        'created_at' => now()->subDays(3),
+    ]);
+
+    // Record from 1 day ago
+    MedicalRecord::create([
+        'encounter_id' => 'ENC-RNG-B',
+        'patient_id' => $pasienB->id,
+        'poli_id' => $poli->id,
+        'dokter_id' => $dokter->id,
+        'status' => 'completed',
+        'nomor_antrean' => 'R-02',
+        'created_at' => now()->subDay(),
+    ]);
+
+    // Filter range that includes both records
+    $this->get('/admin/satusehat-dashboard?'.http_build_query([
+        'date_from' => now()->subDays(3)->toDateString(),
+        'date_to' => now()->subDay()->toDateString(),
+    ]))
+        ->assertOk()
+        ->assertSee('Range Patient A')
+        ->assertSee('Range Patient B');
+
+    // Filter range that includes only the recent record
+    $this->get('/admin/satusehat-dashboard?'.http_build_query([
+        'date_from' => now()->subDay()->toDateString(),
+        'date_to' => now()->subDay()->toDateString(),
+    ]))
+        ->assertOk()
+        ->assertSee('Range Patient B')
+        ->assertDontSee('Range Patient A');
+});
+
 test('medical record dynamic validation logic works correctly', function () {
     $pasien = Pasien::create([
         'no_rekam_medis' => 'RM-999',
@@ -251,7 +319,10 @@ test('batch dispatcher dispatches all ready records', function () {
     ]);
 
     // Dispatch batch
-    $this->post(route('admin.satusehat-dashboard.dispatch-all-ready', ['date' => now()->toDateString()]))
+    $this->post(route('admin.satusehat-dashboard.dispatch-all-ready'), [
+        'date_from' => now()->toDateString(),
+        'date_to' => now()->toDateString(),
+    ])
         ->assertRedirect();
 
     $record->refresh();

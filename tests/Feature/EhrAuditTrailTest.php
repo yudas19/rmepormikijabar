@@ -18,12 +18,12 @@ beforeEach(function () {
     FaskesProfile::updateOrCreate(
         ['id' => 1],
         [
-            'nama_faskes' => 'Klinik EMR Pintar Jabar',
+            'nama_faskes' => 'Klinik Pormiki',
             'logo_path' => 'logos/logo.png',
-            'alamat' => 'Jl. Raya Perekaman Medis No. 45, Bandung',
-            'penanggung_jawab' => 'Dr. Jane Doe',
+            'alamat' => 'Jl. Raya Perekam Medis No. 45, Bandung',
+            'penanggung_jawab' => 'Dr. PMIK',
             'no_telp' => '022-123456',
-            'email' => 'info@emrpintar.id',
+            'email' => 'info@pormiki.id',
             'kode_faskes_kemenkes' => '1234567',
         ]
     );
@@ -84,7 +84,7 @@ test('public user can verify a valid electronic medical letter', function () {
 
     $response->assertOk();
     $response->assertSee('Budiman');
-    $response->assertSee('Klinik EMR Pintar Jabar');
+    $response->assertSee('Klinik Pormiki');
     $response->assertSee('dr. '.$dokter->nama_petugas);
     $response->assertSee('Dokumen Terverifikasi');
     $response->assertSee('Surat Keterangan Sakit');

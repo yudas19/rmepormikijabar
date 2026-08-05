@@ -87,9 +87,12 @@
     </style>
 </head>
 <body>
-    <div class="header">
-        <h2>Klinik EMR Pintar Jabar</h2>
-        <p>Jl. Raya Perekaman Medis No. 45, Bandung, Jawa Barat | Telp: (022) 123456 | Email: info@emrpintar.id</p>
+    <div class="header" style="position: relative;">
+        @if (isset($profile) && $profile->logo_path)
+            <img src="{{ public_path('storage/' . $profile->logo_path) }}" alt="Logo" style="position: absolute; left: 0; top: 0; height: 60px; width: 60px; object-fit: contain;">
+        @endif
+        <h2>{{ isset($profile) && $profile->nama_faskes ? $profile->nama_faskes : 'Klinik EMR Pintar Jabar' }}</h2>
+        <p>{{ isset($profile) && $profile->alamat ? $profile->alamat : 'Jl. Raya Perekaman Medis No. 45, Bandung, Jawa Barat' }} | Telp: {{ isset($profile) && $profile->no_telp ? $profile->no_telp : '(022) 123456' }} | Email: {{ isset($profile) && $profile->email ? $profile->email : 'info@emrpintar.id' }}</p>
     </div>
 
     <div class="title">

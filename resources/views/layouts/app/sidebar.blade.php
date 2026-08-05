@@ -23,7 +23,7 @@
         </flux:sidebar.nav>
 
         <flux:sidebar.item icon="folder" :href="route('master.index')" :current="request()->routeIs('master.*') && !request()->routeIs('master.jadwal-dokter')" wire:navigate>
-            {{ __('Master Data') }}
+            {{ __('Mapping Aplikasi') }}
         </flux:sidebar.item>
 
         @can('akses_pendaftaran')
@@ -98,7 +98,7 @@
                 {{ __('Repository GitHub') }}
             </flux:sidebar.item>
 
-            <flux:sidebar.item icon="book-open-text" href="https://youtu.be/ulp83bbf6-U" target="_blank" class="text-slate-400 hover:text-slate-200">
+            <flux:sidebar.item icon="book-open-text" href="https://youtu.be/nEoNwRdP16k" target="_blank" class="text-slate-400 hover:text-slate-200">
                 {{ __('Tutorial Penggunaan') }}
             </flux:sidebar.item>
         </flux:sidebar.nav>

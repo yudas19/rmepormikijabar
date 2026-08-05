@@ -121,7 +121,7 @@ class VerificationController extends Controller
             }
 
             $faskes = FaskesProfile::find(1);
-            $namaFaskes = $faskes->nama_faskes ?? 'Klinik EMR Pintar Jabar';
+            $namaFaskes = $faskes->nama_faskes ?? 'silahkan konfigurasi faskes anda di halaman admin';
 
             return view('verify-document', [
                 'isValid' => true,

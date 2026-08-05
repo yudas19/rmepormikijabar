@@ -18,7 +18,7 @@ beforeEach(function () {
     FaskesProfile::updateOrCreate(
         ['id' => 1],
         [
-            'nama_faskes' => 'Klinik EMR Pintar Jabar',
+            'nama_faskes' => 'Klinik Pormiki',
             'logo_path' => 'logos/logo.png',
             'alamat' => 'Jl. Raya Perekaman Medis No. 45, Bandung',
             'penanggung_jawab' => 'Dr. Jane Doe',
@@ -214,7 +214,7 @@ test('print route renders correctly with faskes header information', function ()
 
     $response->assertOk();
     $response->assertSee('SURAT KETERANGAN SEHAT');
-    $response->assertSee('Klinik EMR Pintar Jabar'); // from faskes_profiles
+    $response->assertSee('Klinik Pormiki'); // from faskes_profiles
     $response->assertSee('Alice'); // patient name
     $response->assertSee('dr. '.$dokter->nama_petugas); // doctor name
 });

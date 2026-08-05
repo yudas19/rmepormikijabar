@@ -15,8 +15,9 @@ class PrintController extends Controller
     public function printConsent($id)
     {
         $consent = SuratPersetujuan::with(['pendaftaran.pasien', 'petugas'])->findOrFail($id);
+        $profile = FaskesProfile::first();
 
-        $pdf = Pdf::loadView('print.consent', compact('consent'));
+        $pdf = Pdf::loadView('print.consent', compact('consent', 'profile'));
 
         $filename = 'consent_'.str_replace(['/', '\\'], '_', $consent->no_surat).'.pdf';
 
@@ -26,8 +27,9 @@ class PrintController extends Controller
     public function printReferral($id)
     {
         $referral = SuratRujukan::with(['pendaftaran.pasien', 'dokter'])->findOrFail($id);
+        $profile = FaskesProfile::first();
 
-        $pdf = Pdf::loadView('print.referral', compact('referral'));
+        $pdf = Pdf::loadView('print.referral', compact('referral', 'profile'));
 
         $filename = 'referral_'.str_replace(['/', '\\'], '_', $referral->no_surat).'.pdf';
 
