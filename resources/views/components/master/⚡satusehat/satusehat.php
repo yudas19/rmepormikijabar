@@ -40,6 +40,9 @@ new class extends Component
 
     public $satusehat_location_id = '';
 
+    // SatuSehat API fetched locations
+    public $satusehatLocations = [];
+
     protected function getModelClass()
     {
         return $this->activeTab === 'config' ? MasterSatusehatConfig::class : MasterPoliSatusehat::class;
@@ -190,6 +193,30 @@ new class extends Component
 
         if ($this->selectedId === $id) {
             $this->resetForm();
+        }
+    }
+
+    public function fetchLocations()
+    {
+        try {
+            $service = new \App\Services\SatuSehatService;
+            $result = $service->getLocationsByOrganization();
+
+            if (! $result['success']) {
+                Flux::toast(variant: 'danger', text: $result['error'] ?? 'Gagal mengambil data lokasi.');
+
+                return;
+            }
+
+            $this->satusehatLocations = $result['locations'] ?? [];
+
+            if (empty($this->satusehatLocations)) {
+                Flux::toast(variant: 'warning', text: 'Tidak ada lokasi ditemukan untuk organisasi ini di SatuSehat.');
+            } else {
+                Flux::toast(variant: 'success', text: count($this->satusehatLocations).' lokasi berhasil diambil dari SatuSehat.');
+            }
+        } catch (\RuntimeException $e) {
+            Flux::toast(variant: 'danger', text: $e->getMessage());
         }
     }
 

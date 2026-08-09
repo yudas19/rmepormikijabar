@@ -244,8 +244,26 @@ new class extends Component
             return;
         }
 
-        $this->ihs_number_practitioner = 'P'.rand(1000000000, 9999999999);
-        Flux::toast(variant: 'success', text: 'NIK berhasil diverifikasi dengan SatuSehat. IHS Practitioner Number diperoleh.');
+        try {
+            $service = new \App\Services\SatuSehatService;
+            $result = $service->lookupPractitionerByNik($this->nik);
+
+            if (! $result['success']) {
+                Flux::toast(variant: 'danger', text: $result['error'] ?? 'Gagal menghubungi SatuSehat.');
+
+                return;
+            }
+
+            if ($result['found']) {
+                $this->ihs_number_practitioner = $result['ihs_number'] ?? '';
+                $displayName = $result['name'] ?? 'Praktisi';
+                Flux::toast(variant: 'success', text: "NIK berhasil diverifikasi dengan SatuSehat. IHS: {$this->ihs_number_practitioner} ({$displayName})");
+            } else {
+                Flux::toast(variant: 'warning', text: 'NIK tidak ditemukan di SatuSehat sebagai Practitioner. Pastikan NIK terdaftar di platform SatuSehat Kemenkes.');
+            }
+        } catch (\RuntimeException $e) {
+            Flux::toast(variant: 'danger', text: $e->getMessage());
+        }
     }
 
     public function render()

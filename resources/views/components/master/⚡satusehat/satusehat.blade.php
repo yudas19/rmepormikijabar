@@ -144,7 +144,26 @@
                             @endforeach
                         </flux:select>
 
-                        <flux:input wire:model="satusehat_location_id" label="SatuSehat Location ID" required placeholder="Masukkan Location ID" />
+                        <div class="space-y-2">
+                            <div class="flex items-end gap-2">
+                                @if (count($satusehatLocations) > 0)
+                                    <flux:select wire:model="satusehat_location_id" label="SatuSehat Location ID" required placeholder="Pilih Lokasi SatuSehat" class="flex-1">
+                                        @foreach ($satusehatLocations as $loc)
+                                            <flux:select.option value="{{ $loc['id'] }}">{{ $loc['name'] }} ({{ $loc['id'] }})</flux:select.option>
+                                        @endforeach
+                                    </flux:select>
+                                @else
+                                    <flux:input wire:model="satusehat_location_id" label="SatuSehat Location ID" required placeholder="Masukkan Location ID" class="flex-1" />
+                                @endif
+                                <flux:button type="button" variant="primary" size="sm" wire:click="fetchLocations" wire:loading.attr="disabled">
+                                    <span wire:loading.remove wire:target="fetchLocations">Ambil Lokasi</span>
+                                    <span wire:loading wire:target="fetchLocations">Memuat...</span>
+                                </flux:button>
+                            </div>
+                            @if (count($satusehatLocations) > 0)
+                                <p class="text-xs text-zinc-500">{{ count($satusehatLocations) }} lokasi ditemukan dari SatuSehat.</p>
+                            @endif
+                        </div>
                     @endif
 
                     <div class="flex gap-2 pt-2">

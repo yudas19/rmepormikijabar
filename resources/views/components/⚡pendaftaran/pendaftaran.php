@@ -309,45 +309,38 @@ new class extends Component
         }
     }
 
-    // MOCK SatuSehat Verification Lookups
+    // SatuSehat NIK Verification via FHIR API
     public function verifyNik()
     {
         $this->validate([
             'nik' => 'required|string|size:16',
         ]);
 
-        $mockLookups = [
-            '1234567890123456' => [
-                'nama' => 'Budi Santoso',
-                'ihs' => 'IHS-2026110022',
-                'dob' => '1980-01-01',
-                'gender' => 'L',
-                'tempat_lahir' => 'Bandung',
-            ],
-            '9876543210987654' => [
-                'nama' => 'Siti Rahma',
-                'ihs' => 'IHS-2026110033',
-                'dob' => '1992-05-12',
-                'gender' => 'P',
-                'tempat_lahir' => 'Jakarta',
-            ],
-        ];
+        try {
+            $service = new \App\Services\SatuSehatService;
+            $result = $service->lookupPatientByNik($this->nik);
 
-        if (array_key_exists($this->nik, $mockLookups)) {
-            $data = $mockLookups[$this->nik];
-            $this->nama_pasien = $data['nama'];
-            $this->ihs_number = $data['ihs'];
-            $this->tanggal_lahir = $data['dob'];
-            $this->jenis_kelamin = $data['gender'];
-            $this->tempat_lahir = $data['tempat_lahir'];
-            $this->isIhsSynced = true;
-            $this->showIhsWarning = false;
-            Flux::toast(variant: 'success', text: 'NIK terverifikasi di SatuSehat Kemenkes!');
-        } else {
-            $this->ihs_number = '';
-            $this->isIhsSynced = false;
-            $this->showIhsWarning = true;
-            Flux::toast(variant: 'warning', text: 'IHS Not Synced: NIK tidak ditemukan di SatuSehat.');
+            if (! $result['success']) {
+                Flux::toast(variant: 'danger', text: $result['error'] ?? 'Gagal menghubungi SatuSehat.');
+
+                return;
+            }
+
+            if ($result['found']) {
+                $this->ihs_number = $result['ihs_number'] ?? '';
+                $this->isIhsSynced = true;
+                $this->showIhsWarning = false;
+
+                $displayName = $result['name'] ?? 'Pasien';
+                Flux::toast(variant: 'success', text: "NIK terverifikasi di SatuSehat Kemenkes! ({$displayName})");
+            } else {
+                $this->ihs_number = '';
+                $this->isIhsSynced = false;
+                $this->showIhsWarning = true;
+                Flux::toast(variant: 'warning', text: 'IHS Not Synced: NIK tidak ditemukan di SatuSehat.');
+            }
+        } catch (\RuntimeException $e) {
+            Flux::toast(variant: 'danger', text: $e->getMessage());
         }
     }
 
