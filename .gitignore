@@ -22,3 +22,6 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+docker-compose.yml
+Dockerfile
+app/Providers/AppServiceProvider.php
